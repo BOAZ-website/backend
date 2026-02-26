@@ -35,3 +35,18 @@ out/
 
 ### VS Code ###
 .vscode/
+
+### Spring Boot ###
+*.jar
+*.war
+
+### Env ###
+.env
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
+logs/
