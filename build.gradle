@@ -36,6 +36,9 @@ dependencies {
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // env
+    implementation 'io.github.cdimascio:dotenv-java:3.1.0'
 }
 
 tasks.named('test') {
