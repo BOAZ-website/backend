@@ -1,11 +1,14 @@
 package com.boaz.backend.domain.recruitment.dto;
 
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
 @Getter
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecruitmentResponse {
 
     private final Integer term;
