@@ -1,0 +1,62 @@
+language: "ko-KR" # 리뷰 언어 설정
+tone_instructions: "친근하고 건설적인 피드백을 주세요. 문제점 지적보다는 개선 방향을 제안하는 톤으로 작성해주세요."
+
+reviews:
+  profile: "chill" # 리뷰 스타일 (chill, assertive 중 선택)
+  request_changes_workflow: false # AI가 직접 'Changes Requested' 상태를 변경할지 여부
+  high_level_summary: true # PR의 전체적인 요약 생성
+  high_level_summary_instructions: |
+    변경 사항을 아래 형식으로 간결하게 요약해주세요:
+    - **변경 목적**: (1~2 문장)
+    - **주요 변경 내용**: (bullet list, 파일/레이어 기준)
+    - **영향 범위**: API 변경 / DB 스키마 변경 / 설정 변경 여부
+  review_status: true
+  collapse_walkthrough: true   # 변경 사항 요약 코멘트 토클로 표시
+  assess_linked_issues: true  # PR에 연결된 이슈를 분석하여 리뷰에 활용할지 여부
+  related_issues: false # 연관된 다른 이슈를 찾아서 링크할지 여부
+  related_prs: false # 연관된 다른 PR을 찾아서 링크할지 여부
+  poem: false # 불필요한 감성적 요소(시 등) 제거
+
+  # 자동 리뷰 트리거 설정
+  auto_review:
+    # PR이 생성됐을 때 자동으로 리뷰 시작
+    enabled: true
+    # 이미 리뷰가 진행된 PR에 새로운 커밋이 추가될 때, 변경된 부분에 대해서만 자동으로 리뷰를 진행할지 여부
+    auto_incremental_review: true
+    drafts: false
+
+  # 리뷰 제외 파일
+  path_filters:
+    - "!**/*.lock"
+    - "!**/gradlew"
+    - "!**/gradlew.bat"
+    - "!**/.gradle/**"
+    - "!**/build/**"                 # Gradle 빌드 산출물
+    - "!**/*_Querydsl.java"          # QueryDSL Q클래스 자동 생성
+    - "!**/*_.java"                  # JPA 메타모델 자동 생성
+    - "!**/generated/**"
+    - "!**/generated-sources/**"
+    - "!**/*.pb.java"                # Protobuf 자동 생성
+
+  # 백엔드 특화 프롬프트 지침 (Instructions)
+  instructions: |
+    당신은 숙련된 백엔드 엔지니어입니다. 다음 기준에 따라 코드를 리뷰하십시오:
+
+    1. 가독성, 예외처리, 테스트/확장/유지보수성, 모듈화, API/DB/보안 설계 기준을 기반으로 리뷰해주세요.
+    2. 객체지향, 최신 트렌드, 불필요한 로직, 클린코드, 리팩토링, 서비스/도메인 설계, 공통 예외 처리, 확장성도 함께 확인해주세요.
+    3. 각 리뷰 포인트별로 문제점과 대안, 장단점을 논리적으로 제시하고, 필요한 경우 예시 코드도 추가해 주세요.
+    4. 리뷰가 너무 많아서 피로감을 줄 수 있으니, 꼭 필요한 부분에 집중해주고, 나머지는 캡션으로 설명해주세요.
+    5. 사소한 스타일 이슈(단순 오타, 띄어쓰기 등)는 개별 코멘트 대신 한꺼번에 모아서 요약해주고, 로직 결함이나 보안 위험 같은 Critical한 이슈 위주로 라인 코멘트를 남겨주세요.
+    6. 리뷰 남겨주는 부분은 해당 라인 범위의 코멘트에 작성해주세요.
+
+# 도구별 설정 (Chat 및 자동 수정 기능)
+chat:
+  auto_reply: true
+
+# 지식 베이스 설정
+knowledge_base:
+  opt_out: false
+  web_search:
+    enabled: true              # Spring 최신 문서/CVE 등 웹 검색 활용
+  learnings:
+    scope: auto                # 리뷰 피드백에서 자동 학습
