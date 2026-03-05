@@ -33,8 +33,8 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
         
         LocalDateTime now = LocalDateTime.now();
-        boolean isActive = now.isAfter(recruitment.getStartDate()) 
-                        && now.isBefore(recruitment.getEndDate());
+        boolean isActive = !now.isBefore(recruitment.getStartDate()) 
+                        && !now.isAfter(recruitment.getEndDate());
 
         if (!isActive) {
             return RecruitmentResponse.inactive();
