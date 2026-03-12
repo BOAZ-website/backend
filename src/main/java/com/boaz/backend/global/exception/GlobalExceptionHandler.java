@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -33,6 +34,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.error(400, ErrorCode.INVALID_INPUT_VALUE.getCode(), message));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingParameter(MissingServletRequestParameterException e) {
+        log.warn("MissingParameterException: {}", e.getParameterName());
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(
+                        400,
+                        ErrorCode.MISSING_PARAMETER.getCode(),
+                        ErrorCode.MISSING_PARAMETER.getMessage()
+                ));
     }
 
     @ExceptionHandler(Exception.class)
