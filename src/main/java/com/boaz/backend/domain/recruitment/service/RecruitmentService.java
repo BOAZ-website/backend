@@ -8,6 +8,7 @@ import com.boaz.backend.domain.recruitment.entity.QuestionCategory;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
+import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +51,7 @@ public class RecruitmentService {
     }
 
     // 지원서 질문 조회하기
-    public List<QuestionResponse> getQuestions(Long recruitmentId, String trackParam) {
+    public List<QuestionResponse> getQuestions(Long recruitmentId, Track track) {
 
         // 공고 존재 여부 확인
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
@@ -64,13 +65,8 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
-        // track 유효성 검사
-        QuestionCategory trackCategory;
-        try {
-            trackCategory = QuestionCategory.valueOf(trackParam);
-        } catch (IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_TRACK_NAME);
-        }
+        // Track → QuestionCategory 변환
+        QuestionCategory trackCategory = QuestionCategory.valueOf(track.name());
 
         // 공통 + 해당 부문 질문 조회
         List<ApplicationQuestion> questions = applicationQuestionRepository

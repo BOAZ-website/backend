@@ -5,6 +5,8 @@ import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.ApiResponse;
+import com.boaz.backend.global.common.enums.Track;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +40,7 @@ public class RecruitmentController {
     @GetMapping("/questions")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getQuestions(
             @RequestParam Long recruitmentId,
-            @RequestParam String track) {
+            @RequestParam Track track) {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getQuestions(recruitmentId, track)));
     }
 }
