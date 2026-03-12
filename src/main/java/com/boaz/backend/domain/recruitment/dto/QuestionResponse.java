@@ -2,6 +2,8 @@ package com.boaz.backend.domain.recruitment.dto;
 
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.QuestionType;
+import com.boaz.backend.global.exception.CustomException;
+import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -36,10 +38,13 @@ public class QuestionResponse {
             this.metadata = null;
         } else {
             this.limitLength = null;
+            if (question.getMetadata() == null) {
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
             try {
                 this.metadata = objectMapper.readTree(question.getMetadata());
             } catch (Exception e) {
-                throw new RuntimeException("metadata JSON 파싱 실패: " + question.getId());
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
     }
