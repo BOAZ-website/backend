@@ -13,10 +13,14 @@ public enum ErrorCode {
 
     // Recruitment
     RECRUITMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RECRUITMENT_NOT_FOUND", "해당 모집 공고를 찾을 수 없습니다."),
-    ALREADY_APPLIED(HttpStatus.CONFLICT, "ALREADY_APPLIED", "이미 지원한 모집 공고입니다."),
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
-    INVALID_TRACK_NAME(HttpStatus.BAD_REQUEST, "INVALID_TRACK_NAME", "올바른 지원 부문을 선택해주세요."),
     QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
+    RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "RECRUITMENT_CLOSED", "현재 지원 기간이 아닙니다."),
+    ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "ANSWER_REQUIRED", "필수 질문에 답변해주세요."),
+    INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_EMAIL_FORMAT", "이메일 형식이 올바르지 않습니다."),
+    INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_PHONE_FORMAT", "전화번호 형식이 올바르지 않습니다."),
+    INVALID_ANSWER_TYPE(HttpStatus.BAD_REQUEST, "INVALID_ANSWER_TYPE", "답변 형식이 올바르지 않습니다."),
+    INVALID_BIRTH_DATE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_BIRTH_DATE_FORMAT", "생년월일 형식이 올바르지 않습니다. (YYYY-MM-DD)"),
 
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
