@@ -1,8 +1,11 @@
 package com.boaz.backend.domain.recruitment.entity;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.boaz.backend.global.common.BaseEntity;
@@ -12,6 +15,7 @@ import java.time.LocalDate;
 
 @Getter
 @Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "applicants")
 @EntityListeners(AuditingEntityListener.class)
 public class Applicant extends BaseEntity  {
