@@ -18,13 +18,15 @@ public class ApplicationQuestion extends BaseEntity {
     @JoinColumn(name = "recruitment_id", nullable = false)
     private Recruitment recruitment;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private QuestionCategory category;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private QuestionType type;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
     @Column(columnDefinition = "JSON")
