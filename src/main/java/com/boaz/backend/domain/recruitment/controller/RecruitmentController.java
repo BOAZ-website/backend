@@ -1,5 +1,7 @@
 package com.boaz.backend.domain.recruitment.controller;
 
+import com.boaz.backend.domain.recruitment.dto.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
@@ -9,10 +11,12 @@ import com.boaz.backend.global.common.enums.Track;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,5 +46,14 @@ public class RecruitmentController {
             @RequestParam Long recruitmentId,
             @RequestParam Track track) {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getQuestions(recruitmentId, track)));
+    }
+
+    @Operation(summary = "지원서 제출")
+    @PostMapping("/applications")
+    public ResponseEntity<ApiResponse<ApplicationResponse>> submitApplication(
+            @RequestBody @Valid ApplicationRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.created(recruitmentService.submitApplication(request)));
     }
 }
