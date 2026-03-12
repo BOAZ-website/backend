@@ -58,8 +58,8 @@ public class RecruitmentService {
 
         // 모집 중 여부 확인
         LocalDateTime now = LocalDateTime.now();
-        boolean isActive = now.isAfter(recruitment.getStartDate())
-                        && now.isBefore(recruitment.getEndDate());
+        boolean isActive = !now.isBefore(recruitment.getStartDate()) 
+                        && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
