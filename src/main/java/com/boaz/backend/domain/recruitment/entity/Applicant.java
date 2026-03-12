@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.recruitment.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
@@ -57,4 +58,24 @@ public class Applicant extends BaseEntity  {
     private String graduationDate;
 
     private Boolean gradSchoolPlan;
+
+    @Builder
+    public Applicant(Recruitment recruitment, Track track, String name, String email,
+                    String phone, String university, String major, String minorDoubleMajor,
+                    Integer lastSemester, MilitaryStatus militaryStatus, LocalDate birthDate,
+                    String graduationDate, Boolean gradSchoolPlan) {
+        this.recruitment = recruitment;
+        this.track = track;
+        this.name = name;
+        this.email = email;
+        this.phone = phone;
+        this.university = university;
+        this.major = major;
+        this.minorDoubleMajor = minorDoubleMajor;
+        this.lastSemester = lastSemester;
+        this.militaryStatus = militaryStatus;
+        this.birthDate = birthDate;
+        this.graduationDate = graduationDate;
+        this.gradSchoolPlan = gradSchoolPlan;
+    }
 }
