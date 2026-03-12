@@ -16,7 +16,7 @@ public enum ErrorCode {
     ALREADY_APPLIED(HttpStatus.CONFLICT, "ALREADY_APPLIED", "이미 지원한 모집 공고입니다."),
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
     INVALID_TRACK_NAME(HttpStatus.BAD_REQUEST, "INVALID_TRACK_NAME", "올바른 지원 부문을 선택해주세요."),
-    QUESTIONS_NOT_FOUND(HttpStatus.INTERNAL_SERVER_ERROR, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
+    QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
 
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
