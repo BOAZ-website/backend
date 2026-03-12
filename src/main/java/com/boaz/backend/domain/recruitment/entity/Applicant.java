@@ -24,6 +24,7 @@ public class Applicant extends BaseEntity  {
     private Recruitment recruitment;
 
     @Column(length = 50)
+    @Enumerated(EnumType.STRING)
     private Track track;
 
     @Column(length = 100, nullable = false)
