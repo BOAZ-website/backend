@@ -49,7 +49,7 @@ public class RecruitmentService {
         return RecruitmentResponse.from(recruitment);
     }
 
-    // 지원서 조회하기
+    // 지원서 질문 조회하기
     public List<QuestionResponse> getQuestions(Long recruitmentId, String trackParam) {
 
         // 공고 존재 여부 확인
