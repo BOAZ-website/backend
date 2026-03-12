@@ -44,7 +44,7 @@ public class RecruitmentService {
     private final ApplicantAnswerRepository applicantAnswerRepository;
     private final ObjectMapper objectMapper;
 
-    
+
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
         boolean isActive = recruitmentRepository
@@ -141,6 +141,9 @@ public class RecruitmentService {
                         QuestionCategory.공통,
                         trackCategory
                 );
+        if (questions.isEmpty()) {
+            throw new CustomException(ErrorCode.QUESTIONS_NOT_FOUND);
+        }
 
         // 필수 질문 답변 여부 확인
         List<String> requiredQuestionIds = questions.stream()
@@ -157,6 +160,22 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.ANSWER_REQUIRED);
         }
 
+        // 중복 questionId 검증
+        if (answeredQuestionIds.size() != answeredQuestionIds.stream().distinct().count()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        // 잘못된 questionId 검증
+        List<String> validQuestionIds = questions.stream()
+                .map(ApplicationQuestion::getId)
+                .toList();
+
+        for (AnswerRequest answerRequest : request.getAnswers()) {
+            if (!validQuestionIds.contains(answerRequest.getQuestionId())) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
+        
         // 답변 형식 검증 (TEXT → String, TABLE → JSON)
         Map<String, ApplicationQuestion> questionMap = questions.stream()
                 .collect(Collectors.toMap(ApplicationQuestion::getId, q -> q));
@@ -166,6 +185,13 @@ public class RecruitmentService {
             if (question == null) continue;
 
             JsonNode answer = answerRequest.getAnswer();
+            if (question.getIsRequired()) {
+                if (answer == null || answer.isNull()
+                        || (question.getType() == QuestionType.TEXT && answer.asText().trim().isEmpty())
+                        || (question.getType() == QuestionType.TABLE && (!answer.isObject() || answer.size() == 0))) {
+                    throw new CustomException(ErrorCode.ANSWER_REQUIRED);
+                }
+            }
             if (question.getType() == QuestionType.TEXT && !answer.isTextual()) {
                 throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
             }
