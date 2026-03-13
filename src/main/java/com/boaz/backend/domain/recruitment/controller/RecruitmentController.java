@@ -60,7 +60,7 @@ public class RecruitmentController {
     }
 
     @Operation(summary = "모집 사전 알림 구독")
-    @PostMapping
+    @PostMapping("/subscriptions")
     public ResponseEntity<ApiResponse<SubscriptionResponse>> subscribe(
             @RequestBody @Valid SubscriptionRequest request) {
         return ResponseEntity
