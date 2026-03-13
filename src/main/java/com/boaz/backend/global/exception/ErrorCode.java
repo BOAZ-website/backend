@@ -21,6 +21,8 @@ public enum ErrorCode {
     INVALID_PHONE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_PHONE_FORMAT", "전화번호 형식이 올바르지 않습니다."),
     INVALID_ANSWER_TYPE(HttpStatus.BAD_REQUEST, "INVALID_ANSWER_TYPE", "답변 형식이 올바르지 않습니다."),
     INVALID_BIRTH_DATE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_BIRTH_DATE_FORMAT", "생년월일 형식이 올바르지 않습니다. (YYYY-MM-DD)"),
+    MISSING_CONTACT(HttpStatus.BAD_REQUEST, "MISSING_CONTACT", "이메일을 입력해주세요."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "이미 구독 신청된 이메일입니다."),
 
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
