@@ -27,6 +27,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -284,8 +286,11 @@ public class RecruitmentService {
                 .email(request.getEmail())
                 .build();
 
-        subscriptionRepository.save(subscription);
-
-        return SubscriptionResponse.from(subscription);
+        try {
+            subscriptionRepository.save(subscription);
+            return SubscriptionResponse.from(subscription);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 }
