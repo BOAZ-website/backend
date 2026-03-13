@@ -287,7 +287,7 @@ public class RecruitmentService {
                 .build();
 
         try {
-            subscriptionRepository.save(subscription);
+            subscriptionRepository.saveAndFlush(subscription);
             return SubscriptionResponse.from(subscription);
         } catch (DataIntegrityViolationException e) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
