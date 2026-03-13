@@ -5,6 +5,8 @@ import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
+import com.boaz.backend.domain.recruitment.dto.SubscriptionRequest;
+import com.boaz.backend.domain.recruitment.dto.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.common.enums.Track;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class RecruitmentController {
 
     private final RecruitmentService recruitmentService;
-
+    ;
     @Operation(summary = "모집 중 여부 조회")
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<RecruitmentStatusResponse>> getRecruitmentStatus() {
@@ -55,5 +57,14 @@ public class RecruitmentController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.created(recruitmentService.submitApplication(request)));
+    }
+
+    @Operation(summary = "모집 사전 알림 구독")
+    @PostMapping
+    public ResponseEntity<ApiResponse<SubscriptionResponse>> subscribe(
+            @RequestBody @Valid SubscriptionRequest request) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(ApiResponse.created(recruitmentService.subscribe(request)));
     }
 }
