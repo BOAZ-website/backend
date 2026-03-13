@@ -6,16 +6,20 @@ import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
+import com.boaz.backend.domain.recruitment.dto.SubscriptionRequest;
+import com.boaz.backend.domain.recruitment.dto.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.QuestionCategory;
 import com.boaz.backend.domain.recruitment.entity.QuestionType;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
+import com.boaz.backend.domain.recruitment.entity.Subscription;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
+import com.boaz.backend.domain.recruitment.repository.SubscriptionRepository;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -23,6 +27,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +49,7 @@ public class RecruitmentService {
     private final ApplicantRepository applicantRepository;
     private final ApplicantAnswerRepository applicantAnswerRepository;
     private final ObjectMapper objectMapper;
+    private final SubscriptionRepository subscriptionRepository;
 
 
     // 모집 중 여부 조회
@@ -259,5 +266,31 @@ public class RecruitmentService {
         }
 
         return ApplicationResponse.of(applicant.getId(), applicant.getCreatedAt());
+    }
+
+    // 모집 사전 알림 신청하기
+    @Transactional
+    public SubscriptionResponse subscribe(SubscriptionRequest request) {
+
+        // 이메일 형식 검증
+        if (!request.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
+            throw new CustomException(ErrorCode.INVALID_EMAIL_FORMAT);
+        }
+
+        // 중복 이메일 확인
+        if (subscriptionRepository.existsByEmail(request.getEmail())) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
+
+        Subscription subscription = Subscription.builder()
+                .email(request.getEmail())
+                .build();
+
+        try {
+            subscriptionRepository.saveAndFlush(subscription);
+            return SubscriptionResponse.from(subscription);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
     }
 }
