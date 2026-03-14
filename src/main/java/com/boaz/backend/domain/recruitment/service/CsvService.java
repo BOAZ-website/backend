@@ -64,11 +64,11 @@ public class CsvService {
                 row.add(applicant.getUniversity());
                 row.add(applicant.getMajor());
                 row.add(formatMinorDoubleMajor(applicant.getMinorDoubleMajor()));
-                row.add(String.valueOf(applicant.getLastSemester()));
-                row.add(applicant.getMilitaryStatus().name());
-                row.add(applicant.getBirthDate().toString());
-                row.add(applicant.getGraduationDate());
-                row.add(applicant.getGradSchoolPlan() ? "Y" : "N");
+                row.add(String.valueOf(applicant.getLastSemester() != null ? applicant.getLastSemester() : ""));
+                row.add(applicant.getMilitaryStatus() != null ? applicant.getMilitaryStatus().name() : "");
+                row.add(applicant.getBirthDate() != null ? applicant.getBirthDate().toString() : "");
+                row.add(applicant.getGraduationDate() != null ? applicant.getGraduationDate() : "");
+                row.add(applicant.getGradSchoolPlan() != null ? (applicant.getGradSchoolPlan() ? "Y" : "N") : "");
                 row.add(applicant.getCreatedAt().toString());
 
                 Map<String, ApplicantAnswer> applicantAnswers = answerMap.getOrDefault(applicant.getId(), Collections.emptyMap());
