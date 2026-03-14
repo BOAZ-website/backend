@@ -57,12 +57,12 @@ public class CsvService {
             // 지원자별 행 작성
             for (Applicant applicant : applicants) {
                 List<String> row = new ArrayList<>();
-                row.add(applicant.getTrack().name());
+                row.add(applicant.getTrack() != null ? applicant.getTrack().name() : "");
                 row.add(applicant.getName());
                 row.add(applicant.getEmail());
-                row.add(applicant.getPhone());
-                row.add(applicant.getUniversity());
-                row.add(applicant.getMajor());
+                row.add(applicant.getPhone() != null ? applicant.getPhone() : "");
+                row.add(applicant.getUniversity() != null ? applicant.getUniversity() : "");
+                row.add(applicant.getMajor() != null ? applicant.getMajor() : "");
                 row.add(formatMinorDoubleMajor(applicant.getMinorDoubleMajor()));
                 row.add(String.valueOf(applicant.getLastSemester() != null ? applicant.getLastSemester() : ""));
                 row.add(applicant.getMilitaryStatus() != null ? applicant.getMilitaryStatus().name() : "");
