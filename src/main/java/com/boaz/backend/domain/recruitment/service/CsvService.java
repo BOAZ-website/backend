@@ -121,10 +121,18 @@ public class CsvService {
 
     private String escapeCsvValue(String value) {
         if (value == null) return "\"\"";
-        // 쌍따옴표, 쉼표, 줄바꿈이 포함된 경우 쌍따옴표로 감싸기
-        if (value.contains("\"") || value.contains(",") || value.contains("\n")) {
-            return "\"" + value.replace("\"", "\"\"") + "\"";
+        String sanitized = sanitizeForSpreadsheet(value);
+        return "\"" + sanitized.replace("\"", "\"\"") + "\"";
+    }
+
+    private String sanitizeForSpreadsheet(String value) {
+        String trimmed = value.stripLeading();
+        if (!trimmed.isEmpty()) {
+            char first = trimmed.charAt(0);
+            if (first == '=' || first == '+' || first == '-' || first == '@') {
+                return "'" + value;
+            }
         }
-        return "\"" + value + "\"";
+        return value;
     }
 }
