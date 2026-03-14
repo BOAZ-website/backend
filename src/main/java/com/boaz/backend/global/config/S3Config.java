@@ -26,7 +26,14 @@ public class S3Config {
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region));
 
-        if (!accessKey.isBlank() && !secretKey.isBlank()) {
+        boolean hasAccessKey = !accessKey.isBlank();
+        boolean hasSecretKey = !secretKey.isBlank();
+
+        if (hasAccessKey != hasSecretKey) {
+            throw new IllegalStateException("AWS 자격증명 설정 오류: access-key와 secret-key는 둘 다 설정하거나 둘 다 비워야 합니다.");
+        }
+
+        if (hasAccessKey) {
             builder.credentialsProvider(StaticCredentialsProvider.create(
                     AwsBasicCredentials.create(accessKey, secretKey)
             ));
