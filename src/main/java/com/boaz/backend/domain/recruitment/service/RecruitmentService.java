@@ -33,9 +33,12 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,7 +55,8 @@ public class RecruitmentService {
     private final ApplicantAnswerRepository applicantAnswerRepository;
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
-
+    private final CsvService csvService;
+    private final S3Service s3Service;
 
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
@@ -303,6 +307,55 @@ public class RecruitmentService {
             return SubscriptionResponse.from(subscription);
         } catch (DataIntegrityViolationException e) {
             throw new CustomException(ErrorCode.DUPLICATE_EMAIL);
+        }
+    }
+
+    // 지원서 파일 다운로드
+    public void downloadApplications(Integer term) {
+
+        // 공고 존재 여부 확인
+        Recruitment recruitment = recruitmentRepository.findByTerm(term)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        String timestamp = LocalDateTime.now()
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+
+        // 부문별 CSV 생성 및 S3 업로드
+        for (Track track : List.of(Track.시각화, Track.분석, Track.엔지니어링)) {
+
+            // 해당 부문 지원자 조회
+            List<Applicant> applicants = applicantRepository
+                    .findLatestByRecruitmentIdAndTrack(recruitment.getId(), track);
+
+            // 공통 + 해당 부문 질문 조회
+            List<ApplicationQuestion> questions = applicationQuestionRepository
+                    .findByRecruitmentIdAndCategories(
+                            recruitment.getId(),
+                            QuestionCategory.공통, 
+                            QuestionCategory.valueOf(track.name())
+                    );
+
+            // 지원자 답변 조회
+            List<Long> applicantIds = applicants.stream()
+                    .map(Applicant::getId)
+                    .toList();
+
+            List<ApplicantAnswer> answers = applicantIds.isEmpty()
+                    ? Collections.emptyList()
+                    : applicantAnswerRepository.findByApplicantIds(applicantIds);
+
+            // CSV 생성
+            byte[] csv;
+            try {
+                csv = csvService.generateCsv(applicants, questions, answers);
+            } catch (IOException e) {
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+
+            // S3 업로드
+            String key = String.format("%d/applicants_%s_%s.csv",
+                    term, track.name(), timestamp);
+            s3Service.uploadCsv(key, csv);
         }
     }
 }

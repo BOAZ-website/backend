@@ -23,7 +23,8 @@ public enum ErrorCode {
     INVALID_BIRTH_DATE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_BIRTH_DATE_FORMAT", "생년월일 형식이 올바르지 않습니다. (YYYY-MM-DD)"),
     MISSING_CONTACT(HttpStatus.BAD_REQUEST, "MISSING_CONTACT", "이메일을 입력해주세요."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "이미 구독 신청된 이메일입니다."),
-
+    S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_UPLOAD_FAILED", "파일 업로드 중 오류가 발생했습니다."),
+    
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
 

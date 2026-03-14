@@ -74,4 +74,12 @@ public class RecruitmentController {
                 .status(HttpStatus.CREATED)
                 .body(ApiResponse.created(recruitmentService.subscribe(request)));
     }
+
+    @Operation(summary = "지원서 CSV 파일 생성")
+    @GetMapping("/admin/recruitment/applications/download")
+    public ResponseEntity<ApiResponse<Void>> downloadApplications(
+            @RequestParam Integer term) {
+        recruitmentService.downloadApplications(term);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
 }
