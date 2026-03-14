@@ -1,4 +1,5 @@
 spring:
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/boaz?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
@@ -31,3 +32,16 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /api-docs
+
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+
+admin:
+  api-key: ${ADMIN_API_KEY}
