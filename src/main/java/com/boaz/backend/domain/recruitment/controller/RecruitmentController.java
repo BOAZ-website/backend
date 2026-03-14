@@ -2,6 +2,7 @@ package com.boaz.backend.domain.recruitment.controller;
 
 import com.boaz.backend.domain.recruitment.dto.ApplicationRequest;
 import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
+import com.boaz.backend.domain.recruitment.dto.DeadlineResponse;
 import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
@@ -29,11 +30,17 @@ import org.springframework.web.bind.annotation.*;
 public class RecruitmentController {
 
     private final RecruitmentService recruitmentService;
-    ;
+    
     @Operation(summary = "모집 중 여부 조회")
     @GetMapping("/status")
     public ResponseEntity<ApiResponse<RecruitmentStatusResponse>> getRecruitmentStatus() {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getRecruitmentStatus()));
+    }
+
+    @Operation(summary = "모집 마감 일시 조회")
+    @GetMapping("/deadline")
+    public ResponseEntity<ApiResponse<DeadlineResponse>> getDeadline() {
+        return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getDeadline()));
     }
 
     @Operation(summary = "모집 공고 정보 조회")

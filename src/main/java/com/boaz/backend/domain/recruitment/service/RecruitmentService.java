@@ -3,6 +3,7 @@ package com.boaz.backend.domain.recruitment.service;
 import com.boaz.backend.domain.recruitment.dto.AnswerRequest;
 import com.boaz.backend.domain.recruitment.dto.ApplicationRequest;
 import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
+import com.boaz.backend.domain.recruitment.dto.DeadlineResponse;
 import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
@@ -37,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,10 +56,20 @@ public class RecruitmentService {
 
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
-        boolean isActive = recruitmentRepository
-                .findActiveRecruitment(LocalDateTime.now())
-                .isPresent();
-        return RecruitmentStatusResponse.of(isActive);
+        Optional<Recruitment> activeRecruitment = recruitmentRepository
+                .findActiveRecruitment(LocalDateTime.now());
+        
+        return activeRecruitment
+                .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
+                .orElse(RecruitmentStatusResponse.of(false, null));
+    }
+
+    // 모집 공고 마감 일시 조회
+    public DeadlineResponse getDeadline() {
+        LocalDateTime now = LocalDateTime.now();
+        Recruitment recruitment = recruitmentRepository.findActiveRecruitment(now)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+        return DeadlineResponse.from(recruitment);
     }
 
     // 기수별 모집 공고 조회
