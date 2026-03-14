@@ -38,6 +38,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,10 +56,12 @@ public class RecruitmentService {
 
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
-        boolean isActive = recruitmentRepository
-                .findActiveRecruitment(LocalDateTime.now())
-                .isPresent();
-        return RecruitmentStatusResponse.of(isActive);
+        Optional<Recruitment> activeRecruitment = recruitmentRepository
+                .findActiveRecruitment(LocalDateTime.now());
+        
+        return activeRecruitment
+                .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
+                .orElse(RecruitmentStatusResponse.of(false, null));
     }
 
     // 모집 공고 마감 일시 조회
