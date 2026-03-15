@@ -9,10 +9,10 @@ import lombok.Getter;
 @Getter
 public class AnswerRequest {
 
-    @NotNull
+    @NotNull(message = "question_id를 입력해주세요.")
     @JsonProperty("question_id")
     private String questionId;
 
-    @NotNull
+    @NotNull(message = "답변을 입력해주세요.")
     private JsonNode answer;
 }
