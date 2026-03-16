@@ -1,0 +1,18 @@
+package com.boaz.backend.domain.recruitment.dto;
+
+import com.boaz.backend.domain.recruitment.entity.Subscription;
+import lombok.Getter;
+
+@Getter
+public class SubscriptionResponse {
+
+    private final String email;
+
+    private SubscriptionResponse(String email) {
+        this.email = email;
+    }
+
+    public static SubscriptionResponse from(Subscription subscription) {
+        return new SubscriptionResponse(subscription.getEmail());
+    }
+}
