@@ -32,7 +32,7 @@ public class CurriculumService {
             try {
                 trackEnum = Curriculum.Track.valueOf(track.toUpperCase());
             } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.INVALID_TRACK);
+                throw new CustomException(ErrorCode.CURRICULUM_NOT_FOUND);
             }
             curriculums = curriculumRepository.findByTrack(trackEnum)
                     .map(List::of)
