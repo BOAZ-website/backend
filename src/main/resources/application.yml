@@ -1,13 +1,19 @@
 spring:
+
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/boaz?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  sql:
+    init:
+      mode: always  # 항상 data.sql을 실행하도록 설정
+
   jpa:
+    defer-datasource-initialization: true  # 하이버네이트가 테이블을 만든 후 data.sql 실행
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      ddl-auto: ${DDL_AUTO:create}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -26,3 +32,16 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /api-docs
+
+cloud:
+  aws:
+    s3:
+      bucket: ${S3_BUCKET_NAME}
+    region:
+      static: ap-northeast-2
+    credentials:
+      access-key: ${AWS_ACCESS_KEY:}
+      secret-key: ${AWS_SECRET_KEY:}
+
+admin:
+  api-key: ${ADMIN_API_KEY}
