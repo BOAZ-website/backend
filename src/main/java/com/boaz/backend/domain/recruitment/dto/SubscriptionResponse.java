@@ -8,11 +8,11 @@ public class SubscriptionResponse {
 
     private final String email;
 
-    private SubscriptionResponse(Subscription subscription) {
-        this.email = subscription.getEmail();
+    private SubscriptionResponse(String email) {
+        this.email = email;
     }
 
     public static SubscriptionResponse from(Subscription subscription) {
-        return new SubscriptionResponse(subscription);
+        return new SubscriptionResponse(subscription.getEmail());
     }
 }
