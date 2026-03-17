@@ -44,7 +44,7 @@ public class Archive extends BaseEntity {
     @Column(columnDefinition = "json")
     private String links;
 
-    @Column(name = "content_date")
+    @Column(name = "content_date", nullable = false)
     private LocalDate contentDate;
 
     @Builder
@@ -65,6 +65,9 @@ public class Archive extends BaseEntity {
         this.track = track;
         this.imageUrl = imageUrl;
         this.links = links;
+        if (contentDate == null) {
+            throw new IllegalArgumentException("아카이빙 content_date는 null일 수 없습니다.");
+        }
         this.contentDate = contentDate;
     }
 
@@ -85,6 +88,9 @@ public class Archive extends BaseEntity {
         this.track = track;
         this.imageUrl = imageUrl;
         this.links = links;
+        if (contentDate == null) {
+            throw new IllegalArgumentException("아카이빙 content_date는 null일 수 없습니다.");
+        }
         this.contentDate = contentDate;
     }
 

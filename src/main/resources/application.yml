@@ -8,6 +8,7 @@ spring:
   sql:
     init:
       mode: always  # 항상 data.sql을 실행하도록 설정
+      encoding: UTF-8 
 
   jpa:
     defer-datasource-initialization: true  # 하이버네이트가 테이블을 만든 후 data.sql 실행

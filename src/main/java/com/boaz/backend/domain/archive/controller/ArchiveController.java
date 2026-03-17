@@ -34,7 +34,7 @@ public class ArchiveController {
             track, 
             term, 
             keyword, 
-            toZeroBasedPage(page), 
+            page, 
             size
         );
 
@@ -43,7 +43,7 @@ public class ArchiveController {
 
     // 활동 사진 아카이빙 조회 
     @GetMapping("/activities")
-    public ApiResponse<ArchivePageResponse> getActivites(
+    public ApiResponse<ArchivePageResponse> getActivities(
         @RequestParam(required = false) Integer term, 
         @RequestParam(required = false) String keyword, 
         @RequestParam(defaultValue = "1") int page, 
@@ -54,7 +54,7 @@ public class ArchiveController {
             null, 
             term, 
             keyword, 
-            toZeroBasedPage(page), 
+            page, 
             size
         );
 
@@ -74,15 +74,10 @@ public class ArchiveController {
             track, 
             null, 
             keyword, 
-            toZeroBasedPage(page), 
+            page, 
             size
         ); 
 
         return ApiResponse.ok(response);
-    }
-
-    // 프론트의 1페이지 기준 값을 Spring Pageable의 0페이지 기준 값으로 변환 
-    private int toZeroBasedPage(int page) {
-        return page -1; 
     }
 }

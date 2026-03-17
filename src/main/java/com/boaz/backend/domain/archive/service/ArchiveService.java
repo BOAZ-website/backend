@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ArchiveService {
 
+    private static final int MAX_PAGE_SIZE = 100; 
     private final ArchiveRepository archiveRepository;
 
     // 컨트롤러가 넘겨준 값들을 서비스가 받는 부분 
@@ -35,6 +36,7 @@ public class ArchiveService {
         int size 
     ) {
         validatePagination(page, size);
+        int zeroBasedPage = page - 1;   // 페이지 0기반으로 변환 
      
         String normalizedKeyword = normalizeKeyword(keyword);
 
@@ -47,7 +49,7 @@ public class ArchiveService {
             effectiveTrack, 
             term, 
             normalizedKeyword, 
-            PageRequest.of(page, size)
+            PageRequest.of(zeroBasedPage, size)
         );
 
         // 조회된 DB 엔티티를 프론트 응답용 DTO로 변환
@@ -61,7 +63,7 @@ public class ArchiveService {
 
     // 페이지 값 검증
     private void validatePagination(int page, int size) {
-        if (page < 0 || size < 1) {
+        if (page < 1 || size < 1 || size > MAX_PAGE_SIZE) {
             throw new CustomException(ErrorCode.INVALID_PAGINATION);
         }
     }
