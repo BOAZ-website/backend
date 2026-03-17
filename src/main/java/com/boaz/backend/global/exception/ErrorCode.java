@@ -32,8 +32,11 @@ public enum ErrorCode {
     // Review
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_NOT_FOUND", "해당 후기를 찾을 수 없습니다."),
 
-     // FAQ
+    // FAQ
+    INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", "잘못된 요청 값 입니다."),
+    MISSING_REQUIRED_PARAMETER(HttpStatus.BAD_REQUEST, "MISSING_REQUIRED_PARAMETER", "필수 요청 값이 누락되었습니다."),
     FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "FAQ_NOT_FOUND", "해당 FAQ를 찾을 수 없습니다.");
+
 
     private final HttpStatus httpStatus;
     private final String code;
