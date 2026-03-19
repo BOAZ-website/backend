@@ -8,6 +8,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -47,6 +48,23 @@ public class GlobalExceptionHandler {
                         ErrorCode.MISSING_PARAMETER.getMessage()
                 ));
     }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        
+        String paramName = e.getName();
+        String message = String.format("파라미터 '%s'의 값이 올바르지 않습니다.", paramName);
+        
+        log.warn("TypeMismatchException: {}", message, e);
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(
+                        400,
+                        ErrorCode.INVALID_PARAMETER_TYPE.getCode(),
+                        message
+                ));
+    }
+
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
