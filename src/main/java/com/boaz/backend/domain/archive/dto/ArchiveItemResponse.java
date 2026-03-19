@@ -2,6 +2,8 @@ package com.boaz.backend.domain.archive.dto;
 
 import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.global.common.enums.Track;
+import com.boaz.backend.global.exception.CustomException;
+import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,8 +34,8 @@ public class ArchiveItemResponse {
     private LocalDate contentDate;
 
     // DB에서 가져온 Entity 객체를 API 응답용 DTO 객체로 변환 
-    public static ArchiveItemResponse from (Archive archive) {
-        return ArchiveItemResDponse.builder()
+    public static ArchiveItemResponse from(Archive archive) {
+        return ArchiveItemResponse.builder()
             .id(archive.getId())
             .term(archive.getTerm())
             .title(archive.getTitle())
@@ -59,11 +61,7 @@ public class ArchiveItemResponse {
                 new TypeReference<Map<String, String>>() {}
             );
         } catch (Exception e) {
-            // 파싱 실패 시 로그만 남기고 null 반환
-            log.warn("links JSON 파싱에 실패했습니다. 값: {}", linksJson, e);
-            return null;
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
-
-
 }
