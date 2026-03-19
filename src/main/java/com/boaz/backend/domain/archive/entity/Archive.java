@@ -65,33 +65,6 @@ public class Archive extends BaseEntity {
         this.track = track;
         this.imageUrl = imageUrl;
         this.links = links;
-        if (contentDate == null) {
-            throw new IllegalArgumentException("아카이빙 content_date는 null일 수 없습니다.");
-        }
         this.contentDate = contentDate;
     }
-
-    public void update(
-        Integer term,
-        ArchiveCategory category,
-        String title, 
-        String teamName, 
-        Track track, 
-        String imageUrl, 
-        String links, 
-        LocalDate contentDate 
-    ) {
-        this.term = term;
-        this.category = category;
-        this.title = title;
-        this.teamName = teamName;
-        this.track = track;
-        this.imageUrl = imageUrl;
-        this.links = links;
-        if (contentDate == null) {
-            throw new IllegalArgumentException("아카이빙 content_date는 null일 수 없습니다.");
-        }
-        this.contentDate = contentDate;
-    }
-
 }

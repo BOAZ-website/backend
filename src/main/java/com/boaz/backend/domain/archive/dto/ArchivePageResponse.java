@@ -11,19 +11,12 @@ import java.util.List;
 public class ArchivePageResponse {
 
     private int currentPage;
-
     private int totalPages;
-
     private int size; 
-
     private int currentSize;
-
     private long totalSize;
-
     private boolean hasPrevious;
-
     private boolean hasNext;
-
     private List<ArchiveItemResponse> posts;
 
     public static ArchivePageResponse from(Page<ArchiveItemResponse> page) {

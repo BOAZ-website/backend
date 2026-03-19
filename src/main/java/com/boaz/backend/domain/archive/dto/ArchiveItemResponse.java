@@ -23,24 +23,17 @@ public class ArchiveItemResponse {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private Long id;
-
     private Integer term;   // 기술블로그일 경우 null이면 JSON에서 자동 제외
-
     private String title;
-
     private String teamName;
-
     private Track track;
-
     private String imageUrl;
-
     private Map<String, String> links;
-
     private LocalDate contentDate;
 
     // DB에서 가져온 Entity 객체를 API 응답용 DTO 객체로 변환 
     public static ArchiveItemResponse from (Archive archive) {
-        return ArchiveItemResponse.builder()
+        return ArchiveItemResDponse.builder()
             .id(archive.getId())
             .term(archive.getTerm())
             .title(archive.getTitle())
