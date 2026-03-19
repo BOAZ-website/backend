@@ -3,7 +3,6 @@ package com.boaz.backend.domain.archive.dto;
 import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.global.common.enums.Track;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,17 +28,14 @@ public class ArchiveItemResponse {
 
     private String title;
 
-    @JsonProperty("team_name")
     private String teamName;
 
     private Track track;
 
-    @JsonProperty("image_url")
     private String imageUrl;
 
     private Map<String, String> links;
 
-    @JsonProperty("content_date")
     private LocalDate contentDate;
 
     // DB에서 가져온 Entity 객체를 API 응답용 DTO 객체로 변환 

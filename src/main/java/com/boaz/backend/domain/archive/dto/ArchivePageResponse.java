@@ -1,6 +1,5 @@
 package com.boaz.backend.domain.archive.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Getter;
 import org.springframework.data.domain.Page;
@@ -11,24 +10,18 @@ import java.util.List;
 @Builder
 public class ArchivePageResponse {
 
-    @JsonProperty("current_page")
     private int currentPage;
 
-    @JsonProperty("total_pages")
     private int totalPages;
 
     private int size; 
 
-    @JsonProperty("current_size")
     private int currentSize;
 
-    @JsonProperty("total_size")
     private long totalSize;
 
-    @JsonProperty("has_previous")
     private boolean hasPrevious;
 
-    @JsonProperty("has_next")
     private boolean hasNext;
 
     private List<ArchiveItemResponse> posts;
