@@ -23,6 +23,9 @@ public class Recruitment extends BaseEntity {
 
     @Column(nullable = false)
     private LocalDateTime endDate;
+    
+    @Column(columnDefinition = "JSON", nullable = false)
+    private String schedule;
 
     @Column(length = 255)
     private String brochureUrl;

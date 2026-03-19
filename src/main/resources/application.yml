@@ -9,6 +9,7 @@ spring:
   sql:
     init:
       mode: always  # 항상 data.sql을 실행하도록 설정
+      encoding: UTF-8 
 
   jpa:
     defer-datasource-initialization: true  # 하이버네이트가 테이블을 만든 후 data.sql 실행
@@ -23,6 +24,16 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
 
+  cloud:
+    aws:
+      s3:
+        bucket: ${S3_BUCKET_NAME}
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${AWS_ACCESS_KEY:}
+        secret-key: ${AWS_SECRET_KEY:}
+
 server:
   port: 8080
 
@@ -32,16 +43,6 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /api-docs
-
-cloud:
-  aws:
-    s3:
-      bucket: ${S3_BUCKET_NAME}
-    region:
-      static: ap-northeast-2
-    credentials:
-      access-key: ${AWS_ACCESS_KEY:}
-      secret-key: ${AWS_SECRET_KEY:}
 
 admin:
   api-key: ${ADMIN_API_KEY}
