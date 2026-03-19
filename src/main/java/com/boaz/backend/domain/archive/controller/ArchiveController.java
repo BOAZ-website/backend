@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,7 +26,7 @@ public class ArchiveController {
 
     @Operation(summary = "프로젝트 아카이빙 목록 조회")
     @GetMapping("/projects")
-    public ApiResponse<ArchivePageResponse> getProjects(
+    public ResponseEntity<ApiResponse<ArchivePageResponse>> getProjects(
         @RequestParam(defaultValue = "전부문") Track track, 
         @RequestParam(required = false) Integer term, 
         @RequestParam(required = false) String keyword, 
@@ -41,12 +42,12 @@ public class ArchiveController {
             size
         );
 
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @Operation(summary = "활동 사진 아카이빙 조회")
     @GetMapping("/activities")
-    public ApiResponse<ArchivePageResponse> getActivities(
+    public ResponseEntity<ApiResponse<ArchivePageResponse>> getActivities(
         @RequestParam(required = false) Integer term, 
         @RequestParam(required = false) String keyword, 
         @RequestParam(defaultValue = "1") int page, 
@@ -61,12 +62,12 @@ public class ArchiveController {
             size
         );
 
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
     @Operation(summary = "기술 블로그 아카이빙 조회")
     @GetMapping("/blogs")
-    public ApiResponse<ArchivePageResponse> getBlogs(
+    public ResponseEntity<ApiResponse<ArchivePageResponse>> getBlogs(
         @RequestParam(defaultValue = "전부문") Track track, 
         @RequestParam(required = false) String keyword, 
         @RequestParam(defaultValue = "1") int page, 
@@ -81,6 +82,6 @@ public class ArchiveController {
             size
         ); 
 
-        return ApiResponse.ok(response);
+        return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }
