@@ -26,7 +26,7 @@ public class ArchivePageResponse {
 
     private List<ArchiveItemResponse> posts;
 
-    public static ArchivePageResponse fromPage(Page<ArchiveItemResponse> page) {
+    public static ArchivePageResponse from(Page<ArchiveItemResponse> page) {
         return ArchivePageResponse.builder()
             .currentPage(page.getNumber() + 1)  // 현재 페이지 번호 1부터 시작하도록
             .totalPages(page.getTotalPages())

@@ -39,7 +39,7 @@ public class ArchiveItemResponse {
     private LocalDate contentDate;
 
     // DB에서 가져온 Entity 객체를 API 응답용 DTO 객체로 변환 
-    public static ArchiveItemResponse fromEntity(Archive archive) {
+    public static ArchiveItemResponse from (Archive archive) {
         return ArchiveItemResponse.builder()
             .id(archive.getId())
             .term(archive.getTerm())

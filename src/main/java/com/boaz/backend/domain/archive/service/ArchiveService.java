@@ -55,10 +55,10 @@ public class ArchiveService {
         // 조회된 DB 엔티티를 프론트 응답용 DTO로 변환
         // Page.map()을 사용하면 페이지 정보는 유지하면서 content만 변환됨. 
         Page<ArchiveItemResponse> itemPage = 
-            archives.map(ArchiveItemResponse::fromEntity);
+            archives.map(ArchiveItemResponse::from);
 
         // 페이지 메타데이터 + 게시글 목록을 포함한 응답 DTO로 변환  
-        return ArchivePageResponse.fromPage(itemPage);   
+        return ArchivePageResponse.from(itemPage);   
     }
 
     // 페이지 값 검증
