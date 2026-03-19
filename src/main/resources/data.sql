@@ -1,9 +1,21 @@
 -- recruitment 임시 데이터
-INSERT INTO recruitment (id, term, start_date, end_date, brochure_url, created_at, updated_at)
-VALUES (1, 26, '2026-03-01 00:00:00', '2026-03-29 23:59:59', 'https://example.com/brochure.pdf', NOW(), NOW());
+INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
+VALUES (1, 26, '2026-03-01 00:00:00', '2026-03-29 23:59:59', 
+'[
+  { "step": "서류 모집", "start": "2026-03-01", "end": "2026-03-29", "sequence": 1 },
+  { "step": "서류 합격 발표", "start": "2026-04-04", "end": "2026-04-04", "sequence": 2 },
+  { "step": "면접", "start": "2026-04-06", "end": "2026-04-07", "sequence": 3 },
+  { "step": "최종 합격 발표", "start": "2026-04-10", "end": "2026-04-10", "sequence": 4 }
+]', 'https://example.com/brochure.pdf', NOW(), NOW());
 
-INSERT INTO recruitment (id, term, start_date, end_date, brochure_url, created_at, updated_at)
-VALUES (2, 27, '2026-07-01 00:00:00', '2026-07-31 23:59:59', 'https://example.com/brochure.pdf', NOW(), NOW());
+INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
+VALUES (2, 27, '2026-07-01 00:00:00', '2026-07-31 23:59:59', 
+'[
+  { "step": "서류 모집", "start": "2026-07-01", "end": "2026-07-31", "sequence": 1 },
+  { "step": "서류 합격 발표", "start": "2026-08-04", "end": "2026-08-04", "sequence": 2 },
+  { "step": "면접", "start": "2026-08-06", "end": "2026-08-07", "sequence": 3 },
+  { "step": "최종 합격 발표", "start": "2026-08-10", "end": "2026-08-10", "sequence": 4 }
+]', 'https://example.com/brochure.pdf', NOW(), NOW());
 
 -- application_question 임시 데이터
 INSERT INTO application_question (id, recruitment_id, category, type, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
