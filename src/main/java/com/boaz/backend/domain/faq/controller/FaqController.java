@@ -1,5 +1,5 @@
 package com.boaz.backend.domain.faq.controller;
-
+import com.boaz.backend.domain.faq.entity.Faq;
 import com.boaz.backend.domain.faq.dto.FaqResponse;
 import com.boaz.backend.domain.faq.service.FaqService;
 import com.boaz.backend.global.common.ApiResponse;
@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class FaqController {
     @GetMapping("/faqs")
     @Operation(summary = "FAQ 조회", description = "카테고리별 FAQ 목록을 order_num 오름차순으로 반환합니다.")
     public ResponseEntity<ApiResponse<List<FaqResponse>>> getFaqs(
-            @RequestParam String category) {
+            @RequestParam Faq.Category category) {
         return ResponseEntity.ok(ApiResponse.ok(faqService.getFaqs(category)));
     }
 }
