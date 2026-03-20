@@ -18,15 +18,8 @@ public class FaqService {
 
     private final FaqRepository faqRepository;
 
-    public List<FaqResponse> getFaqs(String category) {
-        Faq.Category categoryEnum;
-        try {
-            categoryEnum = Faq.Category.valueOf(category);
-        } catch (IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_PARAMETER);
-        }
-
-        return faqRepository.findAllByCategoryOrderByOrderNumAsc(categoryEnum)
+    public List<FaqResponse> getFaqs(Faq.Category category) {
+        return faqRepository.findAllByCategoryOrderByOrderNumAsc(category)
                 .stream()
                 .map(FaqResponse::from)
                 .toList();
