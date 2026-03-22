@@ -35,27 +35,38 @@ jobs:
             backend-0.0.1-SNAPSHOT.jar \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/backend/build/libs/backend-0.0.1-SNAPSHOT.jar
 
-      - name: .env 파일 주입 및 서비스 재시작
+      - name: .env 파일 주입
+        run: |
+          # Secrets 값을 환경변수로 받아서 SSH로 전달 (heredoc 이스케이프 문제 방지)
+          ssh -i ~/.ssh/boaz.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            cat > /home/ubuntu/backend/.env << EOF
+          DB_URL=$DB_URL
+          DB_USERNAME=$DB_USERNAME
+          DB_PASSWORD=$DB_PASSWORD
+          S3_BUCKET_NAME=$S3_BUCKET_NAME
+          ADMIN_API_KEY=$ADMIN_API_KEY
+          EOF
+          "
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+
+      - name: 서비스 재시작
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cat > /home/ubuntu/backend/.env << 'ENVEOF'
-            DB_URL=${{ secrets.DB_URL }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            ADMIN_API_KEY=${{ secrets.ADMIN_API_KEY }}
-            ENVEOF
-
             sudo systemctl restart boaz.service
 
             sleep 5
             sudo systemctl is-active --quiet boaz.service \
               && echo "✅ 배포 성공" \
-              || (echo "❌ 배포 실패" && sudo journalctl -u boaz.service -n 50 && exit 1)
+              || (echo "❌ 배포 실패 — 로그:" && sudo journalctl -u boaz.service -n 50 && exit 1)
 
       - name: 헬스체크
         run: |
