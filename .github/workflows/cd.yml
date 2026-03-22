@@ -1,0 +1,82 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ dev, feat/#39-CI/CD-pipeline ]
+
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: CI에서 빌드된 JAR 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: SSH 키 설정
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/boaz.pem
+          chmod 600 ~/.ssh/boaz.pem
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: JAR 파일 EC2로 전송
+        run: |
+          scp -i ~/.ssh/boaz.pem \
+            backend-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/backend/build/libs/backend-0.0.1-SNAPSHOT.jar
+
+      - name: .env 파일 주입
+        run: |
+          # Secrets 값을 환경변수로 받아서 SSH로 전달 (heredoc 이스케이프 문제 방지)
+          ssh -i ~/.ssh/boaz.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "
+            cat > /home/ubuntu/backend/.env << EOF
+          DB_URL=$DB_URL
+          DB_USERNAME=$DB_USERNAME
+          DB_PASSWORD=$DB_PASSWORD
+          S3_BUCKET_NAME=$S3_BUCKET_NAME
+          ADMIN_API_KEY=$ADMIN_API_KEY
+          EOF
+          "
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+
+      - name: 서비스 재시작
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            sudo systemctl restart boaz.service
+
+            sleep 5
+            sudo systemctl is-active --quiet boaz.service \
+              && echo "✅ 배포 성공" \
+              || (echo "❌ 배포 실패 — 로그:" && sudo journalctl -u boaz.service -n 50 && exit 1)
+
+      - name: 헬스체크
+        run: |
+          sleep 10
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://dev.bigdataboaz.com/actuator/health \
+            --max-time 15 --retry 3 --retry-delay 5)
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ 헬스체크 성공: HTTP $STATUS"
+          else
+            echo "❌ 헬스체크 실패: HTTP $STATUS"
+            exit 1
+          fi
