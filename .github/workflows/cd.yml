@@ -70,13 +70,15 @@ jobs:
 
       - name: 헬스체크
         run: |
-          sleep 10
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            https://dev.bigdataboaz.com/actuator/health \
-            --max-time 15 --retry 3 --retry-delay 5)
-          if [ "$STATUS" = "200" ]; then
-            echo "✅ 헬스체크 성공: HTTP $STATUS"
-          else
-            echo "❌ 헬스체크 실패: HTTP $STATUS"
-            exit 1
-          fi
+          sleep 15
+          for i in 1 2 3 4 5; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://dev.bigdataboaz.com/actuator/health)
+            echo "시도 $i: HTTP $STATUS"
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ 헬스체크 성공"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "❌ 헬스체크 실패"
+          exit 1
