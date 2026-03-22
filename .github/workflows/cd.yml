@@ -61,8 +61,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            sudo systemctl daemon-reload        # ← 이 줄 추가
             sudo systemctl restart boaz.service
-
             sleep 5
             sudo systemctl is-active --quiet boaz.service \
               && echo "✅ 배포 성공" \
