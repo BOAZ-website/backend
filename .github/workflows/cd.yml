@@ -1,0 +1,96 @@
+name: CD
+
+on:
+  # CI 워크플로우 완료 후 자동 트리거 (dev 브랜치 push 시에만)
+  workflow_run:
+    workflows: [ "CI" ]
+    types: [ completed ]
+    branches: [ dev ]
+
+  # 수동 배포가 필요할 때 Actions 탭에서 실행
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    # CI가 실패했으면 배포 중단
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+
+    steps:
+      - name: CI에서 빌드된 JAR 다운로드
+        uses: actions/download-artifact@v4
+        with:
+          name: app-jar
+          # workflow_run 트리거일 때는 이전 워크플로우의 아티팩트를 가져와야 함
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # ── JAR을 EC2로 전송 ──────────────────────────────────────────────
+      - name: SSH 키 설정
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/boaz.pem
+          chmod 600 ~/.ssh/boaz.pem
+          # EC2 호스트 키 사전 등록 (known_hosts 경고 방지)
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: JAR 파일 EC2로 전송 (scp)
+        run: |
+          scp -i ~/.ssh/boaz.pem \
+            backend-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/ubuntu/backend/build/libs/backend-0.0.1-SNAPSHOT.jar
+
+      # ── EC2에서 앱 재시작 ─────────────────────────────────────────────
+      - name: systemd 서비스 재시작
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. 기존 서비스 중단
+            sudo systemctl stop boaz.service
+
+            # 2. 새 JAR은 이미 scp로 전송 완료된 상태
+
+            # 3. 서비스 시작
+            sudo systemctl start boaz.service
+
+            # 4. 서비스 상태 확인 (실패 시 워크플로우 실패 처리)
+            sleep 5
+            sudo systemctl is-active --quiet boaz.service \
+              && echo "✅ 서비스 정상 실행 중" \
+              || (echo "❌ 서비스 시작 실패" && sudo journalctl -u boaz.service -n 30 && exit 1)
+
+      # ── 헬스체크 ─────────────────────────────────────────────────────
+      - name: 헬스체크 (Spring Actuator)
+        run: |
+          sleep 10   # 앱 기동 대기
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://dev.bigdataboaz.com/actuator/health \
+            --max-time 15 \
+            --retry 3 \
+            --retry-delay 5)
+
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ 헬스체크 성공: HTTP $STATUS"
+          else
+            echo "❌ 헬스체크 실패: HTTP $STATUS"
+            exit 1
+          fi
+
+      # ── .env 환경변수 동기화 (필요 시 주석 해제) ─────────────────────
+      # .env 파일을 GitHub Secret에 통째로 저장해두고 배포 시 덮어쓰는 방식
+      # Secret 이름: ENV_FILE / 값: .env 파일 내용 전체
+      #
+      # - name: .env 파일 업데이트
+      #   uses: appleboy/ssh-action@v1
+      #   with:
+      #     host: ${{ secrets.EC2_HOST }}
+      #     username: ${{ secrets.EC2_USER }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/backend/.env
+      #       sudo systemctl restart boaz.service
