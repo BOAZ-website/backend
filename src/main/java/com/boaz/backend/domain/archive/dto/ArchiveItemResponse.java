@@ -18,14 +18,13 @@ import java.time.LocalDate;
 
 @Getter
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Slf4j
 public class ArchiveItemResponse {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private Long id;
-    private Integer term;   // 기술블로그일 경우 null이면 JSON에서 자동 제외
+    private Integer term;
     private String title;
     private String teamName;
     private Track track;
