@@ -47,13 +47,13 @@ VALUES ('분석2', 1, '분석', 'TEXT', '본인이 진행했던 [머신러닝 / 
 
 -- archive 임시 데이터
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (1, 25, '프로젝트', '2024 BOAZ 컨퍼런스 추천시스템 발표', '자료연구팀', '분석', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
+VALUES (1, 25, '프로젝트', '사용자 맞춤형 뭐뭐뭐뭐 추천시스템 발표', '자료연구팀', '분석', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (2, 0, '프로젝트', '2024 BOAZ 컨퍼런스 우엥우엥우엥 발표', NULL, '분석', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
+VALUES (2, 0, '프로젝트', '누구구구의 뭐뭐뭐뭐 오오오오우 발표', NULL, '분석', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (3, 25, '프로젝트', '2024 BOAZ 데이터 파이프라인 발표', '자료연구팀', '엔지니어링', 'https://example.com/conf2.png', '{"slideshare":"https://slideshare.net/example2"}', '2024-08-10', NOW(), NOW());
+VALUES (3, 25, '프로젝트', '무엇무엇 데이터 파이프라인 발표', '자료연구팀', '엔지니어링', 'https://example.com/conf2.png', '{"slideshare":"https://slideshare.net/example2"}', '2024-08-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
 VALUES (4, 25, '기술블로그', 'Spring Boot 예외 처리 구조 정리', NULL, '엔지니어링', 'https://example.com/blog1.png', '{"medium":"https://medium.com/@boaz/example1"}', '2025-02-14', NOW(), NOW());
@@ -68,13 +68,13 @@ INSERT INTO archive (id, term, category, title, team_name, track, image_url, lin
 VALUES (7, 25, '활동사진', '25기 신입기수 OT', NULL, '전부문', 'https://example.com/activity2.png', '{"instagram":"https://instagram.com/p/example2"}', '2025-03-01', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (8, 26, '프로젝트', '2025 BOAZ 추천 시스템 고도화 발표', NULL, '엔지니어링', 'https://example.com/conf3.png', '{"slideshare":"https://slideshare.net/example3","github":"https://github.com/boaz/recommendation-system"}', '2025-08-12', NOW(), NOW());
+VALUES (8, 26, '프로젝트', '추천 시스템 고도화 땡땡 발표', NULL, '엔지니어링', 'https://example.com/conf3.png', '{"slideshare":"https://slideshare.net/example3","github":"https://github.com/boaz/recommendation-system"}', '2025-08-12', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (9, 26, '프로젝트', '2025 BOAZ 실시간 데이터 처리 시스템 발표', '데이터엔지니어링팀', '엔지니어링', 'https://example.com/conf4.png', '{"slideshare":"https://slideshare.net/example4","github":"https://github.com/boaz/stream-processing"}', '2025-08-18', NOW(), NOW());
+VALUES (9, 26, '프로젝트', '실시간 데이터 처리 뭐뭐뭐뭐 시스템 발표', '데이터엔지니어링팀', '엔지니어링', 'https://example.com/conf4.png', '{"slideshare":"https://slideshare.net/example4","github":"https://github.com/boaz/stream-processing"}', '2025-08-18', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (10, 26, '프로젝트', '2025 BOAZ 데이터 시각화 대시보드 발표', '데이터시각화팀', '시각화', 'https://example.com/conf5.png', '{"slideshare":"https://slideshare.net/example5","github":"https://github.com/boaz/dashboard-project"}', '2025-08-25', NOW(), NOW());
+VALUES (10, 26, '프로젝트', '데이터 시각화 대시보드 블라블라 발표', '데이터시각화팀', '시각화', 'https://example.com/conf5.png', '{"slideshare":"https://slideshare.net/example5","github":"https://github.com/boaz/dashboard-project"}', '2025-08-25', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
 VALUES (11, 26, '기술블로그', 'Kafka 기반 데이터 스트리밍 아키텍처 정리', NULL, '엔지니어링', 'https://example.com/blog3.png', '{"medium":"https://medium.com/@boaz/kafka-stream","github":"https://github.com/boaz/kafka-stream-example"}', '2025-03-01', NOW(), NOW());
