@@ -1,3 +1,21 @@
+-- 외래 키 체크 해제 (실행 오류 방지)
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- 모든 테이블 초기화
+TRUNCATE recruitment;
+TRUNCATE application_question;
+TRUNCATE archive;
+TRUNCATE applicants;
+TRUNCATE applicant_answer;
+TRUNCATE curriculum;
+TRUNCATE faq;
+TRUNCATE review;
+
+-- 외래 키 체크 재활성화
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 임시 데이터
+
 -- recruitment 임시 데이터
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
 VALUES (1, 26, '2026-03-01 00:00:00', '2026-03-29 23:59:59', 
@@ -93,18 +111,19 @@ VALUES (15, 26, '활동사진', '26기 데이터 엔지니어링 워크샵', NUL
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
 VALUES (16, 26, '활동사진', '26기 데이터 시각화 세션', NULL, '시각화', 'https://example.com/activity5.png', '{"instagram":"https://instagram.com/p/example5","youtube":"https://youtube.com/watch?v=visualization-session"}', '2025-04-15', NOW(), NOW());
+
 -- applicant 임시 데이터
-INSERT INTO applicants (recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
-VALUES (1, '엔지니어링', '테스트1', 'string@example', '01012345678', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:19:27', '2026-03-14 22:19:27');
+INSERT INTO applicants (id, recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
+VALUES (1, 1, '엔지니어링', '테스트1', 'string@example', '01012345678', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:19:27', '2026-03-14 22:19:27');
 
-INSERT INTO applicants (recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
-VALUES (1, '엔지니어링', '테스트1', 'string@example', '01012345678', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:38:15', '2026-03-14 22:38:15');
+INSERT INTO applicants (id, recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
+VALUES (2, 1, '엔지니어링', '테스트1', 'string@example', '01012345678', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:38:15', '2026-03-14 22:38:15');
 
-INSERT INTO applicants (recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
-VALUES (1, '분석', '테스트2', 'string22@example', '01012345688', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:21:18', '2026-03-14 22:21:18');
+INSERT INTO applicants (id, recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
+VALUES (3, 1, '분석', '테스트2', 'string22@example', '01012345688', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:21:18', '2026-03-14 22:21:18');
 
-INSERT INTO applicants (recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
-VALUES (1, '시각화', '테스트3', 'string33@example', '01012345622', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:21:58', '2026-03-14 22:21:58');
+INSERT INTO applicants (id, recruitment_id, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, created_at, updated_at)
+VALUES (4, 1, '시각화', '테스트3', 'string33@example', '01012345622', 'university', 'major', '["minor_double_major"]', 7, '필_또는_면제', '2002-01-01', '2026-08', false, '2026-03-14 22:21:58', '2026-03-14 22:21:58');
 
 -- applicant_answer 임시 데이터 (테스트1 첫 번째 제출 - id: 1)
 INSERT INTO applicant_answer (applicant_id, question_id, answer_text, answer_json, created_at, updated_at)
