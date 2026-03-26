@@ -36,6 +36,11 @@ public class ArchiveService {
         int size 
     ) {
         validatePagination(page, size);
+
+        if (term != null && term < 0) {
+            throw new CustomException(ErrorCode.INVALID_PARAMETER_TYPE);
+        }
+
         int zeroBasedPage = page - 1;   // 페이지 0기반으로 변환 
      
         String normalizedKeyword = normalizeKeyword(keyword);

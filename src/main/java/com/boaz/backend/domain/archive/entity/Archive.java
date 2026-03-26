@@ -21,7 +21,7 @@ public class Archive extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(nullable = false)
     private Integer term;
 
     @Enumerated(EnumType.STRING)
@@ -31,20 +31,20 @@ public class Archive extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(name = "team_name", length = 100)
+    @Column(length = 100)
     private String teamName;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private Track track;
 
-    @Column(name = "image_url", nullable = false, length = 255)
+    @Column(nullable = false, length = 255)
     private String imageUrl;
 
-    @Column(columnDefinition = "json")
+    @Column(nullable = false, columnDefinition = "json")
     private String links;
 
-    @Column(name = "content_date", nullable = false)
+    @Column(nullable = false)
     private LocalDate contentDate;
 
     @Builder
