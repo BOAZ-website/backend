@@ -1,6 +1,8 @@
 package com.boaz.backend.domain.curriculum.repository;
 
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
+import com.boaz.backend.global.common.enums.Track;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,5 +12,5 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
 
     List<Curriculum> findAll();
 
-    Optional<Curriculum> findByTrack(Curriculum.Track track);
+    Optional<Curriculum> findByTrack(Track track);
 }

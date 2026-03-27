@@ -3,6 +3,8 @@ package com.boaz.backend.domain.curriculum.controller;
 import com.boaz.backend.domain.curriculum.dto.CurriculumResponse;
 import com.boaz.backend.domain.curriculum.service.CurriculumService;
 import com.boaz.backend.global.common.ApiResponse;
+import com.boaz.backend.global.common.enums.Track;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,7 @@ public class CurriculumController {
     @GetMapping
     @Operation(summary = "커리큘럼 전체 조회", description = "트랙 필터링 가능. 미입력 시 전체 3개 트랙 반환.")
     public ResponseEntity<ApiResponse<List<CurriculumResponse>>> getCurriculums(
-            @RequestParam(required = false) String track) {
+            @RequestParam(required = false) Track track) {
         return ResponseEntity.ok(ApiResponse.ok(curriculumService.getCurriculums(track)));
     }
 }

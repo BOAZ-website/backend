@@ -27,6 +27,7 @@ public class Faq extends BaseEntity {
     private Integer orderNum;
 
     public enum Category {
-        지원, 활동, 기타
+        // 지원, 활동, 기타
+        RECRUITMENT, ACTIVITY, ETC
     }
 }

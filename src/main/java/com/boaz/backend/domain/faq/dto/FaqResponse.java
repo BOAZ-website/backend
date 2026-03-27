@@ -17,7 +17,7 @@ public class FaqResponse {
     @Schema(description = "답변", example = "학부생 및 대학원생이라면 누구나 지원 가능합니다. 전공 제한 없이 데이터에 관심 있는 분이라면 환영합니다.")
     private final String answer;
 
-    @Schema(description = "카테고리", example = "지원", allowableValues = {"지원", "활동", "기타"})
+    @Schema(description = "카테고리", example = "지원", allowableValues = {"RECRUITMENT", "ACTIVITY", "ETC"})
     private final String category;
 
     @JsonProperty("order_num")
