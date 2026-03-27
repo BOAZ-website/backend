@@ -27,14 +27,14 @@ public class ArchiveController {
     @Operation(summary = "프로젝트 아카이빙 목록 조회")
     @GetMapping("/projects")
     public ResponseEntity<ApiResponse<ArchivePageResponse>> getProjects(
-        @RequestParam(defaultValue = "전부문") Track track, 
+        @RequestParam(defaultValue = "ALL") Track track, 
         @RequestParam(required = false) Integer term, 
         @RequestParam(required = false) String keyword, 
         @RequestParam(defaultValue = "1") int page, 
         @RequestParam(defaultValue = "6") int size 
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.프로젝트, 
+            ArchiveCategory.PROJECT, 
             track, 
             term, 
             keyword, 
@@ -54,7 +54,7 @@ public class ArchiveController {
         @RequestParam(defaultValue = "6") int size
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.활동사진, 
+            ArchiveCategory.ACTIVITY, 
             null, 
             term, 
             keyword, 
@@ -68,13 +68,13 @@ public class ArchiveController {
     @Operation(summary = "기술 블로그 아카이빙 조회")
     @GetMapping("/blogs")
     public ResponseEntity<ApiResponse<ArchivePageResponse>> getBlogs(
-        @RequestParam(defaultValue = "전부문") Track track, 
+        @RequestParam(defaultValue = "ALL") Track track, 
         @RequestParam(required = false) String keyword, 
         @RequestParam(defaultValue = "1") int page, 
         @RequestParam(defaultValue = "6") int size 
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.기술블로그, 
+            ArchiveCategory.BLOG, 
             track, 
             null, 
             keyword, 

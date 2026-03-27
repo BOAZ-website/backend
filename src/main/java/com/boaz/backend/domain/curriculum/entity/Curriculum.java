@@ -1,6 +1,8 @@
 package com.boaz.backend.domain.curriculum.entity;
 
 import com.boaz.backend.global.common.BaseEntity;
+import com.boaz.backend.global.common.enums.Track;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -18,8 +20,4 @@ public class Curriculum extends BaseEntity {
 
     @Column(columnDefinition = "JSON")
     private String curriculumSteps;
-
-    public enum Track {
-        ANALYSIS, VISUALIZATION, ENGINEERING
-    }
 }

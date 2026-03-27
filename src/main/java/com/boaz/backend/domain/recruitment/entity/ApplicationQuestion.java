@@ -11,7 +11,7 @@ import lombok.Getter;
 public class ApplicationQuestion extends BaseEntity {
 
     @Id
-    @Column(length = 10)
+    @Column(length = 20)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

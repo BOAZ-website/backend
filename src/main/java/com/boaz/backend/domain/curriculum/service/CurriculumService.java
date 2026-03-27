@@ -4,6 +4,7 @@ import com.boaz.backend.domain.curriculum.dto.CurriculumResponse;
 import com.boaz.backend.domain.curriculum.dto.CurriculumStepResponse;
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
 import com.boaz.backend.domain.curriculum.repository.CurriculumRepository;
+import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -24,17 +25,11 @@ public class CurriculumService {
     private final CurriculumRepository curriculumRepository;
     private final ObjectMapper objectMapper;
 
-    public List<CurriculumResponse> getCurriculums(String track) {
+    public List<CurriculumResponse> getCurriculums(Track track) {
         List<Curriculum> curriculums;
 
         if (track != null) {
-            Curriculum.Track trackEnum;
-            try {
-                trackEnum = Curriculum.Track.valueOf(track.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new CustomException(ErrorCode.CURRICULUM_NOT_FOUND);
-            }
-            curriculums = curriculumRepository.findByTrack(trackEnum)
+            curriculums = curriculumRepository.findByTrack(track)
                     .map(List::of)
                     .orElse(List.of());
         } else {

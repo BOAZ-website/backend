@@ -111,7 +111,7 @@ public class RecruitmentService {
 
         // 공통 + 해당 부문 질문 조회
         List<ApplicationQuestion> questions = applicationQuestionRepository
-                .findByRecruitmentIdAndCategories(recruitmentId, QuestionCategory.공통, trackCategory);
+                .findByRecruitmentIdAndCategories(recruitmentId, QuestionCategory.COMMON, trackCategory);
 
         if (questions.isEmpty()) {
             throw new CustomException(ErrorCode.QUESTIONS_NOT_FOUND);
@@ -166,7 +166,7 @@ public class RecruitmentService {
         List<ApplicationQuestion> questions = applicationQuestionRepository
                 .findByRecruitmentIdAndCategories(
                         request.getRecruitmentId(),
-                        QuestionCategory.공통,
+                        QuestionCategory.COMMON,
                         trackCategory
                 );
         if (questions.isEmpty()) {
@@ -326,7 +326,7 @@ public class RecruitmentService {
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
 
         // 부문별 CSV 생성 및 S3 업로드
-        for (Track track : List.of(Track.시각화, Track.분석, Track.엔지니어링)) {
+        for (Track track : List.of(Track.VISUALIZATION, Track.ANALYSIS, Track.ENGINEERING)) {
 
             // 해당 부문 지원자 조회
             List<Applicant> applicants = applicantRepository
@@ -336,7 +336,7 @@ public class RecruitmentService {
             List<ApplicationQuestion> questions = applicationQuestionRepository
                     .findByRecruitmentIdAndCategories(
                             recruitment.getId(),
-                            QuestionCategory.공통, 
+                            QuestionCategory.COMMON, 
                             QuestionCategory.valueOf(track.name())
                     );
 

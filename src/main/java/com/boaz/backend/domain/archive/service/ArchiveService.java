@@ -46,7 +46,7 @@ public class ArchiveService {
         String normalizedKeyword = normalizeKeyword(keyword);
 
         // 전부문이면 track 조건을 아예 걸지 않도록 null 처리
-        Track effectiveTrack = (track == Track.전부문) ? null : track;
+        Track effectiveTrack = (track == Track.ALL) ? null : track;
 
         // Repository에 검색 조건과 페이징 정보를 전달해 DB 조회 수행 
         Page<Archive> archives = archiveRepository.searchArchives(

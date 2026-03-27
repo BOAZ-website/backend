@@ -1,6 +1,8 @@
 package com.boaz.backend.domain.review.entity;
 
 import com.boaz.backend.global.common.BaseEntity;
+import com.boaz.backend.global.common.enums.Track;
+
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -24,8 +26,4 @@ public class Review extends BaseEntity {
     private String content;
 
     private String imageUrl;
-
-    public enum Track {
-      VISUALIZATION, ANALYSIS, ENGINEERING
-     }
 }
