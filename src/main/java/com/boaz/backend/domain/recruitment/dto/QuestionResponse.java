@@ -13,6 +13,8 @@ import lombok.Getter;
 @Getter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class QuestionResponse {
+    
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private final String questionId;
     private final String category;
@@ -22,14 +24,24 @@ public class QuestionResponse {
     private final JsonNode metadata;
     private final Integer orderNum;
     private final Boolean isRequired;
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    
+    public static QuestionResponse from(ApplicationQuestion question) {
+        return new QuestionResponse(question);
+    }
+    
+    public static QuestionResponse from(ApplicationQuestion question, String content) {
+        return new QuestionResponse(question, content);
+    }
 
     private QuestionResponse(ApplicationQuestion question) {
+        this(question, question.getContent());
+    }
+    
+    private QuestionResponse(ApplicationQuestion question, String content) {
         this.questionId = question.getId();
         this.category = question.getCategory().name();
         this.type = question.getType().name();
-        this.content = question.getContent();
+        this.content = content;
         this.orderNum = question.getOrderNum();
         this.isRequired = question.getIsRequired();
 
@@ -47,9 +59,5 @@ public class QuestionResponse {
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
         }
-    }
-
-    public static QuestionResponse from(ApplicationQuestion question) {
-        return new QuestionResponse(question);
     }
 }

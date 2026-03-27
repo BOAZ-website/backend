@@ -118,8 +118,13 @@ public class RecruitmentService {
         }
 
         return questions.stream()
-                .map(QuestionResponse::from)
-                .toList();
+            .map(question -> {
+                String content = question.getContent() != null
+                        ? question.getContent().replace("{Track}", track.name())
+                        : null;
+                return QuestionResponse.from(question, content);
+            })
+            .toList();
     }
 
     // 지원서 제출하기
