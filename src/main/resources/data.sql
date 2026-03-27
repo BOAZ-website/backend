@@ -16,7 +16,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- 임시 데이터
 
-recruitment 임시 데이터
+-- recruitment 임시 데이터
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
 VALUES (1, 26, '2026-03-01 00:00:00', '2026-03-29 23:59:59', 
 '[
@@ -35,7 +35,7 @@ VALUES (2, 27, '2026-07-01 00:00:00', '2026-07-31 23:59:59',
   { "step": "최종 합격 발표", "start": "2026-08-10", "end": "2026-08-10", "sequence": 4 }
 ]', 'https://example.com/brochure.pdf', NOW(), NOW());
 
-application_question 임시 데이터
+-- application_question 임시 데이터
 INSERT INTO application_question (id, recruitment_id, category, type, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
 VALUES ('COMMON1', 1, 'COMMON', 'TEXT', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, 500, 1, true, NOW(), NOW());
 
