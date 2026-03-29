@@ -44,7 +44,7 @@ public class Archive extends BaseEntity {
     @Column(nullable = false, columnDefinition = "json")
     private String links;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private LocalDate contentDate;
 
     @Builder

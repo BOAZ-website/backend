@@ -68,7 +68,7 @@ INSERT INTO archive (id, term, category, title, team_name, track, image_url, lin
 VALUES (1, 25, 'PROJECT', '사용자 맞춤형 뭐뭐뭐뭐 추천시스템 발표', '자료연구팀', 'ANALYSIS', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
-VALUES (2, 0, 'PROJECT', '누구구구의 뭐뭐뭐뭐 오오오오우 발표', NULL, 'ANALYSIS', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
+VALUES (2, 0, 'PROJECT', '누구구구의 뭐뭐뭐뭐 오오오오우 발표', NULL, 'ANALYSIS', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', NULL, NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at) 
 VALUES (3, 25, 'PROJECT', '무엇무엇 데이터 파이프라인 발표', '자료연구팀', 'ENGINEERING', 'https://example.com/conf2.png', '{"slideshare":"https://slideshare.net/example2"}', '2024-08-10', NOW(), NOW());

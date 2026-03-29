@@ -25,7 +25,10 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
                 OR LOWER(REPLACE(a.title, ' ', '')) 
                     LIKE CONCAT('%', LOWER(REPLACE(:keyword, ' ', '')), '%')
             )
-        ORDER BY a.contentDate DESC, a.id DESC 
+        ORDER BY 
+            CASE WHEN a.contentDate IS NULL THEN 1 ELSE 0 END ASC, 
+            a.contentDate DESC, 
+            a.id DESC 
     """)
     Page<Archive> searchArchives(
         @Param("category") ArchiveCategory category, 
