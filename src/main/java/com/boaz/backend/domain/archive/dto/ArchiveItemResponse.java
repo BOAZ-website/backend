@@ -4,7 +4,6 @@ import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
