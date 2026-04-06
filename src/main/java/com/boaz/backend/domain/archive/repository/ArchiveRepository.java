@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.archive.repository;
 
 import com.boaz.backend.domain.archive.entity.Archive;
-import com.boaz.backend.domain.archive.entity.ArchiveCategory;
+import com.boaz.backend.domain.archive.entity.Archive.ArchiveCategory;
 import com.boaz.backend.global.common.enums.Track;
 
 import org.springframework.data.domain.Page;
