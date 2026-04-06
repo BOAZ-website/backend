@@ -17,6 +17,11 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Archive extends BaseEntity {
 
+    // 아카이브 카테고리 (프로젝트, 활동사진, 기술블로그)
+    public enum ArchiveCategory {
+        PROJECT, ACTIVITY, BLOG
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

@@ -3,7 +3,7 @@ package com.boaz.backend.domain.archive.service;
 import com.boaz.backend.domain.archive.dto.ArchiveItemResponse;
 import com.boaz.backend.domain.archive.dto.ArchivePageResponse;
 import com.boaz.backend.domain.archive.entity.Archive;
-import com.boaz.backend.domain.archive.entity.ArchiveCategory;
+import com.boaz.backend.domain.archive.entity.Archive.ArchiveCategory;
 import com.boaz.backend.domain.archive.repository.ArchiveRepository;
 import com.boaz.backend.global.common.enums.Track;
 
