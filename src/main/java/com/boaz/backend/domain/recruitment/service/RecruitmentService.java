@@ -12,8 +12,6 @@ import com.boaz.backend.domain.recruitment.dto.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
-import com.boaz.backend.domain.recruitment.entity.QuestionCategory;
-import com.boaz.backend.domain.recruitment.entity.QuestionType;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.entity.Subscription;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
@@ -106,12 +104,12 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
-        // Track → QuestionCategory 변환
-        QuestionCategory trackCategory = QuestionCategory.valueOf(track.name());
+        // Track → ApplicationQuestion.Category 변환
+        ApplicationQuestion.Category trackCategory = ApplicationQuestion.Category.valueOf(track.name());
 
         // 공통 + 해당 부문 질문 조회
         List<ApplicationQuestion> questions = applicationQuestionRepository
-                .findByRecruitmentIdAndCategories(recruitmentId, QuestionCategory.COMMON, trackCategory);
+                .findByRecruitmentIdAndCategories(recruitmentId, ApplicationQuestion.Category.COMMON, trackCategory);
 
         if (questions.isEmpty()) {
             throw new CustomException(ErrorCode.QUESTIONS_NOT_FOUND);
@@ -162,11 +160,11 @@ public class RecruitmentService {
         }
         
         // 해당 공고의 질문 목록 조회
-        QuestionCategory trackCategory = QuestionCategory.valueOf(request.getTrack().name());
+        ApplicationQuestion.Category trackCategory = ApplicationQuestion.Category.valueOf(request.getTrack().name());
         List<ApplicationQuestion> questions = applicationQuestionRepository
                 .findByRecruitmentIdAndCategories(
                         request.getRecruitmentId(),
-                        QuestionCategory.COMMON,
+                        ApplicationQuestion.Category.COMMON,
                         trackCategory
                 );
         if (questions.isEmpty()) {
@@ -215,15 +213,15 @@ public class RecruitmentService {
             JsonNode answer = answerRequest.getAnswer();
             if (question.getIsRequired()) {
                 if (answer == null || answer.isNull()
-                        || (question.getType() == QuestionType.TEXT && answer.asText().trim().isEmpty())
-                        || (question.getType() == QuestionType.TABLE && (!answer.isObject() || answer.size() == 0))) {
+                        || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
+                        || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
                 }
             }
-            if (question.getType() == QuestionType.TEXT && !answer.isTextual()) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT && !answer.isTextual()) {
                 throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
             }
-            if (question.getType() == QuestionType.TABLE && !answer.isObject()) {
+            if (question.getType() == ApplicationQuestion.Type.TABLE && !answer.isObject()) {
                 throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
             }
         }
@@ -266,7 +264,7 @@ public class RecruitmentService {
             String answerText = null;
             String answerJson = null;
 
-            if (question.getType() == QuestionType.TEXT) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT) {
                 answerText = answer.asText();
             } else {
                 try {
@@ -336,8 +334,8 @@ public class RecruitmentService {
             List<ApplicationQuestion> questions = applicationQuestionRepository
                     .findByRecruitmentIdAndCategories(
                             recruitment.getId(),
-                            QuestionCategory.COMMON, 
-                            QuestionCategory.valueOf(track.name())
+                            ApplicationQuestion.Category.COMMON, 
+                            ApplicationQuestion.Category.valueOf(track.name())
                     );
 
             // 지원자 답변 조회

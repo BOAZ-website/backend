@@ -1,7 +1,6 @@
 package com.boaz.backend.domain.recruitment.dto;
 
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
-import com.boaz.backend.domain.recruitment.entity.QuestionType;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -45,7 +44,7 @@ public class QuestionResponse {
         this.orderNum = question.getOrderNum();
         this.isRequired = question.getIsRequired();
 
-        if (question.getType() == QuestionType.TEXT) {
+        if (question.getType() == ApplicationQuestion.Type.TEXT) {
             this.limitLength = question.getLimitLength();
             this.metadata = null;
         } else {

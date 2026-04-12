@@ -10,6 +10,15 @@ import lombok.Getter;
 @Table(name = "application_question")
 public class ApplicationQuestion extends BaseEntity {
 
+    //공통, 시각화, 분석, 엔지니어링
+    public enum Category {
+        COMMON, ANALYSIS, VISUALIZATION, ENGINEERING
+    }
+
+    public enum Type {
+        TEXT, TABLE
+    }
+
     @Id
     @Column(length = 20)
     private String id;
@@ -20,11 +29,11 @@ public class ApplicationQuestion extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private QuestionCategory category;
+    private Category category;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private QuestionType type;
+    private Type type;
 
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
