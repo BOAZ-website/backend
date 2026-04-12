@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.curriculum.service;
 
-import com.boaz.backend.domain.curriculum.dto.CurriculumResponse;
-import com.boaz.backend.domain.curriculum.dto.CurriculumStepResponse;
+import com.boaz.backend.domain.curriculum.dto.response.CurriculumResponse;
+import com.boaz.backend.domain.curriculum.dto.response.CurriculumStepResponse;
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
 import com.boaz.backend.domain.curriculum.repository.CurriculumRepository;
 import com.boaz.backend.global.common.enums.Track;

@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.curriculum.dto;
+package com.boaz.backend.domain.curriculum.dto.response;
 
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
 import com.fasterxml.jackson.annotation.JsonProperty;

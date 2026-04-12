@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.response;
 
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.global.exception.CustomException;

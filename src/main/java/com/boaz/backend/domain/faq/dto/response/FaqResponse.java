@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.faq.dto;
+package com.boaz.backend.domain.faq.dto.response;
 
 import com.boaz.backend.domain.faq.entity.Faq;
 import com.fasterxml.jackson.annotation.JsonProperty;

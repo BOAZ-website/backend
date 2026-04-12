@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.archive.service;
 
-import com.boaz.backend.domain.archive.dto.ArchiveItemResponse;
-import com.boaz.backend.domain.archive.dto.ArchivePageResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchiveItemResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
 import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.repository.ArchiveRepository;

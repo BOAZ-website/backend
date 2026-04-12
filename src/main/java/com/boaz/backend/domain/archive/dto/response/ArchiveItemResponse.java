@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.archive.dto;
+package com.boaz.backend.domain.archive.dto.response;
 
 import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.global.common.enums.Track;

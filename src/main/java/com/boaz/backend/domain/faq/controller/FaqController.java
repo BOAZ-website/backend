@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.faq.controller;
+import com.boaz.backend.domain.faq.dto.response.FaqResponse;
 import com.boaz.backend.domain.faq.entity.Faq;
-import com.boaz.backend.domain.faq.dto.FaqResponse;
 import com.boaz.backend.domain.faq.service.FaqService;
 import com.boaz.backend.global.common.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;

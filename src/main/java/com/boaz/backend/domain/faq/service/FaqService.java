@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.faq.service;
 
-import com.boaz.backend.domain.faq.dto.FaqResponse;
+import com.boaz.backend.domain.faq.dto.response.FaqResponse;
 import com.boaz.backend.domain.faq.entity.Faq;
 import com.boaz.backend.domain.faq.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;

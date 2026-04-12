@@ -1,14 +1,14 @@
 package com.boaz.backend.domain.recruitment.service;
 
-import com.boaz.backend.domain.recruitment.dto.AnswerRequest;
-import com.boaz.backend.domain.recruitment.dto.ApplicationRequest;
-import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
-import com.boaz.backend.domain.recruitment.dto.DeadlineResponse;
-import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
-import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
-import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
-import com.boaz.backend.domain.recruitment.dto.SubscriptionRequest;
-import com.boaz.backend.domain.recruitment.dto.SubscriptionResponse;
+import com.boaz.backend.domain.recruitment.dto.request.AnswerRequest;
+import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
+import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
+import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;

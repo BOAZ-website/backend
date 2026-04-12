@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.archive.controller;
 
-import com.boaz.backend.domain.archive.dto.ArchivePageResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
 import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.service.ArchiveService;
 import com.boaz.backend.global.common.ApiResponse;

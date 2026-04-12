@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.archive.dto;
+package com.boaz.backend.domain.archive.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;

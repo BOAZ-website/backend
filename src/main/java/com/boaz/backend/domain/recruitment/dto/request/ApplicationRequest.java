@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.request;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.global.common.enums.Track;
