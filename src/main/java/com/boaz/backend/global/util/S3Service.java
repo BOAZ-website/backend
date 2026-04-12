@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.service;
+package com.boaz.backend.global.util;
 
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
