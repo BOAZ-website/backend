@@ -18,7 +18,7 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- recruitment 임시 데이터
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (1, 26, '2026-03-01 00:00:00', '2026-03-29 23:59:59', 
+VALUES (1, 26, '2026-03-01 00:00:00', '2026-04-29 23:59:59', 
 '[
   { "step": "서류 모집", "start": "2026-03-01", "end": "2026-03-29", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-04-04", "end": "2026-04-04", "sequence": 2 },
