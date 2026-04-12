@@ -106,7 +106,7 @@ public class RecruitmentService {
         }
 
         // Track → ApplicationQuestion.Category 변환
-        ApplicationQuestion.Category trackCategory = ApplicationQuestion.Category.valueOf(track.name());
+        ApplicationQuestion.Category trackCategory = toQuestionCategory(track);
 
         // 공통 + 해당 부문 질문 조회
         List<ApplicationQuestion> questions = applicationQuestionRepository
@@ -161,7 +161,7 @@ public class RecruitmentService {
         }
         
         // 해당 공고의 질문 목록 조회
-        ApplicationQuestion.Category trackCategory = ApplicationQuestion.Category.valueOf(request.getTrack().name());
+        ApplicationQuestion.Category trackCategory = toQuestionCategory(request.getTrack());
         List<ApplicationQuestion> questions = applicationQuestionRepository
                 .findByRecruitmentIdAndCategories(
                         request.getRecruitmentId(),
@@ -336,7 +336,7 @@ public class RecruitmentService {
                     .findByRecruitmentIdAndCategories(
                             recruitment.getId(),
                             ApplicationQuestion.Category.COMMON, 
-                            ApplicationQuestion.Category.valueOf(track.name())
+                            toQuestionCategory(track)
                     );
 
             // 지원자 답변 조회
@@ -361,5 +361,14 @@ public class RecruitmentService {
                     term, track.name(), timestamp);
             s3Service.uploadCsv(key, csv);
         }
+    }
+
+    private ApplicationQuestion.Category toQuestionCategory(Track track) {
+        return switch (track) {
+            case ANALYSIS -> ApplicationQuestion.Category.ANALYSIS;
+            case VISUALIZATION -> ApplicationQuestion.Category.VISUALIZATION;
+            case ENGINEERING -> ApplicationQuestion.Category.ENGINEERING;
+            default -> throw new CustomException(ErrorCode.INVALID_PARAMETER_TYPE);
+        };
     }
 }
