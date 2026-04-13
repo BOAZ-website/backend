@@ -173,12 +173,12 @@ public class RecruitmentService {
         }
 
         // 필수 질문 답변 여부 확인
-        List<String> requiredQuestionIds = questions.stream()
+        List<Long> requiredQuestionIds = questions.stream()
                 .filter(ApplicationQuestion::getIsRequired)
                 .map(ApplicationQuestion::getId)
                 .toList();
 
-        List<String> answeredQuestionIds = request.getAnswers().stream()
+        List<Long> answeredQuestionIds = request.getAnswers().stream()
                 .map(AnswerRequest::getQuestionId)
                 .toList();
 
@@ -193,7 +193,7 @@ public class RecruitmentService {
         }
 
         // 잘못된 questionId 검증
-        List<String> validQuestionIds = questions.stream()
+        List<Long> validQuestionIds = questions.stream()
                 .map(ApplicationQuestion::getId)
                 .toList();
 
@@ -204,7 +204,7 @@ public class RecruitmentService {
         }
         
         // 답변 형식 검증 (TEXT → String, TABLE → JSON)
-        Map<String, ApplicationQuestion> questionMap = questions.stream()
+        Map<Long, ApplicationQuestion> questionMap = questions.stream()
                 .collect(Collectors.toMap(ApplicationQuestion::getId, q -> q));
 
         for (AnswerRequest answerRequest : request.getAnswers()) {

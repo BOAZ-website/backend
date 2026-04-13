@@ -15,7 +15,8 @@ public class QuestionResponse {
     
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final String questionId;
+    private final Long questionId;
+    private final String label;
     private final String category;
     private final String type;
     private final String content;
@@ -38,6 +39,7 @@ public class QuestionResponse {
     
     private QuestionResponse(ApplicationQuestion question, String content) {
         this.questionId = question.getId();
+        this.label = question.getLabel();
         this.category = question.getCategory().name();
         this.type = question.getType().name();
         this.content = content;
