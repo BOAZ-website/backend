@@ -44,7 +44,7 @@ jobs:
           DB_USERNAME=$DB_USERNAME
           DB_PASSWORD=$DB_PASSWORD
           S3_BUCKET_NAME=$S3_BUCKET_NAME
-          ADMIN_API_KEY=$ADMIN_API_KEY
+          JWT_SECRET=$JWT_SECRET
           EOF
           "
         env:
@@ -52,7 +52,7 @@ jobs:
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
-          ADMIN_API_KEY: ${{ secrets.ADMIN_API_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: 서비스 재시작
         uses: appleboy/ssh-action@v1
