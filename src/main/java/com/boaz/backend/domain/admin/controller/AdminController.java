@@ -36,7 +36,8 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @Operation(summary = "계정 생성 (SUPER only)")
+    @Operation(summary = "계정 생성 (SUPER only)",
+            description = "SUPER 권한만 호출 가능. track은 ALL 제외 ANALYSIS·VISUALIZATION·ENGINEERING만 허용.")
     @PostMapping("/accounts")
     public ResponseEntity<ApiResponse<AdminIdResponse>> createAccount(
             @RequestBody @Valid AdminCreateRequest request,
@@ -65,7 +66,8 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @Operation(summary = "id별 계정 수정 (SUPER: role 포함 전체 / TEAM: 본인 프로필만)")
+    @Operation(summary = "id별 계정 수정 (SUPER: role 포함 전체 / TEAM: 본인 프로필만)",
+            description = "모든 필드 선택적. role 변경 시 해당 계정의 RefreshToken 삭제(재로그인 강제). 본인 role 변경 불가.")
     @PatchMapping("/accounts/{id}")
     public ResponseEntity<ApiResponse<AdminIdResponse>> updateAccount(
             @PathVariable Long id,
@@ -76,7 +78,8 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @Operation(summary = "id별 계정 삭제 (SUPER: 전체 / TEAM: 본인만)")
+    @Operation(summary = "id별 계정 삭제 (SUPER: 전체 / TEAM: 본인만)",
+            description = "soft delete. 마지막 SUPER 계정은 삭제 불가. 삭제 시 RefreshToken도 함께 삭제.")
     @DeleteMapping("/accounts/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteAccount(
             @PathVariable Long id,
@@ -86,7 +89,8 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "비밀번호 초기화 (SUPER: 전체 / TEAM: 본인만)")
+    @Operation(summary = "비밀번호 초기화 (SUPER: 전체 / TEAM: 본인만)",
+            description = "비밀번호 변경 후 해당 계정의 RefreshToken 삭제(재로그인 강제).")
     @PatchMapping("/accounts/{id}/password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @PathVariable Long id,
