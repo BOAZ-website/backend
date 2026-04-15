@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -73,6 +74,16 @@ public class AdminController {
     ) {
         AdminIdResponse response = adminService.updateAccount(id, request, userDetails.getAdmin());
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "id별 계정 삭제 (SUPER: 전체 / TEAM: 본인만)")
+    @DeleteMapping("/accounts/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @PathVariable Long id,
+            @AuthenticationPrincipal AdminUserDetails userDetails
+    ) {
+        adminService.deleteAccount(id, userDetails.getAdmin());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
     @Operation(summary = "비밀번호 초기화 (SUPER: 전체 / TEAM: 본인만)")

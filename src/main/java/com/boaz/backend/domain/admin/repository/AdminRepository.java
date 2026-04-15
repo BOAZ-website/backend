@@ -15,4 +15,6 @@ public interface AdminRepository extends JpaRepository<Admin, Long> {
     List<Admin> findAllByDeletedAtIsNullOrderByCreatedAtAsc();
 
     Optional<Admin> findByIdAndDeletedAtIsNull(Long id);
+
+    long countByRoleAndDeletedAtIsNull(Admin.Role role);
 }

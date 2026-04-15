@@ -112,6 +112,24 @@ public class AdminService {
     }
 
     @Transactional
+    public void deleteAccount(Long id, Admin currentAdmin) {
+        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
+
+        if (admin.getRole() == Admin.Role.SUPER
+                && adminRepository.countByRoleAndDeletedAtIsNull(Admin.Role.SUPER) <= 1) {
+            throw new CustomException(ErrorCode.LAST_SUPER_ACCOUNT);
+        }
+
+        admin.softDelete();
+        refreshTokenRepository.deleteByAdminId(id);
+    }
+
+    @Transactional
     public void resetPassword(Long id, AdminPasswordResetRequest request, Admin currentAdmin) {
         if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
