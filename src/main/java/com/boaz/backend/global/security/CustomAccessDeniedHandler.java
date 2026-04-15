@@ -15,7 +15,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        sendError(response, ErrorCode.TOKEN_NOT_FOUND);
+        sendError(response, ErrorCode.ACCESS_DENIED);
     }
 
     private void sendError(HttpServletResponse response, ErrorCode errorCode) throws IOException {
