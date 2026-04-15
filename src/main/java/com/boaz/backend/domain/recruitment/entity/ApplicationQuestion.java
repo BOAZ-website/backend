@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.recruitment.entity;
 
 import com.boaz.backend.global.common.BaseEntity;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.Getter;
 
@@ -10,13 +10,22 @@ import lombok.Getter;
 @Table(name = "application_question")
 public class ApplicationQuestion extends BaseEntity {
 
-    //공통, 시각화, 분석, 엔지니어링
     public enum Category {
-        COMMON, ANALYSIS, VISUALIZATION, ENGINEERING
+        @Schema(description = "공통")
+        COMMON,
+        @Schema(description = "분석")
+        ANALYSIS,
+        @Schema(description = "시각화")
+        VISUALIZATION,
+        @Schema(description = "엔지니어링")
+        ENGINEERING
     }
 
     public enum Type {
-        TEXT, TABLE
+        @Schema(description = "텍스트")
+        TEXT,
+        @Schema(description = "표")
+        TABLE
     }
 
     @Id

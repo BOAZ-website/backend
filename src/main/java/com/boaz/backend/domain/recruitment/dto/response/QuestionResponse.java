@@ -6,7 +6,7 @@ import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
@@ -15,14 +15,31 @@ public class QuestionResponse {
     
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Schema(description = "질문 ID", example = "1")
     private final Long questionId;
+
+    @Schema(description = "질문 레이블", example = "공통1")
     private final String label;
+
+    @Schema(description = "카테고리", example = "COMMON", allowableValues = {"COMMON", "ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     private final String category;
+
+    @Schema(description = "질문 유형", example = "TEXT", allowableValues = {"TEXT", "TABLE"})
     private final String type;
+
+    @Schema(description = "질문 내용", example = "자신을 소개해주세요.")
     private final String content;
+
+    @Schema(description = "글자 수 제한 (TEXT 유형인 경우)", example = "500", nullable = true)
     private final Integer limitLength;
+
+    @Schema(description = "메타데이터 (TABLE 유형인 경우)", nullable = true)
     private final JsonNode metadata;
+
+    @Schema(description = "질문 순서", example = "1")
     private final Integer orderNum;
+
+    @Schema(description = "필수 여부", example = "true")
     private final Boolean isRequired;
     
     public static QuestionResponse from(ApplicationQuestion question) {
