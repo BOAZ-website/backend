@@ -40,9 +40,7 @@ public class AdminService {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
-        if (request.getTrack() == Track.ALL) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
-        }
+        request.getTrack().validateNotAll();
 
         if (adminRepository.existsByUsernameAndDeletedAtIsNull(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
