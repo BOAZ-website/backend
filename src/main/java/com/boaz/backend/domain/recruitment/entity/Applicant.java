@@ -1,5 +1,6 @@
 package com.boaz.backend.domain.recruitment.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -20,9 +21,11 @@ import java.time.LocalDate;
 @EntityListeners(AuditingEntityListener.class)
 public class Applicant extends BaseEntity  {
     
-    // 필_또는_면제, 미필
     public enum MilitaryStatus {
-        COMPLETED_OR_EXEMPT, NOT_COMPLETED
+        @Schema(description = "필 또는 면제")
+        COMPLETED_OR_EXEMPT,
+        @Schema(description = "미필")
+        NOT_COMPLETED
     }
 
     @Id
