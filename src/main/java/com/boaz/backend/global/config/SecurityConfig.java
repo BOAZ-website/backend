@@ -1,21 +1,18 @@
 package com.boaz.backend.global.config;
 
-import com.boaz.backend.global.exception.ErrorCode;
 import com.boaz.backend.global.security.AdminUserDetailsService;
+import com.boaz.backend.global.security.CustomAccessDeniedHandler;
+import com.boaz.backend.global.security.CustomAuthenticationEntryPoint;
 import com.boaz.backend.global.security.JwtAuthenticationFilter;
 import com.boaz.backend.global.security.JwtProvider;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,8 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.io.IOException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,6 +31,8 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
     private final AdminUserDetailsService adminUserDetailsService;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -57,15 +54,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint((request, response, e) ->
-                                sendSecurityError(response, ErrorCode.TOKEN_NOT_FOUND))
-                        .accessDeniedHandler((request, response, e) -> {
-                            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-                            ErrorCode errorCode = (auth == null || auth instanceof AnonymousAuthenticationToken)
-                                    ? ErrorCode.TOKEN_NOT_FOUND
-                                    : ErrorCode.UNAUTHORIZED;
-                            sendSecurityError(response, errorCode);
-                        })
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, adminUserDetailsService),
@@ -73,18 +63,6 @@ public class SecurityConfig {
                 );
 
         return http.build();
-    }
-
-    private void sendSecurityError(HttpServletResponse response, ErrorCode errorCode) throws IOException {
-        response.setStatus(errorCode.getHttpStatus().value());
-        response.setContentType("application/json;charset=UTF-8");
-        String body = String.format(
-                "{\"status\":%d,\"error_code\":\"%s\",\"message\":\"%s\"}",
-                errorCode.getHttpStatus().value(),
-                errorCode.getCode(),
-                errorCode.getMessage()
-        );
-        response.getWriter().write(body);
     }
 
     @Bean
