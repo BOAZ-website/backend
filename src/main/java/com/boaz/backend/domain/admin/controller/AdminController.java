@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.admin.controller;
 
 import com.boaz.backend.domain.admin.dto.request.AdminCreateRequest;
+import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
@@ -72,5 +73,16 @@ public class AdminController {
     ) {
         AdminIdResponse response = adminService.updateAccount(id, request, userDetails.getAdmin());
         return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "비밀번호 초기화 (SUPER: 전체 / TEAM: 본인만)")
+    @PatchMapping("/accounts/{id}/password")
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable Long id,
+            @RequestBody @Valid AdminPasswordResetRequest request,
+            @AuthenticationPrincipal AdminUserDetails userDetails
+    ) {
+        adminService.resetPassword(id, request, userDetails.getAdmin());
+        return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }

@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.admin.service;
 
 import com.boaz.backend.domain.admin.dto.request.AdminCreateRequest;
+import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
@@ -108,5 +109,18 @@ public class AdminService {
         request.getTeamName().ifPresent(admin::updateTeamName);
 
         return new AdminIdResponse(admin.getId());
+    }
+
+    @Transactional
+    public void resetPassword(Long id, AdminPasswordResetRequest request, Admin currentAdmin) {
+        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+            throw new CustomException(ErrorCode.UNAUTHORIZED);
+        }
+
+        Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
+
+        admin.resetPassword(passwordEncoder.encode(request.getNewPassword()));
+        refreshTokenRepository.deleteByAdminId(id);
     }
 }
