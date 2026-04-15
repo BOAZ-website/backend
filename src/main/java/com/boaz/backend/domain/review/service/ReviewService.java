@@ -19,6 +19,10 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
 
     public List<ReviewResponse> getReviews(Track track, Integer term) {
+        if (track != null) {
+            track.validateNotAll();
+        }
+
         List<Review> reviews;
 
         if (track != null && term != null) {
