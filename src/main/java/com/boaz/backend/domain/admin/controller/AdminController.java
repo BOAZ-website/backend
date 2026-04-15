@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.admin.controller;
 
 import com.boaz.backend.domain.admin.dto.request.AdminCreateRequest;
+import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
 import com.boaz.backend.domain.admin.service.AdminService;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,6 +60,17 @@ public class AdminController {
             @AuthenticationPrincipal AdminUserDetails userDetails
     ) {
         AdminAccountResponse response = adminService.getAccount(id, userDetails.getAdmin());
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "id별 계정 수정 (SUPER: role 포함 전체 / TEAM: 본인 프로필만)")
+    @PatchMapping("/accounts/{id}")
+    public ResponseEntity<ApiResponse<AdminIdResponse>> updateAccount(
+            @PathVariable Long id,
+            @RequestBody AdminUpdateRequest request,
+            @AuthenticationPrincipal AdminUserDetails userDetails
+    ) {
+        AdminIdResponse response = adminService.updateAccount(id, request, userDetails.getAdmin());
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 }

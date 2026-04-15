@@ -70,6 +70,26 @@ public class Admin extends BaseEntity {
         this.createdBy = createdBy;
     }
 
+    public void updateRole(Role role) {
+        this.role = role;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateTrack(Track track) {
+        this.track = track;
+    }
+
+    public void updateTerm(Integer term) {
+        this.term = term;
+    }
+
+    public void updateTeamName(TeamName teamName) {
+        this.teamName = teamName;
+    }
+
     public void resetPassword(String encodedPassword) {
         this.password = encodedPassword;
     }
