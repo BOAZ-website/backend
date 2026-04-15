@@ -1,6 +1,8 @@
 package com.boaz.backend.global.config;
 
 import com.boaz.backend.global.security.AdminUserDetailsService;
+import com.boaz.backend.global.security.CustomAccessDeniedHandler;
+import com.boaz.backend.global.security.CustomAuthenticationEntryPoint;
 import com.boaz.backend.global.security.JwtAuthenticationFilter;
 import com.boaz.backend.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
     private final AdminUserDetailsService adminUserDetailsService;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final CustomAccessDeniedHandler accessDeniedHandler;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -48,6 +52,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/admin/**").authenticated()
                         .anyRequest().permitAll()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, adminUserDetailsService),
