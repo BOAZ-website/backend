@@ -13,6 +13,13 @@ public enum ErrorCode {
     INVALID_PARAMETER_TYPE(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER_TYPE", "파라미터 타입이 올바르지 않습니다."),
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", "접근 권한이 없습니다."),
 
+    // Auth / Token
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "INVALID_TOKEN", "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "EXPIRED_TOKEN", "만료된 토큰입니다."),
+
+    // Admin
+    ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_NOT_FOUND", "해당 계정을 찾을 수 없습니다."),
+
     // Recruitment
     RECRUITMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RECRUITMENT_NOT_FOUND", "해당 모집 공고를 찾을 수 없습니다."),
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
@@ -37,7 +44,7 @@ public enum ErrorCode {
     FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "FAQ_NOT_FOUND", "해당 FAQ를 찾을 수 없습니다."), 
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", "잘못된 요청 값 입니다."),
 
-    // Archive 
+    // Archive
     INVALID_PAGINATION(HttpStatus.BAD_REQUEST, "INVALID_PAGINATION", "페이지 값이 올바르지 않습니다.");
 
 
