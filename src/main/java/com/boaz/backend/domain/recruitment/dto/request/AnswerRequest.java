@@ -11,7 +11,7 @@ public class AnswerRequest {
 
     @NotNull(message = "question_id를 입력해주세요.")
     @JsonProperty("question_id")
-    private String questionId;
+    private Long questionId;
 
     @NotNull(message = "답변을 입력해주세요.")
     private JsonNode answer;

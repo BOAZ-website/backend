@@ -32,12 +32,12 @@ public class CsvService {
     ) throws IOException {
 
         // 질문 ID 순서 리스트
-        List<String> questionIds = questions.stream()
+        List<Long> questionIds = questions.stream()
                 .map(ApplicationQuestion::getId)
                 .toList();
 
         // 지원자별 답변 맵 구성 (applicantId -> (questionId -> answer))
-        Map<Long, Map<String, ApplicantAnswer>> answerMap = new HashMap<>();
+        Map<Long, Map<Long, ApplicantAnswer>> answerMap = new HashMap<>();
         for (ApplicantAnswer answer : answers) {
             Long applicantId = answer.getApplicant().getId();
             answerMap.computeIfAbsent(applicantId, k -> new HashMap<>())
@@ -51,7 +51,9 @@ public class CsvService {
         try (OutputStreamWriter writer = new OutputStreamWriter(baos, StandardCharsets.UTF_8)) {
             // 헤더 작성
             List<String> headers = new ArrayList<>(BASE_HEADERS);
-            headers.addAll(questionIds);
+            questions.stream()
+                    .map(ApplicationQuestion::getLabel)
+                    .forEach(headers::add);
             writer.write(toCsvRow(headers));
 
             // 지원자별 행 작성
@@ -71,8 +73,8 @@ public class CsvService {
                 row.add(applicant.getGradSchoolPlan() != null ? (applicant.getGradSchoolPlan() ? "Y" : "N") : "");
                 row.add(applicant.getCreatedAt().toString());
 
-                Map<String, ApplicantAnswer> applicantAnswers = answerMap.getOrDefault(applicant.getId(), Collections.emptyMap());
-                for (String questionId : questionIds) {
+                Map<Long, ApplicantAnswer> applicantAnswers = answerMap.getOrDefault(applicant.getId(), Collections.emptyMap());
+                for (Long questionId : questionIds) {
                     ApplicantAnswer answer = applicantAnswers.get(questionId);
                     row.add(answer != null ? formatAnswer(answer) : "");
                 }

@@ -20,12 +20,15 @@ public class ApplicationQuestion extends BaseEntity {
     }
 
     @Id
-    @Column(length = 20)
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recruitment_id", nullable = false)
     private Recruitment recruitment;
+    
+    @Column(length = 20)
+    private String label;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
