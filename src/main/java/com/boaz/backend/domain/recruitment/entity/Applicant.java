@@ -19,6 +19,11 @@ import java.time.LocalDate;
 @Table(name = "applicants")
 @EntityListeners(AuditingEntityListener.class)
 public class Applicant extends BaseEntity  {
+    
+    // 필_또는_면제, 미필
+    public enum MilitaryStatus {
+        COMPLETED_OR_EXEMPT, NOT_COMPLETED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

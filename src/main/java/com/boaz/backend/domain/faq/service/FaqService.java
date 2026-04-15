@@ -1,10 +1,8 @@
 package com.boaz.backend.domain.faq.service;
 
-import com.boaz.backend.domain.faq.dto.FaqResponse;
+import com.boaz.backend.domain.faq.dto.response.FaqResponse;
 import com.boaz.backend.domain.faq.entity.Faq;
 import com.boaz.backend.domain.faq.repository.FaqRepository;
-import com.boaz.backend.global.exception.CustomException;
-import com.boaz.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

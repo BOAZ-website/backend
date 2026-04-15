@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.archive.repository;
 
 import com.boaz.backend.domain.archive.entity.Archive;
-import com.boaz.backend.domain.archive.entity.Archive.ArchiveCategory;
+import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.global.common.enums.Track;
 
 import org.springframework.data.domain.Page;
@@ -31,7 +31,7 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
             a.id DESC 
     """)
     Page<Archive> searchArchives(
-        @Param("category") ArchiveCategory category, 
+        @Param("category") Category category, 
         @Param("track") Track track, 
         @Param("term") Integer term, 
         @Param("keyword") String keyword, 

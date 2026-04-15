@@ -1,7 +1,6 @@
 package com.boaz.backend.domain.recruitment.repository;
 
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
-import com.boaz.backend.domain.recruitment.entity.QuestionCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +16,7 @@ public interface ApplicationQuestionRepository extends JpaRepository<Application
         "ORDER BY q.orderNum ASC")
     List<ApplicationQuestion> findByRecruitmentIdAndCategories(
         @Param("recruitmentId") Long recruitmentId,
-        @Param("commonCategory") QuestionCategory commonCategory,
-        @Param("trackCategory") QuestionCategory trackCategory
+        @Param("commonCategory") ApplicationQuestion.Category commonCategory,
+        @Param("trackCategory") ApplicationQuestion.Category trackCategory
     );
 }

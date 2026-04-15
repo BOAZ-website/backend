@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.review.dto;
+package com.boaz.backend.domain.review.dto.response;
 
 import com.boaz.backend.domain.review.entity.Review;
 import com.fasterxml.jackson.annotation.JsonProperty;

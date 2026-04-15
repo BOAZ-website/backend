@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.review.controller;
 
-import com.boaz.backend.domain.review.dto.ReviewResponse;
+import com.boaz.backend.domain.review.dto.response.ReviewResponse;
 import com.boaz.backend.domain.review.service.ReviewService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.common.enums.Track;

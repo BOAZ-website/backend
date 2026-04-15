@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;

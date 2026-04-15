@@ -18,7 +18,7 @@ import java.time.LocalDate;
 public class Archive extends BaseEntity {
 
     // 아카이브 카테고리 (프로젝트, 활동사진, 기술블로그)
-    public enum ArchiveCategory {
+    public enum Category {
         PROJECT, ACTIVITY, BLOG
     }
 
@@ -31,7 +31,7 @@ public class Archive extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private ArchiveCategory category;
+    private Category category;
 
     @Column(nullable = false, length = 255)
     private String title;
@@ -55,7 +55,7 @@ public class Archive extends BaseEntity {
     @Builder
     public Archive(
         Integer term, 
-        ArchiveCategory category,
+        Category category,
         String title, 
         String teamName, 
         Track track, 

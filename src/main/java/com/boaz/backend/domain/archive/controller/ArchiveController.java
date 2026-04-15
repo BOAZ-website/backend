@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.archive.controller;
 
-import com.boaz.backend.domain.archive.dto.ArchivePageResponse;
-import com.boaz.backend.domain.archive.entity.Archive.ArchiveCategory;
+import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
+import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.service.ArchiveService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.common.enums.Track;
@@ -34,7 +34,7 @@ public class ArchiveController {
         @RequestParam(defaultValue = "6") int size 
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.PROJECT, 
+            Category.PROJECT, 
             track, 
             term, 
             keyword, 
@@ -54,7 +54,7 @@ public class ArchiveController {
         @RequestParam(defaultValue = "6") int size
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.ACTIVITY, 
+            Category.ACTIVITY, 
             null, 
             term, 
             keyword, 
@@ -74,7 +74,7 @@ public class ArchiveController {
         @RequestParam(defaultValue = "6") int size 
     ) {
         ArchivePageResponse response = archiveService.searchArchives(
-            ArchiveCategory.BLOG, 
+            Category.BLOG, 
             track, 
             null, 
             keyword, 

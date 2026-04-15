@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.response;
 
 import com.boaz.backend.domain.recruitment.entity.Subscription;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.curriculum.controller;
 
-import com.boaz.backend.domain.curriculum.dto.CurriculumResponse;
+import com.boaz.backend.domain.curriculum.dto.response.CurriculumResponse;
 import com.boaz.backend.domain.curriculum.service.CurriculumService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.common.enums.Track;

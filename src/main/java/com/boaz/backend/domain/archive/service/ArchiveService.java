@@ -1,9 +1,9 @@
 package com.boaz.backend.domain.archive.service;
 
-import com.boaz.backend.domain.archive.dto.ArchiveItemResponse;
-import com.boaz.backend.domain.archive.dto.ArchivePageResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchiveItemResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
 import com.boaz.backend.domain.archive.entity.Archive;
-import com.boaz.backend.domain.archive.entity.Archive.ArchiveCategory;
+import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.repository.ArchiveRepository;
 import com.boaz.backend.global.common.enums.Track;
 
@@ -28,7 +28,7 @@ public class ArchiveService {
 
     // 컨트롤러가 넘겨준 값들을 서비스가 받는 부분 
     public ArchivePageResponse searchArchives(
-        ArchiveCategory category, 
+        Category category, 
         Track track, 
         Integer term, 
         String keyword, 

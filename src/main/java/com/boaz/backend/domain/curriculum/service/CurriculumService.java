@@ -1,12 +1,10 @@
 package com.boaz.backend.domain.curriculum.service;
 
-import com.boaz.backend.domain.curriculum.dto.CurriculumResponse;
-import com.boaz.backend.domain.curriculum.dto.CurriculumStepResponse;
+import com.boaz.backend.domain.curriculum.dto.response.CurriculumResponse;
+import com.boaz.backend.domain.curriculum.dto.response.CurriculumStepResponse;
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
 import com.boaz.backend.domain.curriculum.repository.CurriculumRepository;
 import com.boaz.backend.global.common.enums.Track;
-import com.boaz.backend.global.exception.CustomException;
-import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;

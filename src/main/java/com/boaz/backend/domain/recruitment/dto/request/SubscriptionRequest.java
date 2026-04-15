@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

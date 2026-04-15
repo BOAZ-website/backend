@@ -1,19 +1,17 @@
 package com.boaz.backend.domain.recruitment.service;
 
-import com.boaz.backend.domain.recruitment.dto.AnswerRequest;
-import com.boaz.backend.domain.recruitment.dto.ApplicationRequest;
-import com.boaz.backend.domain.recruitment.dto.ApplicationResponse;
-import com.boaz.backend.domain.recruitment.dto.DeadlineResponse;
-import com.boaz.backend.domain.recruitment.dto.QuestionResponse;
-import com.boaz.backend.domain.recruitment.dto.RecruitmentResponse;
-import com.boaz.backend.domain.recruitment.dto.RecruitmentStatusResponse;
-import com.boaz.backend.domain.recruitment.dto.SubscriptionRequest;
-import com.boaz.backend.domain.recruitment.dto.SubscriptionResponse;
+import com.boaz.backend.domain.recruitment.dto.request.AnswerRequest;
+import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
+import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
+import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
-import com.boaz.backend.domain.recruitment.entity.QuestionCategory;
-import com.boaz.backend.domain.recruitment.entity.QuestionType;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.entity.Subscription;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
@@ -24,6 +22,7 @@ import com.boaz.backend.domain.recruitment.repository.SubscriptionRepository;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.util.S3Service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -106,12 +105,12 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
-        // Track → QuestionCategory 변환
-        QuestionCategory trackCategory = QuestionCategory.valueOf(track.name());
+        // Track → ApplicationQuestion.Category 변환
+        ApplicationQuestion.Category trackCategory = toQuestionCategory(track);
 
         // 공통 + 해당 부문 질문 조회
         List<ApplicationQuestion> questions = applicationQuestionRepository
-                .findByRecruitmentIdAndCategories(recruitmentId, QuestionCategory.COMMON, trackCategory);
+                .findByRecruitmentIdAndCategories(recruitmentId, ApplicationQuestion.Category.COMMON, trackCategory);
 
         if (questions.isEmpty()) {
             throw new CustomException(ErrorCode.QUESTIONS_NOT_FOUND);
@@ -162,11 +161,11 @@ public class RecruitmentService {
         }
         
         // 해당 공고의 질문 목록 조회
-        QuestionCategory trackCategory = QuestionCategory.valueOf(request.getTrack().name());
+        ApplicationQuestion.Category trackCategory = toQuestionCategory(request.getTrack());
         List<ApplicationQuestion> questions = applicationQuestionRepository
                 .findByRecruitmentIdAndCategories(
                         request.getRecruitmentId(),
-                        QuestionCategory.COMMON,
+                        ApplicationQuestion.Category.COMMON,
                         trackCategory
                 );
         if (questions.isEmpty()) {
@@ -215,15 +214,15 @@ public class RecruitmentService {
             JsonNode answer = answerRequest.getAnswer();
             if (question.getIsRequired()) {
                 if (answer == null || answer.isNull()
-                        || (question.getType() == QuestionType.TEXT && answer.asText().trim().isEmpty())
-                        || (question.getType() == QuestionType.TABLE && (!answer.isObject() || answer.size() == 0))) {
+                        || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
+                        || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
                 }
             }
-            if (question.getType() == QuestionType.TEXT && !answer.isTextual()) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT && !answer.isTextual()) {
                 throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
             }
-            if (question.getType() == QuestionType.TABLE && !answer.isObject()) {
+            if (question.getType() == ApplicationQuestion.Type.TABLE && !answer.isObject()) {
                 throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
             }
         }
@@ -266,7 +265,7 @@ public class RecruitmentService {
             String answerText = null;
             String answerJson = null;
 
-            if (question.getType() == QuestionType.TEXT) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT) {
                 answerText = answer.asText();
             } else {
                 try {
@@ -336,8 +335,8 @@ public class RecruitmentService {
             List<ApplicationQuestion> questions = applicationQuestionRepository
                     .findByRecruitmentIdAndCategories(
                             recruitment.getId(),
-                            QuestionCategory.COMMON, 
-                            QuestionCategory.valueOf(track.name())
+                            ApplicationQuestion.Category.COMMON, 
+                            toQuestionCategory(track)
                     );
 
             // 지원자 답변 조회
@@ -362,5 +361,14 @@ public class RecruitmentService {
                     term, track.name(), timestamp);
             s3Service.uploadCsv(key, csv);
         }
+    }
+
+    private ApplicationQuestion.Category toQuestionCategory(Track track) {
+        return switch (track) {
+            case ANALYSIS -> ApplicationQuestion.Category.ANALYSIS;
+            case VISUALIZATION -> ApplicationQuestion.Category.VISUALIZATION;
+            case ENGINEERING -> ApplicationQuestion.Category.ENGINEERING;
+            default -> throw new CustomException(ErrorCode.INVALID_PARAMETER_TYPE);
+        };
     }
 }

@@ -1,6 +1,6 @@
-package com.boaz.backend.domain.recruitment.dto;
+package com.boaz.backend.domain.recruitment.dto.request;
 
-import com.boaz.backend.domain.recruitment.entity.MilitaryStatus;
+import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.global.common.enums.Track;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
@@ -44,7 +44,7 @@ public class ApplicationRequest {
 
     @NotNull(message = "병역 상태를 선택해주세요.")
     @JsonProperty("military_status")
-    private MilitaryStatus militaryStatus;
+    private Applicant.MilitaryStatus militaryStatus;
 
     @NotBlank(message = "생년월일을 입력해주세요.")
     @JsonProperty("birth_date")
