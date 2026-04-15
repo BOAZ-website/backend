@@ -4,9 +4,6 @@ import com.boaz.backend.global.exception.ErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
@@ -18,11 +15,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        ErrorCode errorCode = (auth == null || auth instanceof AnonymousAuthenticationToken)
-                ? ErrorCode.TOKEN_NOT_FOUND
-                : ErrorCode.UNAUTHORIZED;
-        sendError(response, errorCode);
+        sendError(response, ErrorCode.TOKEN_NOT_FOUND);
     }
 
     private void sendError(HttpServletResponse response, ErrorCode errorCode) throws IOException {
