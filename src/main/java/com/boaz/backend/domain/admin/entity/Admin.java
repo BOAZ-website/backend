@@ -37,7 +37,7 @@ public class Admin extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(nullable = false, updatable = false)
     private String username;
 
     @Column(nullable = false)
