@@ -30,4 +30,20 @@ public class Faq extends BaseEntity {
         // 지원, 활동, 기타
         RECRUITMENT, ACTIVITY, ETC
     }
+
+    public static Faq create(String question, String answer, Category category, Integer orderNum) {
+        Faq faq = new Faq();
+        faq.question = question;
+        faq.answer = answer;
+        faq.category = category;
+        faq.orderNum = orderNum;
+        return faq;
+    }
+
+    public void update(String question, String answer, Category category, Integer orderNum) {
+        if (question != null) this.question = question;
+        if (answer != null) this.answer = answer;
+        if (category != null) this.category = category;
+        if (orderNum != null) this.orderNum = orderNum;
+    }
 }
