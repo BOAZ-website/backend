@@ -38,12 +38,14 @@ public enum ErrorCode {
     
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
-    
+    DUPLICATE_TRACK(HttpStatus.CONFLICT, "DUPLICATE_TRACK", "이미 등록된 트랙입니다."),
+
     // Review
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_NOT_FOUND", "해당 후기를 찾을 수 없습니다."),
 
     // FAQ
-    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "FAQ_NOT_FOUND", "해당 FAQ를 찾을 수 없습니다."), 
+    FAQ_NOT_FOUND(HttpStatus.NOT_FOUND, "FAQ_NOT_FOUND", "해당 FAQ를 찾을 수 없습니다."),
+    DUPLICATE_ORDER_NUM(HttpStatus.CONFLICT, "DUPLICATE_ORDER_NUM", "동일 카테고리에 같은 순서 번호가 이미 존재합니다."),
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", "잘못된 요청 값 입니다."),
 
     // Archive
