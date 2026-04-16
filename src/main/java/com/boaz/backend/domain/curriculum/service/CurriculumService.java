@@ -29,9 +29,7 @@ public class CurriculumService {
 
     @Transactional
     public CurriculumResponse createCurriculum(CurriculumCreateRequest request) {
-        if (request.getTrack() == Track.ALL) {
-            throw new CustomException(ErrorCode.INVALID_PARAMETER);
-        }
+        request.getTrack().validateNotAll();
         if (curriculumRepository.existsByTrack(request.getTrack())) {
             throw new CustomException(ErrorCode.DUPLICATE_TRACK);
         }

@@ -36,6 +36,9 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "DUPLICATE_EMAIL", "이미 구독 신청된 이메일입니다."),
     S3_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_UPLOAD_FAILED", "파일 업로드 중 오류가 발생했습니다."),
     
+    // Track
+    INVALID_TRACK_SELECTION(HttpStatus.BAD_REQUEST, "INVALID_TRACK_SELECTION", "지원 부문을 올바르게 선택해주세요."),
+
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
     DUPLICATE_TRACK(HttpStatus.CONFLICT, "DUPLICATE_TRACK", "이미 등록된 트랙입니다."),
