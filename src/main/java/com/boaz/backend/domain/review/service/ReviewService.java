@@ -24,9 +24,7 @@ public class ReviewService {
 
     @Transactional
     public ReviewResponse createReview(ReviewCreateRequest request) {
-        if (request.getTrack() == Track.ALL) {
-            throw new CustomException(ErrorCode.INVALID_PARAMETER);
-        }
+        request.getTrack().validateNotAll();
         Review review = Review.create(
                 request.getName(),
                 request.getTrack(),
@@ -42,8 +40,8 @@ public class ReviewService {
     public ReviewResponse updateReview(Long reviewId, ReviewUpdateRequest request) {
         Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new CustomException(ErrorCode.REVIEW_NOT_FOUND));
-        if (request.getTrack() == Track.ALL) {
-            throw new CustomException(ErrorCode.INVALID_PARAMETER);
+        if (request.getTrack() != null) {
+            request.getTrack().validateNotAll();
         }
         review.update(
                 request.getName(),
