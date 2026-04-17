@@ -9,6 +9,7 @@ import com.boaz.backend.domain.auth.service.AuthService;
 import com.boaz.backend.global.util.CookieProvider;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -64,6 +65,7 @@ public class AuthController {
 
     // AUTH-003 로그아웃
     @Operation(summary = "로그아웃", description = "Refresh Token 무효화 및 Cookie 삭제")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
         @CookieValue(name = "refresh_token", required = false) String refreshToken, 
