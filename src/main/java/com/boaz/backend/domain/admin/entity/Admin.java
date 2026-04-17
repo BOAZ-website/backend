@@ -2,6 +2,7 @@ package com.boaz.backend.domain.admin.entity;
 
 import com.boaz.backend.global.common.BaseEntity;
 import com.boaz.backend.global.common.enums.Track;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -18,18 +19,25 @@ import java.time.LocalDateTime;
 public class Admin extends BaseEntity {
 
     public enum Role {
-        SUPER, TEAM
+        @Schema(description = "슈퍼 관리자") SUPER,
+        @Schema(description = "팀 관리자") TEAM
     }
-    
+
     public enum TeamName {
-        대표진, 운영지원팀, 대외협력팀, 서비스운영팀, 자료연구팀
+        @Schema(description = "대표진") 대표진,
+        @Schema(description = "디자인팀") 디자인팀,
+        @Schema(description = "자료연구팀") 자료연구팀,
+        @Schema(description = "운영지원팀") 운영지원팀,
+        @Schema(description = "기획팀") 기획팀,
+        @Schema(description = "대외협력팀") 대외협력팀,
+        @Schema(description = "서비스운영팀") 서비스운영팀,
     }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, updatable = false)
+    @Column(nullable = false, updatable = false)
     private String username;
 
     @Column(nullable = false)
@@ -68,6 +76,26 @@ public class Admin extends BaseEntity {
         this.term = term;
         this.teamName = teamName;
         this.createdBy = createdBy;
+    }
+
+    public void updateRole(Role role) {
+        this.role = role;
+    }
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateTrack(Track track) {
+        this.track = track;
+    }
+
+    public void updateTerm(Integer term) {
+        this.term = term;
+    }
+
+    public void updateTeamName(TeamName teamName) {
+        this.teamName = teamName;
     }
 
     public void resetPassword(String encodedPassword) {

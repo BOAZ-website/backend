@@ -27,6 +27,8 @@ public class CurriculumService {
         List<Curriculum> curriculums;
 
         if (track != null) {
+            track.validateNotAll();
+            
             curriculums = curriculumRepository.findByTrack(track)
                     .map(List::of)
                     .orElse(List.of());

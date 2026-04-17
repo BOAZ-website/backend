@@ -104,6 +104,9 @@ public class RecruitmentService {
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
+        
+        // 부문 검증
+        track.validateNotAll();
 
         // Track → ApplicationQuestion.Category 변환
         ApplicationQuestion.Category trackCategory = toQuestionCategory(track);
@@ -141,6 +144,9 @@ public class RecruitmentService {
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
+
+        // 부문 검증
+        request.getTrack().validateNotAll();
 
         // 이메일 형식 검증
         if (!request.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {

@@ -2,6 +2,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- 모든 테이블 초기화
+TRUNCATE admin;
 TRUNCATE recruitment;
 TRUNCATE application_question;
 TRUNCATE archive;
@@ -15,6 +16,13 @@ TRUNCATE review;
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 임시 데이터
+
+-- admin 임시 데이터 (비밀번호: Boaz1234!)
+INSERT INTO admin (username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES ('boaz_super', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '김보아즈', 'ENGINEERING', 27, '대표진', NULL, NOW(), NOW());
+
+INSERT INTO admin (username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES ('boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
 
 -- recruitment 임시 데이터
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)

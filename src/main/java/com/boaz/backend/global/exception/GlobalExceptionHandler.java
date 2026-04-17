@@ -1,8 +1,11 @@
 package com.boaz.backend.global.exception;
 
 import com.boaz.backend.global.common.ApiResponse;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -46,6 +49,29 @@ public class GlobalExceptionHandler {
                         400,
                         ErrorCode.MISSING_PARAMETER.getCode(),
                         ErrorCode.MISSING_PARAMETER.getMessage()
+                ));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        String message = ErrorCode.INVALID_INPUT_VALUE.getMessage();
+        
+        if (e.getCause() instanceof InvalidFormatException ife) {
+                if (!ife.getPath().isEmpty()) {
+                String fieldName = ife.getPath().get(0).getFieldName();
+                message = String.format("'%s' 필드의 값이 유효하지 않습니다. (입력값: %s)", 
+                                        fieldName, ife.getValue());
+                }
+        }
+
+        log.warn("Payload Error: {}", e.getMostSpecificCause().getMessage());
+        
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(
+                        400, 
+                        ErrorCode.INVALID_INPUT_VALUE.getCode(), 
+                        message
                 ));
     }
 
