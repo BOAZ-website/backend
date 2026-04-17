@@ -105,7 +105,10 @@ public class AdminService {
 
         request.getName().ifPresent(admin::updateName);
         request.getTrack().ifPresent(admin::updateTrack);
-        request.getTerm().ifPresent(admin::updateTerm);
+        request.getTerm().ifPresent(t -> {
+            if (t < 0) throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            admin.updateTerm(t);
+        });
         request.getTeamName().ifPresent(admin::updateTeamName);
 
         return new AdminIdResponse(admin.getId());

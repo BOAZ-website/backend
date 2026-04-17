@@ -3,6 +3,7 @@ package com.boaz.backend.domain.admin.dto.request;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.global.common.enums.Track;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -37,6 +38,7 @@ public class AdminCreateRequest {
     private Track track;
 
     @NotNull
+    @Min(0)
     @Schema(description = "기수", example = "25")
     private Integer term;
 
