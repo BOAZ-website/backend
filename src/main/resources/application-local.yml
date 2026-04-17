@@ -59,6 +59,6 @@ jwt:
   refresh-token-expiration: 604800000 # 7일 (ms)
 
 cookie:
-  same-site: None
+  same-site: Lax
   secure: false
   domain: 
