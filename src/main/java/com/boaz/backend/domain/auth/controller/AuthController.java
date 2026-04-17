@@ -7,6 +7,8 @@ import com.boaz.backend.domain.auth.dto.response.LoginResponse;
 import com.boaz.backend.domain.auth.dto.response.TokenRefreshResponse;
 import com.boaz.backend.domain.auth.service.AuthService;
 import com.boaz.backend.global.util.CookieProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 
+@Tag(name = "Auth", description = "인증 관련 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/auth")
@@ -30,6 +33,7 @@ public class AuthController {
     private final CookieProvider cookieProvider;
 
     // AUTH-001 로그인
+    @Operation(summary = "로그인", description = "이메일과 비밀번호로 로그인. 성공 시 Access Token 반환 및 Refresh Token 쿠키 설정")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<LoginResponse>> login(
 
@@ -45,6 +49,7 @@ public class AuthController {
     }
 
     // AUTH-002 토큰 갱신 
+    @Operation(summary = "토큰 갱신", description = "Cookie의 Refresh Token으로 Access Token 재발급")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh(
         @CookieValue(name = "refresh_token", required = false) String refreshToken
@@ -59,6 +64,7 @@ public class AuthController {
     }
 
     // AUTH-003 로그아웃
+    @Operation(summary = "로그아웃", description = "Refresh Token 무효화 및 Cookie 삭제")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
         @CookieValue(name = "refresh_token", required = false) String refreshToken, 
