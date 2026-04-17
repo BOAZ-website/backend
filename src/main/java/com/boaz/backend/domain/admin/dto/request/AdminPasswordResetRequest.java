@@ -8,6 +8,9 @@ import lombok.Getter;
 @Getter
 public class AdminPasswordResetRequest {
 
+    @Schema(description = "현재 비밀번호 (본인 변경 시 필수, SUPER의 타인 초기화 시 불필요)", example = "Boaz1234!")
+    private String currentPassword;
+
     @NotBlank
     @Pattern(
             regexp = "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}$",

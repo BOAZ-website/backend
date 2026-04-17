@@ -24,6 +24,7 @@ public enum ErrorCode {
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "DUPLICATE_USERNAME", "이미 존재하는 아이디입니다."),
     CANNOT_MODIFY_OWN_ROLE(HttpStatus.FORBIDDEN, "CANNOT_MODIFY_OWN_ROLE", "본인 계정의 역할은 변경할 수 없습니다."),
     LAST_SUPER_ACCOUNT(HttpStatus.BAD_REQUEST, "LAST_SUPER_ACCOUNT", "마지막 SUPER 계정은 삭제할 수 없습니다."),
+    INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_CURRENT_PASSWORD", "현재 비밀번호가 올바르지 않습니다."),
 
     // Recruitment
     RECRUITMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RECRUITMENT_NOT_FOUND", "해당 모집 공고를 찾을 수 없습니다."),

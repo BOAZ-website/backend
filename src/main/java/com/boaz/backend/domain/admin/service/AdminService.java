@@ -141,6 +141,16 @@ public class AdminService {
         Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
+        boolean isSelf = currentAdmin.getId().equals(id);
+        if (isSelf) {
+            if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+            if (!passwordEncoder.matches(request.getCurrentPassword(), admin.getPassword())) {
+                throw new CustomException(ErrorCode.INVALID_CURRENT_PASSWORD);
+            }
+        }
+
         admin.resetPassword(passwordEncoder.encode(request.getNewPassword()));
         refreshTokenRepository.deleteByAdminId(id);
     }

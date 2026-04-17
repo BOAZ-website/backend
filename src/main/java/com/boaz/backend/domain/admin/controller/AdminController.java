@@ -89,8 +89,8 @@ public class AdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "비밀번호 초기화 (SUPER: 전체 / TEAM: 본인만)",
-            description = "비밀번호 변경 후 해당 계정의 RefreshToken 삭제(재로그인 강제).")
+    @Operation(summary = "비밀번호 변경 (SUPER: 전체 초기화 / TEAM: 본인만)",
+            description = "본인 비밀번호 변경 시 currentPassword 필수 (역할 무관). SUPER의 타인 초기화 시 currentPassword 불필요. 변경 후 해당 계정의 RefreshToken 삭제(재로그인 강제).")
     @PatchMapping("/accounts/{id}/password")
     public ResponseEntity<ApiResponse<Void>> resetPassword(
             @PathVariable Long id,
