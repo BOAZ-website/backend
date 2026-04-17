@@ -54,8 +54,8 @@ public class SecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
+                        .authenticationEntryPoint(authenticationEntryPoint)  // 인증 실패 시
+                        .accessDeniedHandler(accessDeniedHandler)   // 권한 없을 시 
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, adminUserDetailsService),
