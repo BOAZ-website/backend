@@ -66,7 +66,9 @@ public class AdminService {
     }
 
     public AdminAccountResponse getAccount(Long id, Admin currentAdmin) {
-        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+        boolean isSelf = currentAdmin.getId().equals(id);
+        boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
+        if (isTeam && !isSelf) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -78,18 +80,16 @@ public class AdminService {
 
     @Transactional
     public AdminIdResponse updateAccount(Long id, AdminUpdateRequest request, Admin currentAdmin) {
-        // TEAM은 본인 계정만 수정 가능
-        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+        boolean isSelf = currentAdmin.getId().equals(id);
+        boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
+
+        if (isTeam && !isSelf) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
-
-        // TEAM은 role 변경 불가
-        if (currentAdmin.getRole() == Admin.Role.TEAM && request.getRole().isPresent()) {
+        if (isTeam && request.getRole().isPresent()) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
-
-        // 본인 role 변경 불가
-        if (request.getRole().isPresent() && currentAdmin.getId().equals(id)) {
+        if (isSelf && request.getRole().isPresent()) {
             throw new CustomException(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
         }
 
@@ -116,7 +116,9 @@ public class AdminService {
 
     @Transactional
     public void deleteAccount(Long id, Admin currentAdmin) {
-        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+        boolean isSelf = currentAdmin.getId().equals(id);
+        boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
+        if (isTeam && !isSelf) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
@@ -134,14 +136,14 @@ public class AdminService {
 
     @Transactional
     public void resetPassword(Long id, AdminPasswordResetRequest request, Admin currentAdmin) {
-        if (currentAdmin.getRole() == Admin.Role.TEAM && !currentAdmin.getId().equals(id)) {
+        boolean isSelf = currentAdmin.getId().equals(id);
+        boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
+        if (isTeam && !isSelf) {
             throw new CustomException(ErrorCode.UNAUTHORIZED);
         }
 
         Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
-
-        boolean isSelf = currentAdmin.getId().equals(id);
         if (isSelf) {
             if (request.getCurrentPassword() == null || request.getCurrentPassword().isBlank()) {
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
