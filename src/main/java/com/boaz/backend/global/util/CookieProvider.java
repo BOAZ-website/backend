@@ -22,7 +22,7 @@ public class CookieProvider {
 
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refresh_token";
 
-    // Refresh Token 쿠키 생성 후 응답 헤더에 추가 
+    // Refresh Token 쿠키 헤더 문자열 생성 후 응답 헤더에 추가 
     public void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         String cookie = buildCookieHeader(REFRESH_TOKEN_COOKIE_NAME, refreshToken, (int)(refreshTokenExpiration / 1000));
         response.addHeader("Set-Cookie", cookie);

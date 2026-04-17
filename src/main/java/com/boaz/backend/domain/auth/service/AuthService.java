@@ -31,7 +31,7 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
 
         // 아이디 & 비밀번호 검증 (계정 존재 여부 노출 방지를 위해 동일 에러 반환)
-        Admin admin = adminRepository.findByUsernameAndDeletedAtIsNull(request.getUsername())  // 탈퇴 계정 제외 
+        Admin admin = adminRepository.findByUsernameAndDeletedAtIsNull(request.getUsername())
             .filter(a -> passwordEncoder.matches(request.getPassword(), a.getPassword()))
             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));  // 아이디 또는 비밀번호 불일치한 경우 
 
@@ -45,11 +45,10 @@ public class AuthService {
         // Refresh Token 발급 
         String newRefreshToken = jwtProvider.generateRefreshToken(admin.getId());
 
-        // 해당 계정의 기존 RefreshToken이 DB에 있는지 조회 (단일 로그인 정책)
-        RefreshToken savedToken = refreshTokenRepository.findByAdminId(admin.getId())
-            .orElse(null);
+        // 해당 계정의 기존 RefreshToken이 DB에 있는지 조회
+        RefreshToken savedToken = refreshTokenRepository.findByAdminId(admin.getId()).orElse(null);
         
-        // 기존 토큰 없으면 새로 생성, 있으면 덮어쓰기 
+        // 기존 토큰 없으면 새로 생성, 있으면 덮어쓰기 (단일 로그인 정책)
         if (savedToken == null) {
 
             // 최초 로그인 (새 row 생성)
@@ -81,7 +80,7 @@ public class AuthService {
         RefreshToken savedToken = refreshTokenRepository.findByToken(refreshToken)
             .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));  // DB 불일치 시 예외처리
 
-        // AdminId로 관리자 조회 
+        // AdminId로 관리자 조회 (Access Token 발급 시 유저 정보 필요)
         Admin admin = adminRepository.findById(savedToken.getAdminId())
             .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
         

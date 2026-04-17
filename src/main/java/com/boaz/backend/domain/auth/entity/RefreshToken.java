@@ -43,7 +43,7 @@ public class RefreshToken {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
-    // 토큰 갱신하는 메서드 
+    // 기존 토큰 덮어쓰기 (token, expiresAt 교체)
     public void rotate(String newToken, LocalDateTime newExpiresAt) {
         this.token = newToken;
         this.expiresAt = newExpiresAt;
