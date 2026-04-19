@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.auth.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.boaz.backend.global.security.AdminUserDetails;
 
 import com.boaz.backend.domain.auth.dto.request.LoginRequest;
@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 
 
 @Tag(name = "Auth", description = "인증 관련 API")
@@ -67,14 +68,12 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
+        @AuthenticationPrincipal AdminUserDetails userDetails,
         HttpServletResponse response
     ) {
-        // SecurityContext에서 adminId 추출
-        AdminUserDetails adminUserDetails = (AdminUserDetails) SecurityContextHolder
-            .getContext().getAuthentication().getPrincipal();
-        Long adminId = adminUserDetails.getAdmin().getId();
+
         // DB에서 토큰 삭제 (Service에서 처리)
-        authService.logout(adminId);
+        authService.logout(userDetails.getAdmin().getId());
 
         // 브라우저에 저장된 쿠키 삭제 (Controller에서 처리)
         cookieProvider.expireRefreshTokenCookie(response);
