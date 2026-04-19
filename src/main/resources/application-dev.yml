@@ -67,4 +67,4 @@ management:
 cookie:
   same-site: Strict
   secure: true
-  domain: dev.bigdataboaz.com 
+  domain: bigdataboaz.com 
