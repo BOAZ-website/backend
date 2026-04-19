@@ -96,14 +96,10 @@ public class AuthService {
 
     // AUTH-003 로그아웃
     @Transactional
-    public void logout(String refreshToken) {
+    public void logout(Long adminId) {
 
-        if (refreshToken != null){ 
-            // 토큰에서 adminId 추출 후 해당 계정의 RefreshToken 삭제 
-            Long adminId = jwtProvider.getAdminIdFromToken(refreshToken);
-            refreshTokenRepository.deleteByAdminId(adminId);
-        }
+        // RefreshToken 삭제 
+        refreshTokenRepository.deleteByAdminId(adminId);
 
     }
-
 }

@@ -1,18 +1,20 @@
 package com.boaz.backend.domain.auth.controller;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.boaz.backend.global.security.AdminUserDetails;
 
 import com.boaz.backend.domain.auth.dto.request.LoginRequest;
 import com.boaz.backend.domain.auth.dto.response.LoginResponse;
 import com.boaz.backend.domain.auth.dto.response.TokenRefreshResponse;
 import com.boaz.backend.domain.auth.service.AuthService;
 import com.boaz.backend.global.util.CookieProvider;
+
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 import com.boaz.backend.global.common.ApiResponse;
-import com.boaz.backend.global.exception.CustomException;
-import com.boaz.backend.global.exception.ErrorCode;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -55,9 +57,6 @@ public class AuthController {
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh(
         @CookieValue(name = "refresh_token", required = false) String refreshToken
     ) {
-        if (refreshToken == null) {
-            throw new CustomException(ErrorCode.TOKEN_NOT_FOUND);  // 토큰 미포함 
-        }
         TokenRefreshResponse result = authService.refresh(refreshToken);
 
         return ResponseEntity.ok(ApiResponse.ok(result));
@@ -68,11 +67,14 @@ public class AuthController {
     @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Void>> logout(
-        @CookieValue(name = "refresh_token", required = false) String refreshToken, 
         HttpServletResponse response
     ) {
+        // SecurityContext에서 adminId 추출
+        AdminUserDetails adminUserDetails = (AdminUserDetails) SecurityContextHolder
+            .getContext().getAuthentication().getPrincipal();
+        Long adminId = adminUserDetails.getAdmin().getId();
         // DB에서 토큰 삭제 (Service에서 처리)
-        authService.logout(refreshToken);
+        authService.logout(adminId);
 
         // 브라우저에 저장된 쿠키 삭제 (Controller에서 처리)
         cookieProvider.expireRefreshTokenCookie(response);
