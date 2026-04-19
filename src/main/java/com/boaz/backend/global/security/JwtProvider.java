@@ -31,6 +31,7 @@ public class JwtProvider {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
+    // Access Token 생성 
     public String generateAccessToken(Long adminId, String username, String role) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
@@ -42,6 +43,7 @@ public class JwtProvider {
                 .compact();
     }
 
+    // Refresh Token 생성 
     public String generateRefreshToken(Long adminId) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
@@ -51,6 +53,7 @@ public class JwtProvider {
                 .compact();
     }
 
+    // JWT 토큰을 파싱해서 Claims(내용) 반환 
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -59,14 +62,17 @@ public class JwtProvider {
                 .getPayload();
     }
 
+    // 토큰에서 adminId 추출 
     public Long getAdminIdFromToken(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
+    // 토큰에서 username 추출 
     public String getUsernameFromToken(String token) {
         return parseClaims(token).get("username", String.class);
     }
 
+    // 토큰 유효성 검사 
     public void validateToken(String token) {
         try {
             Jwts.parser()
@@ -74,12 +80,13 @@ public class JwtProvider {
                     .build()
                     .parseSignedClaims(token);
         } catch (ExpiredJwtException e) {
-            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);  // 토큰 만료
         } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_TOKEN);
+            throw new CustomException(ErrorCode.INVALID_TOKEN);  // 위변조 시 
         }
     }
 
+    // Refresh Token 만료 시각 계산 
     public LocalDateTime getRefreshTokenExpiry() {
         return LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000);
     }

@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingRequestCookieException;
 
 @Slf4j
 @RestControllerAdvice
@@ -51,6 +52,19 @@ public class GlobalExceptionHandler {
                         ErrorCode.MISSING_PARAMETER.getMessage()
                 ));
     }
+    
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingCookie(MissingRequestCookieException e) {
+        log.warn("MissingCookieException: {}", e.getCookieName());
+        return ResponseEntity
+                .status(ErrorCode.TOKEN_NOT_FOUND.getHttpStatus())
+                .body(ApiResponse.error(
+                        ErrorCode.TOKEN_NOT_FOUND.getHttpStatus().value(), 
+                        ErrorCode.TOKEN_NOT_FOUND.getCode(), 
+                        ErrorCode.TOKEN_NOT_FOUND.getMessage()
+                ));
+    }
+
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
