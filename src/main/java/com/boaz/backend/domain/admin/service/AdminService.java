@@ -97,19 +97,21 @@ public class AdminService {
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
         request.getTrack().ifPresent(Track::validateNotAll);
-
-        request.getRole().ifPresent(role -> {
-            admin.updateRole(role);
-            refreshTokenRepository.deleteByAdminId(id);
-        });
-
-        request.getName().ifPresent(admin::updateName);
-        request.getTrack().ifPresent(admin::updateTrack);
         request.getTerm().ifPresent(t -> {
             if (t < 0) throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
-            admin.updateTerm(t);
         });
-        request.getTeamName().ifPresent(admin::updateTeamName);
+
+        if (request.getRole().isPresent()) {
+            refreshTokenRepository.deleteByAdminId(id);
+        }
+
+        admin.update(
+                request.getRole().orElse(null),
+                request.getName().orElse(null),
+                request.getTrack().orElse(null),
+                request.getTerm().orElse(null),
+                request.getTeamName().orElse(null)
+        );
 
         return new AdminIdResponse(admin.getId());
     }

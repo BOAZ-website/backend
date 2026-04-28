@@ -56,7 +56,25 @@ public class RecruitmentResponse {
         }
     }
 
+    private RecruitmentResponse(Recruitment recruitment) {
+        this.recruitmentId = recruitment.getId();
+        this.term = recruitment.getTerm();
+        this.startDate = recruitment.getStartDate();
+        this.endDate = recruitment.getEndDate();
+        this.brochureUrl = recruitment.getBrochureUrl();
+        this.isActive = recruitment.isActive();
+        try {
+            this.schedule = objectMapper.readTree(recruitment.getSchedule());
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     public static RecruitmentResponse from(Recruitment recruitment, boolean isActive) {
         return new RecruitmentResponse(recruitment, isActive);
+    }
+
+    public static RecruitmentResponse from(Recruitment recruitment) {
+        return new RecruitmentResponse(recruitment);
     }
 }
