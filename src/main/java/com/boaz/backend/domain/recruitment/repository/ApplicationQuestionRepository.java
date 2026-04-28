@@ -9,6 +9,9 @@ import java.util.List;
 
 public interface ApplicationQuestionRepository extends JpaRepository<ApplicationQuestion, Long> {
 
+    // 공고에 연관된 질문 존재 여부 확인
+    boolean existsByRecruitmentId(Long recruitmentId);
+
     @Query("SELECT q FROM ApplicationQuestion q " +
         "WHERE q.recruitment.id = :recruitmentId " +
         "AND (q.category = :commonCategory OR q.category = :trackCategory) " +
