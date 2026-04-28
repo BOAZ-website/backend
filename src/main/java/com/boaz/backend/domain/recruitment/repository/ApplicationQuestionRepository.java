@@ -18,11 +18,11 @@ public interface ApplicationQuestionRepository extends JpaRepository<Application
     // 수정 시 label 중복 확인 (자기 자신 제외)
     boolean existsByRecruitmentIdAndLabelAndIdNot(Long recruitmentId, String label, Long id);
 
-    // order_num 중복 확인
-    boolean existsByRecruitmentIdAndOrderNum(Long recruitmentId, Integer orderNum);
+    // order_num 중복 확인 (카테고리 내)
+    boolean existsByRecruitmentIdAndCategoryAndOrderNum(Long recruitmentId, ApplicationQuestion.Category category, Integer orderNum);
 
-    // 수정 시 order_num 중복 확인 (자기 자신 제외)
-    boolean existsByRecruitmentIdAndOrderNumAndIdNot(Long recruitmentId, Integer orderNum, Long id);
+    // 수정 시 order_num 중복 확인 (카테고리 내, 자기 자신 제외)
+    boolean existsByRecruitmentIdAndCategoryAndOrderNumAndIdNot(Long recruitmentId, ApplicationQuestion.Category category, Integer orderNum, Long id);
 
     List<ApplicationQuestion> findByRecruitmentIdOrderByOrderNumAsc(Long recruitmentId);
 

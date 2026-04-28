@@ -496,10 +496,12 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         Set<String> labelSet = new java.util.HashSet<>();
-        Set<Integer> orderNumSet = new java.util.HashSet<>();
+        Map<ApplicationQuestion.Category, Set<Integer>> orderNumByCategory = new java.util.HashMap<>();
         for (QuestionItemRequest item : request.getQuestions()) {
             if (!labelSet.add(item.getLabel())) throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
-            if (!orderNumSet.add(item.getOrderNum())) throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            if (!orderNumByCategory.computeIfAbsent(item.getCategory(), k -> new java.util.HashSet<>()).add(item.getOrderNum())) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            }
         }
 
         for (QuestionItemRequest item : request.getQuestions()) {
@@ -509,8 +511,8 @@ public class RecruitmentService {
                     request.getRecruitmentId(), item.getLabel())) {
                 throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
             }
-            if (applicationQuestionRepository.existsByRecruitmentIdAndOrderNum(
-                    request.getRecruitmentId(), item.getOrderNum())) {
+            if (applicationQuestionRepository.existsByRecruitmentIdAndCategoryAndOrderNum(
+                    request.getRecruitmentId(), item.getCategory(), item.getOrderNum())) {
                 throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
             }
         }
@@ -547,10 +549,12 @@ public class RecruitmentService {
                         question.getRecruitment().getId(), request.getLabel(), questionId)) {
             throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
         }
-        if (request.getOrderNum() != null &&
-                applicationQuestionRepository.existsByRecruitmentIdAndOrderNumAndIdNot(
-                        question.getRecruitment().getId(), request.getOrderNum(), questionId)) {
-            throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+        if (request.getOrderNum() != null) {
+            ApplicationQuestion.Category resolvedCategory = request.getCategory() != null ? request.getCategory() : question.getCategory();
+            if (applicationQuestionRepository.existsByRecruitmentIdAndCategoryAndOrderNumAndIdNot(
+                    question.getRecruitment().getId(), resolvedCategory, request.getOrderNum(), questionId)) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            }
         }
 
         ApplicationQuestion.Type resolvedType = request.getType() != null ? request.getType() : question.getType();
