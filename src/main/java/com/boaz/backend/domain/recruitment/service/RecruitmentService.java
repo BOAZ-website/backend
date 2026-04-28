@@ -2,10 +2,14 @@ package com.boaz.backend.domain.recruitment.service;
 
 import com.boaz.backend.domain.recruitment.dto.request.AnswerRequest;
 import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentAdminResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
@@ -56,6 +60,92 @@ public class RecruitmentService {
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
     private final S3Service s3Service;
+
+    // ========================
+    // Admin 전용 메서드
+    // ========================
+
+    // 모든 모집 공고 조회 (term 내림차순)
+    public List<RecruitmentAdminResponse> getAllRecruitments() {
+        return recruitmentRepository.findAllByOrderByTermDesc().stream()
+                .map(RecruitmentAdminResponse::from)
+                .toList();
+    }
+
+    // 모집 공고 등록
+    @Transactional
+    public RecruitmentIdResponse createRecruitment(RecruitmentCreateRequest request) {
+        if (recruitmentRepository.existsByTerm(request.getTerm())) {
+            throw new CustomException(ErrorCode.DUPLICATE_TERM);
+        }
+        if (!request.getEndDate().isAfter(request.getStartDate())) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        String scheduleJson;
+        try {
+            scheduleJson = objectMapper.writeValueAsString(request.getSchedule());
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+        Recruitment recruitment = Recruitment.create(
+                request.getTerm(),
+                request.getStartDate(),
+                request.getEndDate(),
+                scheduleJson,
+                request.getBrochureUrl()
+        );
+        recruitmentRepository.save(recruitment);
+        return RecruitmentIdResponse.of(recruitment.getId());
+    }
+
+    // 모집 공고 수정
+    @Transactional
+    public RecruitmentIdResponse updateRecruitment(Long id, RecruitmentUpdateRequest request) {
+        Recruitment recruitment = recruitmentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (request.getTerm() != null &&
+                recruitmentRepository.existsByTermAndIdNot(request.getTerm(), id)) {
+            throw new CustomException(ErrorCode.DUPLICATE_TERM);
+        }
+
+        LocalDateTime resolvedStart = request.getStartDate() != null ? request.getStartDate() : recruitment.getStartDate();
+        LocalDateTime resolvedEnd = request.getEndDate() != null ? request.getEndDate() : recruitment.getEndDate();
+        if (!resolvedEnd.isAfter(resolvedStart)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String scheduleJson = null;
+        if (request.getSchedule() != null) {
+            try {
+                scheduleJson = objectMapper.writeValueAsString(request.getSchedule());
+            } catch (Exception e) {
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        recruitment.update(
+                request.getTerm(),
+                request.getStartDate(),
+                request.getEndDate(),
+                scheduleJson,
+                request.getBrochureUrl()
+        );
+        return RecruitmentIdResponse.of(recruitment.getId());
+    }
+
+    // 모집 공고 삭제
+    @Transactional
+    public void deleteRecruitment(Long id) {
+        Recruitment recruitment = recruitmentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (applicantRepository.existsByRecruitmentId(id) ||
+                applicationQuestionRepository.existsByRecruitmentId(id)) {
+            throw new CustomException(ErrorCode.RECRUITMENT_HAS_REFERENCES);
+        }
+        recruitmentRepository.delete(recruitment);
+    }
 
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {

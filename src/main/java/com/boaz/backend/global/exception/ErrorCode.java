@@ -28,6 +28,8 @@ public enum ErrorCode {
     INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_CURRENT_PASSWORD", "현재 비밀번호가 올바르지 않습니다."),
 
     // Recruitment
+    DUPLICATE_TERM(HttpStatus.CONFLICT, "DUPLICATE_TERM", "이미 존재하는 기수입니다."),
+    RECRUITMENT_HAS_REFERENCES(HttpStatus.BAD_REQUEST, "RECRUITMENT_HAS_REFERENCES", "연관된 데이터가 존재하여 삭제할 수 없습니다."),
     RECRUITMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RECRUITMENT_NOT_FOUND", "해당 모집 공고를 찾을 수 없습니다."),
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
     QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
