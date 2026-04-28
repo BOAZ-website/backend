@@ -386,7 +386,7 @@ public class RecruitmentService {
     // 모든 모집 공고 조회 (term 내림차순)
     public List<RecruitmentResponse> getAllRecruitments() {
         return recruitmentRepository.findAllByOrderByTermDesc().stream()
-                .map(r -> RecruitmentResponse.from(r, r.isActive()))
+                .map(RecruitmentResponse::from)
                 .toList();
     }
 
