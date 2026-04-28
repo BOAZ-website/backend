@@ -1,7 +1,7 @@
 package com.boaz.backend.domain.recruitment.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -27,7 +27,7 @@ public class RecruitmentCreateRequest {
 
     @NotNull(message = "모집 일정은 필수입니다.")
     @Schema(description = "모집 일정 목록")
-    private JsonNode schedule;
+    private ArrayNode schedule;
 
     @Schema(description = "홍보 책자 링크", example = "https://example.com/brochure.pdf", nullable = true)
     private String brochureUrl;
