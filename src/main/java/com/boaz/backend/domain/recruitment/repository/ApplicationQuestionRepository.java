@@ -12,6 +12,18 @@ public interface ApplicationQuestionRepository extends JpaRepository<Application
     // 공고에 연관된 질문 존재 여부 확인
     boolean existsByRecruitmentId(Long recruitmentId);
 
+    // label 중복 확인
+    boolean existsByRecruitmentIdAndLabel(Long recruitmentId, String label);
+
+    // 수정 시 label 중복 확인 (자기 자신 제외)
+    boolean existsByRecruitmentIdAndLabelAndIdNot(Long recruitmentId, String label, Long id);
+
+    // order_num 중복 확인
+    boolean existsByRecruitmentIdAndOrderNum(Long recruitmentId, Integer orderNum);
+
+    // 수정 시 order_num 중복 확인 (자기 자신 제외)
+    boolean existsByRecruitmentIdAndOrderNumAndIdNot(Long recruitmentId, Integer orderNum, Long id);
+
     @Query("SELECT q FROM ApplicationQuestion q " +
         "WHERE q.recruitment.id = :recruitmentId " +
         "AND (q.category = :commonCategory OR q.category = :trackCategory) " +
