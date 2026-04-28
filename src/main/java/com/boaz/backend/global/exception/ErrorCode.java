@@ -30,6 +30,9 @@ public enum ErrorCode {
     // Recruitment
     DUPLICATE_TERM(HttpStatus.CONFLICT, "DUPLICATE_TERM", "이미 존재하는 기수입니다."),
     RECRUITMENT_HAS_REFERENCES(HttpStatus.BAD_REQUEST, "RECRUITMENT_HAS_REFERENCES", "연관된 데이터가 존재하여 삭제할 수 없습니다."),
+    DUPLICATE_QUESTION_LABEL(HttpStatus.CONFLICT, "DUPLICATE_QUESTION_LABEL", "이미 존재하는 질문 label입니다."),
+    DUPLICATE_QUESTION_ORDER(HttpStatus.CONFLICT, "DUPLICATE_QUESTION_ORDER", "이미 사용 중인 순서 번호입니다."),
+    QUESTION_HAS_ANSWERS(HttpStatus.BAD_REQUEST, "QUESTION_HAS_ANSWERS", "연관된 답변 데이터가 존재하여 삭제할 수 없습니다."),
     RECRUITMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "RECRUITMENT_NOT_FOUND", "해당 모집 공고를 찾을 수 없습니다."),
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
     QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),

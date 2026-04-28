@@ -10,6 +10,9 @@ import org.springframework.data.repository.query.Param;
 
 public interface ApplicantAnswerRepository extends JpaRepository<ApplicantAnswer, Long> {
 
+    // 질문에 연관된 답변 존재 여부 확인
+    boolean existsByQuestionId(Long questionId);
+
     // applicant_id 기반 조회
     @Query("SELECT aa FROM ApplicantAnswer aa WHERE aa.applicant.id IN :applicantIds")
     List<ApplicantAnswer> findByApplicantIds(@Param("applicantIds") List<Long> applicantIds);
