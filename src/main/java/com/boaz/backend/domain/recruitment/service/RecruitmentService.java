@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -483,6 +484,13 @@ public class RecruitmentService {
     public QuestionIdsResponse createQuestions(QuestionsCreateRequest request) {
         Recruitment recruitment = recruitmentRepository.findById(request.getRecruitmentId())
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        Set<String> labelSet = new java.util.HashSet<>();
+        Set<Integer> orderNumSet = new java.util.HashSet<>();
+        for (QuestionItemRequest item : request.getQuestions()) {
+            if (!labelSet.add(item.getLabel())) throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
+            if (!orderNumSet.add(item.getOrderNum())) throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+        }
 
         for (QuestionItemRequest item : request.getQuestions()) {
             validateQuestionType(item.getType(), item.getLimitLength(), item.getMetadata());
