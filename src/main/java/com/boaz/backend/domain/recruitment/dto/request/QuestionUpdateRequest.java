@@ -3,6 +3,7 @@ package com.boaz.backend.domain.recruitment.dto.request;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Positive;
 import lombok.Getter;
 import org.openapitools.jackson.nullable.JsonNullable;
 
@@ -27,6 +28,7 @@ public class QuestionUpdateRequest {
     @Schema(description = "행/열 정보 (null 전송 시 삭제)", nullable = true)
     private JsonNullable<JsonNode> metadata = JsonNullable.undefined();
 
+    @Positive(message = "출력 순서는 양수여야 합니다.")
     @Schema(description = "출력 순서", example = "1", nullable = true)
     private Integer orderNum;
 
