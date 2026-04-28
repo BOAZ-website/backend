@@ -51,7 +51,7 @@ public class RecruitmentAdminController {
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<RecruitmentIdResponse>> updateRecruitment(
             @PathVariable Long id,
-            @RequestBody RecruitmentUpdateRequest request) {
+            @RequestBody @Valid RecruitmentUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.updateRecruitment(id, request)));
     }
 
@@ -90,7 +90,7 @@ public class RecruitmentAdminController {
     @PatchMapping("/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionIdResponse>> updateQuestion(
             @PathVariable Long questionId,
-            @RequestBody QuestionUpdateRequest request) {
+            @RequestBody @Valid QuestionUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.updateQuestion(questionId, request)));
     }
 
