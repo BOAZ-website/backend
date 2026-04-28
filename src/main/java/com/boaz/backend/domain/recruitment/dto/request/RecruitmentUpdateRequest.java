@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.time.LocalDateTime;
 
@@ -24,6 +25,6 @@ public class RecruitmentUpdateRequest {
     @Schema(description = "모집 일정 목록 (수정 시 전체 교체)", nullable = true)
     private JsonNode schedule;
 
-    @Schema(description = "홍보 책자 링크", example = "https://example.com/brochure.pdf", nullable = true)
-    private String brochureUrl;
+    @Schema(description = "홍보 책자 링크 (null 전송 시 삭제)", example = "https://example.com/brochure.pdf", nullable = true)
+    private JsonNullable<String> brochureUrl = JsonNullable.undefined();
 }

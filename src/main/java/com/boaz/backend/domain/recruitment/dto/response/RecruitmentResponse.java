@@ -15,6 +15,9 @@ import java.time.LocalDateTime;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class RecruitmentResponse {
 
+    @Schema(description = "모집 공고 ID", example = "12", nullable = true)
+    private final Long recruitmentId;
+
     @Schema(description = "기수", example = "25", nullable = true)
     private final Integer term;
 
@@ -36,32 +39,24 @@ public class RecruitmentResponse {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     private RecruitmentResponse(Recruitment recruitment, boolean isActive) {
-        this.term = recruitment.getTerm();
-        this.startDate = recruitment.getStartDate();
-        this.endDate = recruitment.getEndDate();
-        try {
+        this.recruitmentId = recruitment.getId();
+        this.term = isActive ? recruitment.getTerm() : null;
+        this.startDate = isActive ? recruitment.getStartDate() : null;
+        this.endDate = isActive ? recruitment.getEndDate() : null;
+        this.brochureUrl = isActive ? recruitment.getBrochureUrl() : null;
+        this.isActive = isActive;
+        if (isActive) {
+            try {
                 this.schedule = objectMapper.readTree(recruitment.getSchedule());
             } catch (Exception e) {
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
-        this.brochureUrl = recruitment.getBrochureUrl();
-        this.isActive = isActive;
+        } else {
+            this.schedule = null;
+        }
     }
 
-    private RecruitmentResponse(boolean isActive) {
-        this.term = null;
-        this.startDate = null;
-        this.endDate = null;
-        this.schedule = null;
-        this.brochureUrl = null;
-        this.isActive = isActive;
-    }
-
-    public static RecruitmentResponse from(Recruitment recruitment) {
-        return new RecruitmentResponse(recruitment, true);
-    }
-
-    public static RecruitmentResponse inactive() {
-        return new RecruitmentResponse(false);
+    public static RecruitmentResponse from(Recruitment recruitment, boolean isActive) {
+        return new RecruitmentResponse(recruitment, isActive);
     }
 }

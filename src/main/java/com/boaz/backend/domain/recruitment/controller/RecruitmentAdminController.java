@@ -2,8 +2,8 @@ package com.boaz.backend.domain.recruitment.controller;
 
 import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
-import com.boaz.backend.domain.recruitment.dto.response.RecruitmentAdminResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.ApiResponse;
 
@@ -30,7 +30,7 @@ public class RecruitmentAdminController {
 
     @Operation(summary = "모든 모집 공고 조회", description = "is_active 무관 전체 공고를 term 내림차순으로 반환합니다.")
     @GetMapping
-    public ResponseEntity<ApiResponse<List<RecruitmentAdminResponse>>> getAllRecruitments() {
+    public ResponseEntity<ApiResponse<List<RecruitmentResponse>>> getAllRecruitments() {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAllRecruitments()));
     }
 

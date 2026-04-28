@@ -8,7 +8,6 @@ import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
-import com.boaz.backend.domain.recruitment.dto.response.RecruitmentAdminResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
@@ -66,9 +65,9 @@ public class RecruitmentService {
     // ========================
 
     // 모든 모집 공고 조회 (term 내림차순)
-    public List<RecruitmentAdminResponse> getAllRecruitments() {
+    public List<RecruitmentResponse> getAllRecruitments() {
         return recruitmentRepository.findAllByOrderByTermDesc().stream()
-                .map(RecruitmentAdminResponse::from)
+                .map(r -> RecruitmentResponse.from(r, r.isActive()))
                 .toList();
     }
 
@@ -174,10 +173,7 @@ public class RecruitmentService {
         boolean isActive = !now.isBefore(recruitment.getStartDate()) 
                         && !now.isAfter(recruitment.getEndDate());
 
-        if (!isActive) {
-            return RecruitmentResponse.inactive();
-        }
-        return RecruitmentResponse.from(recruitment);
+        return RecruitmentResponse.from(recruitment, isActive);
     }
 
     // 지원서 질문 조회하기

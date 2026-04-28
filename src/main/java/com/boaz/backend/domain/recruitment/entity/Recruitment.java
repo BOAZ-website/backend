@@ -3,6 +3,8 @@ package com.boaz.backend.domain.recruitment.entity;
 import com.boaz.backend.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
+import org.openapitools.jackson.nullable.JsonNullable;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -44,11 +46,11 @@ public class Recruitment extends BaseEntity {
         return recruitment;
     }
 
-    public void update(Integer term, LocalDateTime startDate, LocalDateTime endDate, String schedule, String brochureUrl) {
+    public void update(Integer term, LocalDateTime startDate, LocalDateTime endDate, String schedule, JsonNullable<String> brochureUrl) {
         if (term != null) this.term = term;
         if (startDate != null) this.startDate = startDate;
         if (endDate != null) this.endDate = endDate;
         if (schedule != null) this.schedule = schedule;
-        if (brochureUrl != null) this.brochureUrl = brochureUrl;
+        if (brochureUrl != null && brochureUrl.isPresent()) this.brochureUrl = brochureUrl.get();
     }
 }
