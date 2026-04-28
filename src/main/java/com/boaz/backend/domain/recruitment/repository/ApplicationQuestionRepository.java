@@ -24,6 +24,8 @@ public interface ApplicationQuestionRepository extends JpaRepository<Application
     // 수정 시 order_num 중복 확인 (자기 자신 제외)
     boolean existsByRecruitmentIdAndOrderNumAndIdNot(Long recruitmentId, Integer orderNum, Long id);
 
+    List<ApplicationQuestion> findByRecruitmentIdOrderByOrderNumAsc(Long recruitmentId);
+
     @Query("SELECT q FROM ApplicationQuestion q " +
         "WHERE q.recruitment.id = :recruitmentId " +
         "AND (q.category = :commonCategory OR q.category = :trackCategory) " +

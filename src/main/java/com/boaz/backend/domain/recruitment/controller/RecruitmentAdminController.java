@@ -6,6 +6,7 @@ import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionIdsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
@@ -68,6 +69,13 @@ public class RecruitmentAdminController {
             @RequestParam Integer term) {
         recruitmentService.downloadApplications(term);
         return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "지원서 질문 목록 조회", description = "특정 모집 공고의 질문 목록을 조회합니다. 모집 중 여부와 무관하게 조회 가능.")
+    @GetMapping("/{recruitmentId}/questions")
+    public ResponseEntity<ApiResponse<List<QuestionResponse>>> getAdminQuestions(
+            @PathVariable Long recruitmentId) {
+        return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAdminQuestions(recruitmentId)));
     }
 
     @Operation(summary = "지원서 질문 등록", description = "모집 공고에 지원서 질문을 다건 등록합니다. 하나라도 실패 시 전체 롤백.")

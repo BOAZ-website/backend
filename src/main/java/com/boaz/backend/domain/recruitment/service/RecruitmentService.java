@@ -479,6 +479,16 @@ public class RecruitmentService {
         recruitmentRepository.delete(recruitment);
     }
 
+    // 지원서 질문 목록 조회 (어드민 전용, 모집 중 여부 무관)
+    public List<QuestionResponse> getAdminQuestions(Long recruitmentId) {
+        recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+        return applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(recruitmentId)
+                .stream()
+                .map(QuestionResponse::from)
+                .toList();
+    }
+
     // 지원서 질문 등록 (다건, 실패 시 전체 롤백)
     @Transactional
     public QuestionIdsResponse createQuestions(QuestionsCreateRequest request) {
