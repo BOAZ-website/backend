@@ -78,24 +78,12 @@ public class Admin extends BaseEntity {
         this.createdBy = createdBy;
     }
 
-    public void updateRole(Role role) {
-        this.role = role;
-    }
-
-    public void updateName(String name) {
-        this.name = name;
-    }
-
-    public void updateTrack(Track track) {
-        this.track = track;
-    }
-
-    public void updateTerm(Integer term) {
-        this.term = term;
-    }
-
-    public void updateTeamName(TeamName teamName) {
-        this.teamName = teamName;
+    public void update(Role role, String name, Track track, Integer term, TeamName teamName) {
+        if (role != null) this.role = role;
+        if (name != null) this.name = name;
+        if (track != null) this.track = track;
+        if (term != null) this.term = term;
+        if (teamName != null) this.teamName = teamName;
     }
 
     public void resetPassword(String encodedPassword) {
