@@ -17,8 +17,8 @@ public interface ApplicantAnswerRepository extends JpaRepository<ApplicantAnswer
     @Query("SELECT aa FROM ApplicantAnswer aa WHERE aa.applicant.id IN :applicantIds")
     List<ApplicantAnswer> findByApplicantIds(@Param("applicantIds") List<Long> applicantIds);
 
-    // recruitment 내 전체 답변 삭제
-    @Query("DELETE FROM ApplicantAnswer aa WHERE aa.applicant.id IN :applicantIds")
+    // recruitment 내 전체 답변 삭제 (서브쿼리로 메모리 적재 없이 벌크 삭제)
     @org.springframework.data.jpa.repository.Modifying
-    void deleteByApplicantIds(@Param("applicantIds") List<Long> applicantIds);
+    @Query("DELETE FROM ApplicantAnswer aa WHERE aa.applicant.id IN (SELECT a.id FROM Applicant a WHERE a.recruitment.id = :recruitmentId)")
+    void deleteByRecruitmentId(@Param("recruitmentId") Long recruitmentId);
 }

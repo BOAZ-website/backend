@@ -489,11 +489,8 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
         }
 
-        List<Long> applicantIds = applicantRepository.findIdsByRecruitmentId(recruitmentId);
-        if (!applicantIds.isEmpty()) {
-            applicantAnswerRepository.deleteByApplicantIds(applicantIds);
-            applicantRepository.deleteByRecruitmentId(recruitmentId);
-        }
+        applicantAnswerRepository.deleteByRecruitmentId(recruitmentId);
+        applicantRepository.deleteByRecruitmentId(recruitmentId);
     }
 
     // 지원서 질문 목록 조회 (어드민 전용, 모집 중 여부 무관)
