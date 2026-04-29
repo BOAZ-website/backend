@@ -479,6 +479,23 @@ public class RecruitmentService {
         recruitmentRepository.delete(recruitment);
     }
 
+    // 지원서 전체 삭제 (모집 진행 중이면 거부)
+    @Transactional
+    public void deleteApplicants(Long recruitmentId) {
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (recruitment.isActive()) {
+            throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
+        }
+
+        List<Long> applicantIds = applicantRepository.findIdsByRecruitmentId(recruitmentId);
+        if (!applicantIds.isEmpty()) {
+            applicantAnswerRepository.deleteByApplicantIds(applicantIds);
+            applicantRepository.deleteByRecruitmentId(recruitmentId);
+        }
+    }
+
     // 지원서 질문 목록 조회 (어드민 전용, 모집 중 여부 무관)
     public List<QuestionResponse> getAdminQuestions(Long recruitmentId) {
         recruitmentRepository.findById(recruitmentId)

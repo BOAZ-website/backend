@@ -14,6 +14,13 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
     // 공고에 연관된 지원자 존재 여부 확인
     boolean existsByRecruitmentId(Long recruitmentId);
 
+    // recruitment_id 기반 지원자 ID 목록 조회
+    @Query("SELECT a.id FROM Applicant a WHERE a.recruitment.id = :recruitmentId")
+    List<Long> findIdsByRecruitmentId(@Param("recruitmentId") Long recruitmentId);
+
+    // recruitment_id 기반 전체 삭제
+    void deleteByRecruitmentId(Long recruitmentId);
+
     // recruitment_id, track 기반 검색 (중복 제거)
     @Query("""
         SELECT a FROM Applicant a

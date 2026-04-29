@@ -37,6 +37,7 @@ public enum ErrorCode {
     RECRUITMENT_NOT_AVAILABLE(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_AVAILABLE", "현재 지원 가능한 기간이 아닙니다."),
     QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
     RECRUITMENT_CLOSED(HttpStatus.BAD_REQUEST, "RECRUITMENT_CLOSED", "현재 지원 기간이 아닙니다."),
+    RECRUITMENT_NOT_CLOSED(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_CLOSED", "모집이 진행 중인 공고의 지원서는 삭제할 수 없습니다."),
     ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "ANSWER_REQUIRED", "필수 질문에 답변해주세요."),
     INVALID_TRACK_SELECTION(HttpStatus.BAD_REQUEST, "INVALID_TRACK_SELECTION", "지원 부문을 올바르게 선택해주세요."),
     INVALID_EMAIL_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_EMAIL_FORMAT", "이메일 형식이 올바르지 않습니다."),
