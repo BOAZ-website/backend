@@ -9,6 +9,7 @@ import com.boaz.backend.domain.recruitment.dto.response.QuestionIdsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
+import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.ApiResponse;
 
@@ -107,6 +108,19 @@ public class RecruitmentAdminController {
     public ResponseEntity<ApiResponse<Void>> deleteQuestion(
             @PathVariable Long questionId) {
         recruitmentService.deleteQuestion(questionId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
+    @Operation(summary = "모집 사전 알림 신청 목록 조회", description = "모든 사전 알림 신청 목록을 최신순으로 반환합니다.")
+    @GetMapping("/subscriptions")
+    public ResponseEntity<ApiResponse<List<SubscriptionResponse>>> getAllSubscriptions() {
+        return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAllSubscriptions()));
+    }
+
+    @Operation(summary = "모집 사전 알림 신청 전체 삭제", description = "모든 사전 알림 신청 데이터를 삭제합니다. 데이터가 없어도 200을 반환합니다.")
+    @DeleteMapping("/subscriptions")
+    public ResponseEntity<ApiResponse<Void>> deleteAllSubscriptions() {
+        recruitmentService.deleteAllSubscriptions();
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 }
