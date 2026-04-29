@@ -71,6 +71,14 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
+    @Operation(summary = "지원서 전체 삭제", description = "특정 모집 공고의 지원서를 전체 삭제합니다. 모집 진행 중인 경우 삭제 불가.")
+    @DeleteMapping("/{recruitmentId}/applicants")
+    public ResponseEntity<ApiResponse<Void>> deleteApplicants(
+            @PathVariable Long recruitmentId) {
+        recruitmentService.deleteApplicants(recruitmentId);
+        return ResponseEntity.ok(ApiResponse.ok(null));
+    }
+
     @Operation(summary = "지원서 질문 목록 조회", description = "특정 모집 공고의 질문 목록을 조회합니다. 모집 중 여부와 무관하게 조회 가능.")
     @GetMapping("/{recruitmentId}/questions")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getAdminQuestions(
