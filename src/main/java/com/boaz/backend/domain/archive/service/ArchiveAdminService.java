@@ -96,6 +96,7 @@ public class ArchiveAdminService {
             if (category == Category.ACTIVITY && request.getHalf() == null) {
                 throw new CustomException(ErrorCode.MISSING_HALF);
             }
+            validateHalf(request.getHalf());
             validateImage(image);
             String key = generateS3KeyForUpdate(category, archive, request, image);
             newImageUrl = s3Service.uploadImage(key, image);
@@ -161,11 +162,11 @@ public class ArchiveAdminService {
         if (request.getTitle() == null) throw new CustomException(ErrorCode.MISSING_TITLE);
         if (request.getTrack() == null) throw new CustomException(ErrorCode.MISSING_TRACK);
         if (request.getLinks() == null) throw new CustomException(ErrorCode.MISSING_LINKS);
-
         if (category == Category.ACTIVITY && request.getHalf() == null) {
             throw new CustomException(ErrorCode.MISSING_HALF);
         }
-
+        
+        validateHalf(request.getHalf());
         validateTrack(category, request.getTrack());
 
         if (request.getContentDate() != null) {
@@ -185,6 +186,13 @@ public class ArchiveAdminService {
     private void validateContentDate(LocalDate contentDate) {
         if (contentDate.isAfter(LocalDate.now())) {
             throw new CustomException(ErrorCode.FUTURE_DATE_NOT_ALLOWED);
+        }
+    }
+
+    // half 형식 검증
+    private void validateHalf(String half) {
+        if (!half.matches("^\\d{2}-[12]$")) {
+            throw new CustomException(ErrorCode.INVALID_HALF_FORMAT);
         }
     }
 
