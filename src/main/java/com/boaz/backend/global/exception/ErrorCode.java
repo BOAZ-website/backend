@@ -60,7 +60,23 @@ public enum ErrorCode {
     INVALID_PARAMETER(HttpStatus.BAD_REQUEST, "INVALID_PARAMETER", "잘못된 요청 값 입니다."),
 
     // Archive
-    INVALID_PAGINATION(HttpStatus.BAD_REQUEST, "INVALID_PAGINATION", "페이지 값이 올바르지 않습니다.");
+    INVALID_PAGINATION(HttpStatus.BAD_REQUEST, "INVALID_PAGINATION", "페이지 값이 올바르지 않습니다."),
+
+    // Archive Admin
+    ARCHIVE_NOT_FOUND(HttpStatus.NOT_FOUND, "ARCHIVE_NOT_FOUND", "해당 아카이브를 찾을 수 없습니다."),
+    UNSUPPORTED_ARCHIVE_CATEGORY(HttpStatus.BAD_REQUEST, "UNSUPPORTED_ARCHIVE_CATEGORY", "해당 카테고리는 지원하지 않는 작업입니다."),
+    MISSING_TERM(HttpStatus.BAD_REQUEST, "MISSING_TERM", "term이 누락되었습니다."),
+    MISSING_TITLE(HttpStatus.BAD_REQUEST, "MISSING_TITLE", "title이 누락되었습니다."),
+    MISSING_TRACK(HttpStatus.BAD_REQUEST, "MISSING_TRACK", "track이 누락되었습니다."),
+    MISSING_LINKS(HttpStatus.BAD_REQUEST, "MISSING_LINKS", "links가 누락되었습니다."),
+    MISSING_HALF(HttpStatus.BAD_REQUEST, "MISSING_HALF", "half가 누락되었습니다."),
+    INVALID_URL_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_URL_FORMAT", "링크 URL 형식이 올바르지 않습니다."),
+    INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_DATE_FORMAT", "날짜 형식이 올바르지 않습니다. (YYYY-MM-DD)"),
+    FUTURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "FUTURE_DATE_NOT_ALLOWED", "미래 날짜는 입력할 수 없습니다."),
+    INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "허용되지 않는 이미지 파일 형식입니다. (jpg, jpeg, png, webp)"),
+    FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE_SIZE_EXCEEDED", "이미지 파일 크기는 5MB를 초과할 수 없습니다."),
+    INVALID_ENUM_VALUE(HttpStatus.BAD_REQUEST, "INVALID_ENUM_VALUE", "허용되지 않는 값입니다."),
+    S3_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_DELETE_FAILED", "파일 삭제 중 오류가 발생했습니다.");
 
 
     private final HttpStatus httpStatus;
