@@ -151,7 +151,7 @@ public class ArchiveAdminService {
             s3Service.deleteImage(imageUrl);
         } catch (Exception e) {
             log.error("S3 이미지 삭제 실패: imageUrl={}, error={}", imageUrl, e.getMessage());
-            throw new CustomException(ErrorCode.S3_DELETE_FAILED);
+            // throw new CustomException(ErrorCode.S3_DELETE_FAILED);
         }
     }
 
