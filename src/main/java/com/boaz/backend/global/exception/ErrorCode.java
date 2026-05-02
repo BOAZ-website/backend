@@ -71,7 +71,6 @@ public enum ErrorCode {
     MISSING_LINKS(HttpStatus.BAD_REQUEST, "MISSING_LINKS", "links가 누락되었습니다."),
     MISSING_HALF(HttpStatus.BAD_REQUEST, "MISSING_HALF", "half가 누락되었습니다."),
     INVALID_URL_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_URL_FORMAT", "링크 URL 형식이 올바르지 않습니다."),
-    INVALID_DATE_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_DATE_FORMAT", "날짜 형식이 올바르지 않습니다. (YYYY-MM-DD)"),
     FUTURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "FUTURE_DATE_NOT_ALLOWED", "미래 날짜는 입력할 수 없습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "허용되지 않는 이미지 파일 형식입니다. (jpg, jpeg, png, webp)"),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE_SIZE_EXCEEDED", "이미지 파일 크기는 5MB를 초과할 수 없습니다."),
