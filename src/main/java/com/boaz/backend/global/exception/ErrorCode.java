@@ -74,7 +74,6 @@ public enum ErrorCode {
     FUTURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "FUTURE_DATE_NOT_ALLOWED", "미래 날짜는 입력할 수 없습니다."),
     INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "INVALID_FILE_TYPE", "허용되지 않는 이미지 파일 형식입니다. (jpg, jpeg, png, webp)"),
     FILE_SIZE_EXCEEDED(HttpStatus.BAD_REQUEST, "FILE_SIZE_EXCEEDED", "이미지 파일 크기는 5MB를 초과할 수 없습니다."),
-    INVALID_ENUM_VALUE(HttpStatus.BAD_REQUEST, "INVALID_ENUM_VALUE", "허용되지 않는 값입니다."),
     S3_DELETE_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "S3_DELETE_FAILED", "파일 삭제 중 오류가 발생했습니다.");
 
 
