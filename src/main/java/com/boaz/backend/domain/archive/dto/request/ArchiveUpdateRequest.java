@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Getter
 @NoArgsConstructor
@@ -27,6 +28,7 @@ public class ArchiveUpdateRequest {
     private String links;
 
     @Schema(description = "콘텐츠 날짜", example = "2024-07-05")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     private LocalDate contentDate;
 
     @Schema(description = "상/하반기 (활동사진만 사용)", example = "26-1")

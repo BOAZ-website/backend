@@ -96,7 +96,9 @@ public class ArchiveAdminService {
             if (category == Category.ACTIVITY && request.getHalf() == null) {
                 throw new CustomException(ErrorCode.MISSING_HALF);
             }
-            validateHalf(request.getHalf());
+            if (request.getHalf() != null) {
+                validateHalf(request.getHalf());
+            } 
             validateImage(image);
             String key = generateS3KeyForUpdate(category, archive, request, image);
             newImageUrl = s3Service.uploadImage(key, image);
@@ -165,8 +167,9 @@ public class ArchiveAdminService {
         if (category == Category.ACTIVITY && request.getHalf() == null) {
             throw new CustomException(ErrorCode.MISSING_HALF);
         }
-        
-        validateHalf(request.getHalf());
+        if (request.getHalf() != null) {
+            validateHalf(request.getHalf());
+        }
         validateTrack(category, request.getTrack());
 
         if (request.getContentDate() != null) {
