@@ -15,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -90,15 +92,14 @@ public class ArchiveAdminService {
         String oldImageUrl = archive.getImageUrl();
         String newImageUrl = null;
 
-        // 이미지 변경 시 ACTIVITY이면 half null 체크 
-        if (image != null && !image.isEmpty()) {
+        if (category == Category.ACTIVITY && request.getHalf() == null) {
+            throw new CustomException(ErrorCode.MISSING_HALF);
+        }
+        if (request.getHalf() != null) {
+            validateHalf(request.getHalf());
+        }
 
-            if (category == Category.ACTIVITY && request.getHalf() == null) {
-                throw new CustomException(ErrorCode.MISSING_HALF);
-            }
-            if (request.getHalf() != null) {
-                validateHalf(request.getHalf());
-            } 
+        if (image != null && !image.isEmpty()) {
             validateImage(image);
             String key = generateS3KeyForUpdate(category, archive, request, image);
             newImageUrl = s3Service.uploadImage(key, image);
@@ -128,13 +129,18 @@ public class ArchiveAdminService {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        // DB 성공 후 기존 S3 이미지 삭제
         if (newImageUrl != null && oldImageUrl != null && !newImageUrl.equals(oldImageUrl)) {
-            try {
-                s3Service.deleteImage(oldImageUrl);
-            } catch (Exception e) {
-                log.error("기존 S3 이미지 삭제 실패: imageUrl={}, error={}", oldImageUrl, e.getMessage());
-            }
+            final String urlToDelete = oldImageUrl;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        s3Service.deleteImage(urlToDelete);
+                    } catch (Exception e) {
+                        log.error("기존 S3 이미지 삭제 실패: imageUrl={}, error={}", urlToDelete, e.getMessage());
+                    }
+                }
+            });
         }
     }
 
@@ -149,16 +155,19 @@ public class ArchiveAdminService {
 
         String imageUrl = archive.getImageUrl();
 
-        // DB 삭제 먼저
         archiveRepository.delete(archive);
-        archiveRepository.flush();
 
-        // DB 삭제 성공 후 S3 삭제
-        try {
-            s3Service.deleteImage(imageUrl);
-        } catch (Exception e) {
-            log.error("S3 이미지 삭제 실패: imageUrl={}, error={}", imageUrl, e.getMessage());
-            // throw new CustomException(ErrorCode.S3_DELETE_FAILED);
+        if (imageUrl != null) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        s3Service.deleteImage(imageUrl);
+                    } catch (Exception e) {
+                        log.error("S3 이미지 삭제 실패: imageUrl={}, error={}", imageUrl, e.getMessage());
+                    }
+                }
+            });
         }
     }
 
