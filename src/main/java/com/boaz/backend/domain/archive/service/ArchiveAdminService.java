@@ -215,21 +215,23 @@ public class ArchiveAdminService {
     // links URL 검증
     private void validateLinks(String links) {
         UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+        JsonNode jsonNode;
         try {
-            JsonNode jsonNode = objectMapper.readTree(links);
-
-            // JSON의 모든 value(URL)들을 순회하며 검증
-            jsonNode.fields().forEachRemaining(entry -> {
-                String url = entry.getValue().asText();
-                if (!urlValidator.isValid(url)) {
-                    throw new CustomException(ErrorCode.INVALID_URL_FORMAT);
-                }
-            });
-        } catch (CustomException e) {
-            throw e;
-        } catch(Exception e) {
-            throw new CustomException (ErrorCode.INTERNAL_SERVER_ERROR);
+            jsonNode = objectMapper.readTree(links);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
+
+        if (!jsonNode.isObject()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        jsonNode.fields().forEachRemaining(entry -> {
+            String url = entry.getValue().asText();
+            if (!urlValidator.isValid(url)) {
+                throw new CustomException(ErrorCode.INVALID_URL_FORMAT);
+            }
+        });
     }
 
     // 이미지 검증 (형식, 용량)
