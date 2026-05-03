@@ -266,11 +266,12 @@ public class ArchiveAdminService {
         String title = normalizeTitle(request.getTitle());
         String termFolder = request.getTerm() + "기";
         String trackFolder = getTrackFolderName(request.getTrack());
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
 
         return switch (category) {
-            case PROJECT -> "projects/" + termFolder + "/" + trackFolder + "/" + title + "." + extension;
-            case ACTIVITY -> "activities/" + termFolder + "/" + request.getHalf() + "/" + trackFolder + "/" + title + "." + extension;
-            case BLOG -> "blogs/" + termFolder + "/" + trackFolder + "/" + title + "." + extension;
+            case PROJECT -> "projects/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
+            case ACTIVITY -> "activities/" + termFolder + "/" + request.getHalf() + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
+            case BLOG -> "blogs/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
         };
     }
 
