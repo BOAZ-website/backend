@@ -40,13 +40,24 @@ public class S3Service {
         }
     }
 
-    // 이미지 업로드 후 URL 반환 
+    // 이미지 업로드 후 URL 반환
     public String uploadImage(String key, MultipartFile image) {
         try {
+            String contentType = image.getContentType();
+            if (contentType == null) {
+                String filename = image.getOriginalFilename();
+                String ext = filename != null ? filename.substring(filename.lastIndexOf(".") + 1).toLowerCase() : "";
+                contentType = switch (ext) {
+                    case "jpg", "jpeg" -> "image/jpeg";
+                    case "png" -> "image/png";
+                    case "webp" -> "image/webp";
+                    default -> "application/octet-stream";
+                };
+            }
             PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(archivingBucket)
                 .key(key)
-                .contentType(image.getContentType())
+                .contentType(contentType)
                 .build();
             s3Client.putObject(request, RequestBody.fromBytes(image.getBytes()));
             return "https://" + archivingBucket + ".s3." + region + ".amazonaws.com/" + key;
