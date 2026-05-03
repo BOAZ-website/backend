@@ -79,8 +79,8 @@ public class ArchiveAdminService {
             validateTrack(category, request.getTrack());
         }
 
-        if (request.getContentDate() != null) {
-            validateContentDate(request.getContentDate());
+        if (request.getContentDate().isPresent() && request.getContentDate().get() != null) {
+            validateContentDate(request.getContentDate().get());
         }
 
         if (request.getLinks() != null) {
@@ -104,6 +104,10 @@ public class ArchiveAdminService {
             newImageUrl = s3Service.uploadImage(key, image);
         }
 
+        LocalDate newContentDate = request.getContentDate().isPresent()
+            ? request.getContentDate().get()
+            : archive.getContentDate();
+
         try {
             archive.update(
                 request.getTerm(), 
@@ -112,7 +116,7 @@ public class ArchiveAdminService {
                 request.getTrack(), 
                 newImageUrl, 
                 request.getLinks(), 
-                request.getContentDate()
+                newContentDate
             );
             archiveRepository.flush();  // S3 롤백 로직이 실행되도록 트랜잭션 커밋 전에 DB 쓰기를 강제 
 

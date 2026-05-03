@@ -97,6 +97,6 @@ public class Archive extends BaseEntity {
         if (track != null) this.track = track;
         if (imageUrl != null) this.imageUrl = imageUrl;
         if (links != null) this.links = links;
-        if (contentDate != null) this.contentDate = contentDate;
+        this.contentDate = contentDate;
     }
 }
