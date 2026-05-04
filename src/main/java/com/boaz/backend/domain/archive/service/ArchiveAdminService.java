@@ -81,8 +81,8 @@ public class ArchiveAdminService {
             throw new CustomException(ErrorCode.UNSUPPORTED_ARCHIVE_CATEGORY);
         }
 
-        if (request.getTrack() != null) {
-            validateTrack(category, request.getTrack());
+        if (request.getTrack() != null && category != Category.ACTIVITY) {
+            request.getTrack().validateNotAll();
         }
 
         if (request.getContentDate().isPresent() && request.getContentDate().get() != null) {
@@ -172,19 +172,14 @@ public class ArchiveAdminService {
         if (request.getHalf() != null) {
             validateHalf(request.getHalf());
         }
-        validateTrack(category, request.getTrack());
+        if (category != Category.ACTIVITY) {
+            request.getTrack().validateNotAll();
+        }
 
         if (request.getContentDate() != null) {
             validateContentDate(request.getContentDate());
         }
         validateLinks(request.getLinks());
-    }
-
-    // track 검증 (PROJECT, BLOG는 ALL 불가)
-    private void validateTrack(Category category, Track track) {
-        if (category != Category.ACTIVITY) {
-            track.validateNotAll();
-        }
     }
 
     // content_date 미래 날짜 검증
