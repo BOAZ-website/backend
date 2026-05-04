@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -33,7 +34,7 @@ public class ArchiveAdminController {
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.PROJECT, request, image);
-        return ResponseEntity.status(201).body(ApiResponse.created(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null));
     }
 
     // 활동사진 등록
@@ -44,7 +45,7 @@ public class ArchiveAdminController {
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.ACTIVITY, request, image);
-        return ResponseEntity.status(201).body(ApiResponse.created(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null));
     }
 
     // 기술블로그 등록
@@ -55,7 +56,7 @@ public class ArchiveAdminController {
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.BLOG, request, image);
-        return ResponseEntity.status(201).body(ApiResponse.created(null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(null));
     }
 
     // 프로젝트 수정
