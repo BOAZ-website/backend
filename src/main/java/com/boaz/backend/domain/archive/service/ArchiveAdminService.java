@@ -12,7 +12,6 @@ import com.boaz.backend.global.util.S3Service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.validator.routines.UrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -23,9 +22,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -36,7 +36,7 @@ public class ArchiveAdminService {
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5MB
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "webp");
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[]{"http", "https"});
+    private static final Pattern URL_PATTERN = Pattern.compile("^(https?://)([a-zA-Z0-9\\-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/[^\\s]*)?$");
 
     private final ArchiveRepository archiveRepository;
     private final S3Service s3Service;
@@ -211,7 +211,7 @@ public class ArchiveAdminService {
 
         jsonNode.fields().forEachRemaining(entry -> {
             String url = entry.getValue().asText();
-            if (!URL_VALIDATOR.isValid(url)) {
+            if (!URL_PATTERN.matcher(url).matches()) {
                 throw new CustomException(ErrorCode.INVALID_URL_FORMAT);
             }
         });
