@@ -113,14 +113,18 @@ public class ArchiveAdminService {
             ? request.getContentDate().get()
             : archive.getContentDate();
 
+        String newTeamName = request.getTeamName().isPresent()
+            ? request.getTeamName().get()
+            : archive.getTeamName();
+
         try {
             archive.update(
-                request.getTerm(), 
-                request.getTitle(), 
-                request.getTeamName(), 
-                request.getTrack(), 
-                newImageUrl, 
-                request.getLinks(), 
+                request.getTerm(),
+                request.getTitle(),
+                newTeamName,
+                request.getTrack(),
+                newImageUrl,
+                request.getLinks(),
                 newContentDate
             );
             archiveRepository.flush();

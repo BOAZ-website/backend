@@ -93,7 +93,7 @@ public class Archive extends BaseEntity {
     ) {
         if (term != null) this.term = term;
         if (title != null) this.title = title;
-        if (teamName != null) this.teamName = teamName;
+        this.teamName = teamName;
         if (track != null) this.track = track;
         if (imageUrl != null) this.imageUrl = imageUrl;
         if (links != null) this.links = links;

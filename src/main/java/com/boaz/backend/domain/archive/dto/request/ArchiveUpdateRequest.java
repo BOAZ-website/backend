@@ -19,7 +19,7 @@ public class ArchiveUpdateRequest {
     private String title;
 
     @Schema(description = "팀명", example = "보보보아아즈")
-    private String teamName;
+    private JsonNullable<String> teamName = JsonNullable.undefined();
 
     @Schema(description = "트랙", example = "ANALYSIS")
     private Track track;
