@@ -36,6 +36,7 @@ public class ArchiveAdminService {
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;   // 5MB
     private static final List<String> ALLOWED_EXTENSIONS = List.of("jpg", "jpeg", "png", "webp");
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final UrlValidator URL_VALIDATOR = new UrlValidator(new String[]{"http", "https"});
 
     private final ArchiveRepository archiveRepository;
     private final S3Service s3Service;
@@ -60,26 +61,14 @@ public class ArchiveAdminService {
                 .contentDate(request.getContentDate())
                 .build();
             archiveRepository.save(archive);
-            archiveRepository.flush();  // 트랜잭션 커밋 전에 DB 쓰기를 강제하여 커밋 실패 시 catch에서 S3 정리 가능하도록
+            archiveRepository.flush();
         } catch (Exception e) {
             log.error("DB 저장 실패: category={}, title={}, error={}", category, request.getTitle(), e.getMessage());
             s3Service.deleteImage(imageUrl);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
-        final String uploadedUrl = imageUrl;
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status == STATUS_ROLLED_BACK) {
-                    try {
-                        s3Service.deleteImage(uploadedUrl);
-                    } catch (Exception e) {
-                        log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", uploadedUrl, e.getMessage());
-                    }
-                }
-            }
-        });
+        registerS3RollbackCleanup(imageUrl);
     }
 
     // 수정
@@ -134,7 +123,7 @@ public class ArchiveAdminService {
                 request.getLinks(), 
                 newContentDate
             );
-            archiveRepository.flush();  // S3 롤백 로직이 실행되도록 트랜잭션 커밋 전에 DB 쓰기를 강제 
+            archiveRepository.flush();
 
         } catch (Exception e) {
             log.error("DB 업데이트 실패: id={}, error={}", id, e.getMessage());
@@ -145,33 +134,11 @@ public class ArchiveAdminService {
         }
 
         if (newImageUrl != null) {
-            final String uploadedUrl = newImageUrl;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCompletion(int status) {
-                    if (status == STATUS_ROLLED_BACK) {
-                        try {
-                            s3Service.deleteImage(uploadedUrl);
-                        } catch (Exception e) {
-                            log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", uploadedUrl, e.getMessage());
-                        }
-                    }
-                }
-            });
+            registerS3RollbackCleanup(newImageUrl);
         }
 
         if (newImageUrl != null && oldImageUrl != null && !newImageUrl.equals(oldImageUrl)) {
-            final String urlToDelete = oldImageUrl;
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    try {
-                        s3Service.deleteImage(urlToDelete);
-                    } catch (Exception e) {
-                        log.error("기존 S3 이미지 삭제 실패: imageUrl={}, error={}", urlToDelete, e.getMessage());
-                    }
-                }
-            });
+            registerS3DeleteAfterCommit(oldImageUrl);
         }
     }
 
@@ -189,16 +156,7 @@ public class ArchiveAdminService {
         archiveRepository.delete(archive);
 
         if (imageUrl != null) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override
-                public void afterCommit() {
-                    try {
-                        s3Service.deleteImage(imageUrl);
-                    } catch (Exception e) {
-                        log.error("S3 이미지 삭제 실패: imageUrl={}, error={}", imageUrl, e.getMessage());
-                    }
-                }
-            });
+            registerS3DeleteAfterCommit(imageUrl);
         }
     }
 
@@ -245,7 +203,6 @@ public class ArchiveAdminService {
 
     // links URL 검증
     private void validateLinks(String links) {
-        UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
         JsonNode jsonNode;
         try {
             jsonNode = objectMapper.readTree(links);
@@ -259,7 +216,7 @@ public class ArchiveAdminService {
 
         jsonNode.fields().forEachRemaining(entry -> {
             String url = entry.getValue().asText();
-            if (!urlValidator.isValid(url)) {
+            if (!URL_VALIDATOR.isValid(url)) {
                 throw new CustomException(ErrorCode.INVALID_URL_FORMAT);
             }
         });
@@ -270,7 +227,6 @@ public class ArchiveAdminService {
         if (image.getSize() > MAX_FILE_SIZE) {
             throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED);
         }
-
 
         String originalFilename = image.getOriginalFilename();
         if (originalFilename == null) throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
@@ -336,5 +292,33 @@ public class ArchiveAdminService {
             .replaceAll("[^a-zA-Z0-9가-힣-]", "-")  // 나머지 특수문자 → -
             .replaceAll("-{2,}", "-")  // 연속된 - → 하나로
             .replaceAll("^-|-$", "");  // 앞뒤 - 제거
+    }
+
+    private void registerS3RollbackCleanup(String imageUrl) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    try {
+                        s3Service.deleteImage(imageUrl);
+                    } catch (Exception e) {
+                        log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", imageUrl, e.getMessage());
+                    }
+                }
+            }
+        });
+    }
+
+    private void registerS3DeleteAfterCommit(String imageUrl) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    s3Service.deleteImage(imageUrl);
+                } catch (Exception e) {
+                    log.error("S3 이미지 삭제 실패 (커밋 후): imageUrl={}, error={}", imageUrl, e.getMessage());
+                }
+            }
+        });
     }
 }
