@@ -66,6 +66,20 @@ public class ArchiveAdminService {
             s3Service.deleteImage(imageUrl);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+
+        final String uploadedUrl = imageUrl;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status == STATUS_ROLLED_BACK) {
+                    try {
+                        s3Service.deleteImage(uploadedUrl);
+                    } catch (Exception e) {
+                        log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", uploadedUrl, e.getMessage());
+                    }
+                }
+            }
+        });
     }
 
     // 수정
@@ -128,6 +142,22 @@ public class ArchiveAdminService {
                 s3Service.deleteImage(newImageUrl);
             }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        if (newImageUrl != null) {
+            final String uploadedUrl = newImageUrl;
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        try {
+                            s3Service.deleteImage(uploadedUrl);
+                        } catch (Exception e) {
+                            log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", uploadedUrl, e.getMessage());
+                        }
+                    }
+                }
+            });
         }
 
         if (newImageUrl != null && oldImageUrl != null && !newImageUrl.equals(oldImageUrl)) {
