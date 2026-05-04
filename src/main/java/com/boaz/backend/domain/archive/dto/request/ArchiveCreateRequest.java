@@ -14,22 +14,22 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 @NoArgsConstructor
 public class ArchiveCreateRequest {
 
-    @Schema(description = "기수", example = "8", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "기수", example = "8")
     @NotNull(message = "term을 입력해주세요.")
     private Integer term;
 
-    @Schema(description = "제목", example = "AI 기반 수요 예측 프로젝트", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "제목", example = "AI 기반 수요 예측 프로젝트")
     @NotBlank(message = "title을 입력해주세요.")
     private String title;
 
     @Schema(description = "팀명", example = "팀이름")
     private String teamName;
 
-    @Schema(description = "트랙", example = "ANALYSIS", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "트랙", example = "ANALYSIS")
     @NotNull(message = "track을 입력해주세요.")
     private Track track;
 
-    @Schema(description = "링크 JSON", example = "{\"slideshare\": \"https://slideshare.net/boaz.com\"}", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "링크 JSON", example = "{\"slideshare\": \"https://slideshare.net/boaz.com\"}")
     @NotBlank(message = "links를 입력해주세요.")
     private String links;
 
