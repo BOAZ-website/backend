@@ -640,4 +640,18 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
     }
+
+    // 모집 사전 알림 신청 목록 조회 (어드민 전용)
+    public List<SubscriptionResponse> getAllSubscriptions() {
+        return subscriptionRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(SubscriptionResponse::from)
+                .toList();
+    }
+
+    // 모집 사전 알림 신청 전체 삭제 (어드민 전용)
+    @Transactional
+    public void deleteAllSubscriptions() {
+        subscriptionRepository.deleteAll();
+    }
 }
