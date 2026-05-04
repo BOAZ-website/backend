@@ -166,10 +166,6 @@ public class ArchiveAdminService {
 
     // 등록 필수값 검증
     private void validateCreateRequest(Category category, ArchiveCreateRequest request) {
-        if (request.getTerm() == null) throw new CustomException(ErrorCode.MISSING_TERM);
-        if (request.getTitle() == null) throw new CustomException(ErrorCode.MISSING_TITLE);
-        if (request.getTrack() == null) throw new CustomException(ErrorCode.MISSING_TRACK);
-        if (request.getLinks() == null) throw new CustomException(ErrorCode.MISSING_LINKS);
         if (category == Category.ACTIVITY && request.getHalf() == null) {
             throw new CustomException(ErrorCode.MISSING_HALF);
         }

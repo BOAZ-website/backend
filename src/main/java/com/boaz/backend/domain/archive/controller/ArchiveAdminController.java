@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.RequiredArgsConstructor;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,7 +29,7 @@ public class ArchiveAdminController {
     @Operation(summary = "프로젝트 등록", description = "프로젝트 데이터와 이미지를 등록합니다.")
     @PostMapping(value = "/projects", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createProject(
-        @RequestPart("data") ArchiveCreateRequest request, 
+        @Valid @RequestPart("data") ArchiveCreateRequest request,
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.PROJECT, request, image);
@@ -39,7 +40,7 @@ public class ArchiveAdminController {
     @Operation(summary = "활동사진 등록", description = "활동사진 데이터와 이미지를 등록합니다.")
     @PostMapping(value = "/activities", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createActivity(
-        @RequestPart("data") ArchiveCreateRequest request, 
+        @Valid @RequestPart("data") ArchiveCreateRequest request,
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.ACTIVITY, request, image);
@@ -50,7 +51,7 @@ public class ArchiveAdminController {
     @Operation(summary = "기술블로그 등록", description = "기술블로그 데이터와 이미지를 등록합니다.")
     @PostMapping(value = "/blogs", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createBlog (
-        @RequestPart("data") ArchiveCreateRequest request, 
+        @Valid @RequestPart("data") ArchiveCreateRequest request,
         @RequestPart("image") MultipartFile image
     ) {
         archiveAdminService.createArchive(Category.BLOG, request, image);
