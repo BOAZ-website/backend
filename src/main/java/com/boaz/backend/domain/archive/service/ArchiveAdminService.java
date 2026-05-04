@@ -60,6 +60,7 @@ public class ArchiveAdminService {
                 .contentDate(request.getContentDate())
                 .build();
             archiveRepository.save(archive);
+            archiveRepository.flush();  // 트랜잭션 커밋 전에 DB 쓰기를 강제하여 커밋 실패 시 catch에서 S3 정리 가능하도록
         } catch (Exception e) {
             log.error("DB 저장 실패: category={}, title={}, error={}", category, request.getTitle(), e.getMessage());
             s3Service.deleteImage(imageUrl);
