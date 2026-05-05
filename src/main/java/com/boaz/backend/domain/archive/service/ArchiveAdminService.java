@@ -81,27 +81,36 @@ public class ArchiveAdminService {
             throw new CustomException(ErrorCode.UNSUPPORTED_ARCHIVE_CATEGORY);
         }
 
-        if (request.getTrack() != null && category != Category.ACTIVITY) {
-            request.getTrack().validateNotAll();
+        if (request == null && (image == null || image.isEmpty())) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        if (category == Category.ACTIVITY && request == null) {
+            throw new CustomException(ErrorCode.MISSING_HALF);
         }
 
-        if (request.getContentDate().isPresent() && request.getContentDate().get() != null) {
-            validateContentDate(request.getContentDate().get());
-        }
+        if (request != null) {
+            if (request.getTrack() != null && category != Category.ACTIVITY) {
+                request.getTrack().validateNotAll();
+            }
 
-        if (request.getLinks() != null) {
-            validateLinks(request.getLinks());
+            if (request.getContentDate().isPresent() && request.getContentDate().get() != null) {
+                validateContentDate(request.getContentDate().get());
+            }
+
+            if (request.getLinks() != null) {
+                validateLinks(request.getLinks());
+            }
+
+            if (category == Category.ACTIVITY && request.getHalf() == null) {
+                throw new CustomException(ErrorCode.MISSING_HALF);
+            }
+            if (request.getHalf() != null) {
+                validateHalf(request.getHalf());
+            }
         }
 
         String oldImageUrl = archive.getImageUrl();
         String newImageUrl = null;
-
-        if (category == Category.ACTIVITY && request.getHalf() == null) {
-            throw new CustomException(ErrorCode.MISSING_HALF);
-        }
-        if (request.getHalf() != null) {
-            validateHalf(request.getHalf());
-        }
 
         if (image != null && !image.isEmpty()) {
             validateImage(image);
@@ -109,22 +118,22 @@ public class ArchiveAdminService {
             newImageUrl = s3Service.uploadImage(key, image);
         }
 
-        LocalDate newContentDate = request.getContentDate().isPresent()
+        LocalDate newContentDate = (request != null && request.getContentDate().isPresent())
             ? request.getContentDate().get()
             : archive.getContentDate();
 
-        String newTeamName = request.getTeamName().isPresent()
+        String newTeamName = (request != null && request.getTeamName().isPresent())
             ? request.getTeamName().get()
             : archive.getTeamName();
 
         try {
             archive.update(
-                request.getTerm(),
-                request.getTitle(),
+                request != null ? request.getTerm() : null,
+                request != null ? request.getTitle() : null,
                 newTeamName,
-                request.getTrack(),
+                request != null ? request.getTrack() : null,
                 newImageUrl,
-                request.getLinks(),
+                request != null ? request.getLinks() : null,
                 newContentDate
             );
             archiveRepository.flush();
@@ -260,18 +269,28 @@ public class ArchiveAdminService {
     // S3 key 생성 (수정)
     private String generateS3KeyForUpdate(Category category, Archive archive, ArchiveUpdateRequest request, MultipartFile image) {
         String extension = getExtension(image);
-        String title = normalizeTitle(request.getTitle() != null ? request.getTitle() : archive.getTitle());
-        Integer term = request.getTerm() != null ? request.getTerm() : archive.getTerm();
-        Track track = request.getTrack() != null ? request.getTrack() : archive.getTrack();
+        String title = normalizeTitle(request != null && request.getTitle() != null ? request.getTitle() : archive.getTitle());
+        Integer term = request != null && request.getTerm() != null ? request.getTerm() : archive.getTerm();
+        Track track = request != null && request.getTrack() != null ? request.getTrack() : archive.getTrack();
         String termFolder = term + "기";
         String trackFolder = getTrackFolderName(track);
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
+        String half = request != null ? request.getHalf() : extractHalfFromImageUrl(archive.getImageUrl());
 
         return switch (category) {
-            case PROJECT -> "projects/" + termFolder + "/" + trackFolder  + "/" + title + "-" + timestamp + "." + extension;
-            case ACTIVITY -> "activities/" + termFolder + "/" + request.getHalf() + "/" + trackFolder  + "/" + title + "-" + timestamp + "." + extension;
-            case BLOG -> "blogs/" + termFolder + "/" + trackFolder  + "/" + title + "-" + timestamp + "." + extension;
+            case PROJECT -> "projects/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
+            case ACTIVITY -> "activities/" + termFolder + "/" + half + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
+            case BLOG -> "blogs/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
         };
+    }
+
+    // 기존 imageUrl에서 half(예: "26-1") 추출 - image only 수정 시 사용
+    private String extractHalfFromImageUrl(String imageUrl) {
+        if (imageUrl == null) return null;
+        for (String part : imageUrl.split("/")) {
+            if (part.matches("^\\d{2}-[12]$")) return part;
+        }
+        return null;
     }
 
     // 파일 확장자 추출
