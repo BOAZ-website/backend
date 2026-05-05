@@ -40,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -65,6 +66,10 @@ public class RecruitmentService {
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
+
+    @Value("${spring.cloud.aws.recruitment-bucket:}")
+    private String recruitmentBucket;
+
     private final S3Service s3Service;
 
     // 모집 중 여부 조회
@@ -377,7 +382,7 @@ public class RecruitmentService {
             // S3 업로드
             String key = String.format("%d/applicants_%s_%s.csv",
                     term, track.name(), timestamp);
-            s3Service.uploadCsv(key, csv);
+            s3Service.uploadCsv(recruitmentBucket, key, csv);
         }
     }
 

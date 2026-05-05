@@ -18,19 +18,13 @@ public class S3Service {
 
     private final S3Client s3Client;
 
-    @Value("${spring.cloud.aws.s3.recruitment-bucket:}")
-    private String recruitmentbucket;
-
-    @Value("${spring.cloud.aws.s3.archiving-bucket:}")
-    private String archivingBucket;
-
     @Value("${spring.cloud.aws.region.static:}")
     private String region;
 
-    public void uploadCsv(String key, byte[] content) {
+    public void uploadCsv(String bucket, String key, byte[] content) {
         try {
             PutObjectRequest request = PutObjectRequest.builder()
-                    .bucket(recruitmentbucket)
+                    .bucket(bucket)
                     .key(key)
                     .contentType("text/csv")
                     .build();
@@ -41,7 +35,7 @@ public class S3Service {
     }
 
     // 이미지 업로드 후 URL 반환
-    public String uploadImage(String key, MultipartFile image) {
+    public String uploadImage(String bucket, String key, MultipartFile image) {
         try {
             String contentType = image.getContentType();
             if (contentType == null) {
@@ -55,26 +49,26 @@ public class S3Service {
                 };
             }
             PutObjectRequest request = PutObjectRequest.builder()
-                .bucket(archivingBucket)
+                .bucket(bucket)
                 .key(key)
                 .contentType(contentType)
                 .build();
             s3Client.putObject(request, RequestBody.fromBytes(image.getBytes()));
-            return "https://" + archivingBucket + ".s3." + region + ".amazonaws.com/" + key;
+            return "https://" + bucket + ".s3." + region + ".amazonaws.com/" + key;
         } catch (Exception e) {
             throw new CustomException(ErrorCode.S3_UPLOAD_FAILED);
         }
     }
 
     // 이미지 삭제
-    public void deleteImage(String imageUrl) {
+    public void deleteImage(String bucket, String imageUrl) {
         try {
             // URL에서 key 추출
             URI uri = new URI(imageUrl);
             String key = uri.getPath().substring(1);
             
             s3Client.deleteObject(builder -> builder
-                .bucket(archivingBucket)
+                .bucket(bucket)
                 .key(key)
                 .build());
         } catch (Exception e) {

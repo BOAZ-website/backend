@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Value;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,6 +40,10 @@ public class ArchiveAdminService {
     private static final Pattern URL_PATTERN = Pattern.compile("^(https?://)([a-zA-Z0-9\\-]+\\.)+[a-zA-Z]{2,}(:\\d+)?(/[^\\s]*)?$");
 
     private final ArchiveRepository archiveRepository;
+    
+    @Value("${spring.cloud.aws.s3.archiving-bucket:}")
+    private String archivingBucket;
+
     private final S3Service s3Service;
 
     // 등록
@@ -47,7 +52,7 @@ public class ArchiveAdminService {
         validateImage(image);
 
         String key = generateS3Key(category, request, image);
-        String imageUrl = s3Service.uploadImage(key, image);
+        String imageUrl = s3Service.uploadImage(archivingBucket, key, image);
 
         try {
             Archive archive = Archive.builder()
@@ -64,7 +69,7 @@ public class ArchiveAdminService {
             archiveRepository.flush();
         } catch (Exception e) {
             log.error("DB 저장 실패: category={}, title={}, error={}", category, request.getTitle(), e.getMessage());
-            s3Service.deleteImage(imageUrl);
+            s3Service.deleteImage(archivingBucket, imageUrl);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
@@ -115,7 +120,7 @@ public class ArchiveAdminService {
         if (image != null && !image.isEmpty()) {
             validateImage(image);
             String key = generateS3KeyForUpdate(category, archive, request, image);
-            newImageUrl = s3Service.uploadImage(key, image);
+            newImageUrl = s3Service.uploadImage(archivingBucket, key, image);
         }
 
         LocalDate newContentDate = (request != null && request.getContentDate().isPresent())
@@ -141,7 +146,7 @@ public class ArchiveAdminService {
         } catch (Exception e) {
             log.error("DB 업데이트 실패: id={}, error={}", id, e.getMessage());
             if (newImageUrl != null) {
-                s3Service.deleteImage(newImageUrl);
+                s3Service.deleteImage(archivingBucket, newImageUrl);
             }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
@@ -314,7 +319,7 @@ public class ArchiveAdminService {
             public void afterCompletion(int status) {
                 if (status == STATUS_ROLLED_BACK) {
                     try {
-                        s3Service.deleteImage(imageUrl);
+                        s3Service.deleteImage(archivingBucket, imageUrl);
                     } catch (Exception e) {
                         log.error("S3 이미지 삭제 실패 (롤백): imageUrl={}, error={}", imageUrl, e.getMessage());
                     }
@@ -328,7 +333,7 @@ public class ArchiveAdminService {
             @Override
             public void afterCommit() {
                 try {
-                    s3Service.deleteImage(imageUrl);
+                    s3Service.deleteImage(archivingBucket, imageUrl);
                 } catch (Exception e) {
                     log.error("S3 이미지 삭제 실패 (커밋 후): imageUrl={}, error={}", imageUrl, e.getMessage());
                 }
