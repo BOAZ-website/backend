@@ -9,6 +9,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -39,6 +40,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.error(400, ErrorCode.INVALID_INPUT_VALUE.getCode(), message));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiResponse<Void>> handleMissingPart(MissingServletRequestPartException e) {
+        log.warn("MissingPartException: {}", e.getRequestPartName());
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(
+                        400,
+                        ErrorCode.MISSING_PARAMETER.getCode(),
+                        ErrorCode.MISSING_PARAMETER.getMessage()
+                ));
     }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
