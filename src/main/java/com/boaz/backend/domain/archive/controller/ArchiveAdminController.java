@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "Archiving Admin", description = "아카이빙 관리자 API")
+@Tag(name = "[Admin] Archiving", description = "Admin 전용 아카이빙 API")
 @SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequestMapping("/api/v1/admin/archiving")
