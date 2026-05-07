@@ -14,8 +14,8 @@ public class ReviewCreateRequest {
     @Schema(description = "작성자 이름", example = "김분석")
     private String name;
 
-    @NotNull(message = "트랙은 필수입니다.")
-    @Schema(description = "트랙", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
+    @NotNull(message = "부문은 필수입니다.")
+    @Schema(description = "부문", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     private Track track;
 
     @NotNull(message = "기수는 필수입니다.")

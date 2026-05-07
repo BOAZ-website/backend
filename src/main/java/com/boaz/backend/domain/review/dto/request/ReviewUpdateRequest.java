@@ -11,7 +11,7 @@ public class ReviewUpdateRequest {
     @Schema(description = "작성자 이름", example = "김분석", nullable = true)
     private String name;
 
-    @Schema(description = "트랙", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"}, nullable = true)
+    @Schema(description = "부문", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"}, nullable = true)
     private Track track;
 
     @Positive(message = "기수는 양의 정수여야 합니다.")
