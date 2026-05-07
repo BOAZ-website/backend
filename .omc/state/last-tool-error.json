@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"git checkout feat/#75-#76-#77-admin-review\",\"description\":\"Switch to review branch\"}",
-  "error": "Exit code 1\nerror: 다음 파일의 로컬 변경 사항을 체크아웃 때문에 덮어 쓰게 됩니다:\n\tsrc/main/java/com/boaz/backend/domain/curriculum/service/CurriculumService.java\n\tsrc/main/java/com/boaz/backend/global/exception/ErrorCode.java\n브랜치를 전환하기 전에 변경 사항을 커밋하거나 스태시하십시오.\n중지함",
-  "timestamp": "2026-04-16T05:23:02.452Z",
-  "retry_count": 1
-}
