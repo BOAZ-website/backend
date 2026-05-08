@@ -88,9 +88,6 @@ public class ArchiveAdminService {
         if (request == null && (image == null || image.isEmpty())) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
-        if (category == Category.ACTIVITY && request == null) {
-            throw new CustomException(ErrorCode.MISSING_HALF);
-        }
 
         if (request != null) {
             if (request.getTrack() != null && category != Category.ACTIVITY) {
@@ -105,9 +102,6 @@ public class ArchiveAdminService {
                 validateLinks(request.getLinks());
             }
 
-            if (category == Category.ACTIVITY && request.getHalf() == null) {
-                throw new CustomException(ErrorCode.MISSING_HALF);
-            }
             if (request.getHalf() != null) {
                 validateHalf(request.getHalf());
             }
@@ -283,7 +277,7 @@ public class ArchiveAdminService {
         String termFolder = term + "기";
         String trackFolder = getTrackFolderName(track);
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-        String half = request != null ? request.getHalf() : extractHalfFromImageUrl(archive.getImageUrl());
+        String half = (request != null && request.getHalf() != null) ? request.getHalf() : extractHalfFromImageUrl(archive.getImageUrl());
 
         return switch (category) {
             case PROJECT -> "projects/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
