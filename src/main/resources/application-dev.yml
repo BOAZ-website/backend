@@ -27,7 +27,8 @@ spring:
   cloud:
     aws:
       s3:
-        bucket: ${S3_BUCKET_NAME}
+        recruitment-bucket: ${S3_RECRUITMENT_BUCKET_NAME}
+        archiving-bucket: ${S3_ARCHIVING_BUCKET_NAME}
       region:
         static: ap-northeast-2
 

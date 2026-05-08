@@ -81,4 +81,22 @@ public class Archive extends BaseEntity {
         this.links = links;
         this.contentDate = contentDate;
     }
+
+    public void update(
+        Integer term, 
+        String title, 
+        String teamName, 
+        Track track, 
+        String imageUrl, 
+        String links, 
+        LocalDate contentDate
+    ) {
+        if (term != null) this.term = term;
+        if (title != null) this.title = title;
+        this.teamName = teamName;
+        if (track != null) this.track = track;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (links != null) this.links = links;
+        this.contentDate = contentDate;
+    }
 }
