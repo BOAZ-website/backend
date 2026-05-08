@@ -48,7 +48,13 @@ public class ArchiveAdminService {
 
     // 등록
     public void createArchive(Category category, ArchiveCreateRequest request, MultipartFile image) {
-        validateCreateRequest(category, request);
+        if (category == Category.ACTIVITY && request.getHalf() == null) {
+            throw new CustomException(ErrorCode.MISSING_HALF);
+        }
+        if (category != Category.ACTIVITY) {
+            request.getTrack().validateNotAll();
+        }
+        validateLinks(request.getLinks());
         validateImage(image);
 
         String key = generateS3Key(category, request, image);
@@ -69,7 +75,11 @@ public class ArchiveAdminService {
             archiveRepository.flush();
         } catch (Exception e) {
             log.error("DB 저장 실패: category={}, title={}, error={}", category, request.getTitle(), e.getMessage());
-            s3Service.deleteImage(archivingBucket, imageUrl);
+            try {
+                s3Service.deleteImage(archivingBucket, imageUrl);
+            } catch (Exception cleanupException) {
+                log.error("S3 정리 실패: imageUrl={}, error={}", imageUrl, cleanupException.getMessage());
+            }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
@@ -89,9 +99,6 @@ public class ArchiveAdminService {
         if (request == null && (image == null || image.isEmpty())) {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
-        if (category == Category.ACTIVITY && request == null) {
-            throw new CustomException(ErrorCode.MISSING_HALF);
-        }
 
         if (request != null) {
             if (request.getTrack() != null && category != Category.ACTIVITY) {
@@ -99,19 +106,15 @@ public class ArchiveAdminService {
             }
 
             if (request.getContentDate().isPresent() && request.getContentDate().get() != null) {
-                validateContentDate(request.getContentDate().get());
+                if (request.getContentDate().get().isAfter(LocalDate.now())) {
+                    throw new CustomException(ErrorCode.FUTURE_DATE_NOT_ALLOWED);
+                }
             }
 
             if (request.getLinks() != null) {
                 validateLinks(request.getLinks());
             }
 
-            if (category == Category.ACTIVITY && request.getHalf() == null) {
-                throw new CustomException(ErrorCode.MISSING_HALF);
-            }
-            if (request.getHalf() != null) {
-                validateHalf(request.getHalf());
-            }
         }
 
         String oldImageUrl = archive.getImageUrl();
@@ -146,7 +149,11 @@ public class ArchiveAdminService {
         } catch (Exception e) {
             log.error("DB 업데이트 실패: id={}, error={}", id, e.getMessage());
             if (newImageUrl != null) {
-                s3Service.deleteImage(archivingBucket, newImageUrl);
+                try {
+                    s3Service.deleteImage(archivingBucket, newImageUrl);
+                } catch (Exception cleanupException) {
+                    log.error("S3 정리 실패: imageUrl={}, error={}", newImageUrl, cleanupException.getMessage());
+                }
             }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
@@ -178,38 +185,6 @@ public class ArchiveAdminService {
         }
     }
 
-    // 등록 필수값 검증
-    private void validateCreateRequest(Category category, ArchiveCreateRequest request) {
-        if (category == Category.ACTIVITY && request.getHalf() == null) {
-            throw new CustomException(ErrorCode.MISSING_HALF);
-        }
-        if (request.getHalf() != null) {
-            validateHalf(request.getHalf());
-        }
-        if (category != Category.ACTIVITY) {
-            request.getTrack().validateNotAll();
-        }
-
-        if (request.getContentDate() != null) {
-            validateContentDate(request.getContentDate());
-        }
-        validateLinks(request.getLinks());
-    }
-
-    // content_date 미래 날짜 검증
-    private void validateContentDate(LocalDate contentDate) {
-        if (contentDate.isAfter(LocalDate.now())) {
-            throw new CustomException(ErrorCode.FUTURE_DATE_NOT_ALLOWED);
-        }
-    }
-
-    // half 형식 검증
-    private void validateHalf(String half) {
-        if (!half.matches("^\\d{2}-[12]$")) {
-            throw new CustomException(ErrorCode.INVALID_HALF_FORMAT);
-        }
-    }
-
     // links URL 검증
     private void validateLinks(String links) {
         JsonNode jsonNode;
@@ -233,6 +208,7 @@ public class ArchiveAdminService {
 
     // 이미지 검증 (형식, 용량)
     private void validateImage(MultipartFile image) {
+        if (image.isEmpty()) throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
         if (image.getSize() > MAX_FILE_SIZE) {
             throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED);
         }
@@ -280,22 +256,29 @@ public class ArchiveAdminService {
         String termFolder = term + "기";
         String trackFolder = getTrackFolderName(track);
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmmss"));
-        String half = request != null ? request.getHalf() : extractHalfFromImageUrl(archive.getImageUrl());
+        String half;
+
+        // ACTIVITY 이미지 단독 수정 시 half 재사용
+        if (request != null && request.getHalf() != null) {
+            half = request.getHalf();
+        } else {
+            half = null;
+            String imageUrl = archive.getImageUrl();
+            if (imageUrl != null) {
+                for (String part : imageUrl.split("/")) {
+                    if (part.matches("^\\d{2}-[12]$")) {
+                        half = part;
+                        break;
+                    }
+                }
+            }
+        }
 
         return switch (category) {
             case PROJECT -> "projects/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
             case ACTIVITY -> "activities/" + termFolder + "/" + half + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
             case BLOG -> "blogs/" + termFolder + "/" + trackFolder + "/" + title + "-" + timestamp + "." + extension;
         };
-    }
-
-    // 기존 imageUrl에서 half(예: "26-1") 추출 - image only 수정 시 사용
-    private String extractHalfFromImageUrl(String imageUrl) {
-        if (imageUrl == null) return null;
-        for (String part : imageUrl.split("/")) {
-            if (part.matches("^\\d{2}-[12]$")) return part;
-        }
-        return null;
     }
 
     // 파일 확장자 추출
@@ -313,6 +296,7 @@ public class ArchiveAdminService {
             .replaceAll("^-|-$", "");  // 앞뒤 - 제거
     }
 
+    // 트랜잭션 롤백 시 S3 이미지 삭제
     private void registerS3RollbackCleanup(String imageUrl) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
@@ -328,6 +312,7 @@ public class ArchiveAdminService {
         });
     }
 
+    // 트랜잭션 커밋 후 S3 이미지 삭제 (기존 이미지 정리)
     private void registerS3DeleteAfterCommit(String imageUrl) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
