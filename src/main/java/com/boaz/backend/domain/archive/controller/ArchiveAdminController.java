@@ -63,8 +63,8 @@ public class ArchiveAdminController {
     @Operation(summary = "프로젝트 수정", description = "프로젝트 데이터를 수정합니다.")
     @PatchMapping(value = "/projects/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateProject (
-        @PathVariable Long id, 
-        @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
+        @PathVariable Long id,
+        @Valid @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         archiveAdminService.updateArchive(Category.PROJECT, id, request, image);
@@ -76,7 +76,7 @@ public class ArchiveAdminController {
     @PatchMapping(value = "/activities/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateActivity(
         @PathVariable Long id,
-        @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
+        @Valid @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         archiveAdminService.updateArchive(Category.ACTIVITY, id, request, image);
@@ -88,7 +88,7 @@ public class ArchiveAdminController {
     @PatchMapping(value = "/blogs/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateBlog(
         @PathVariable Long id,
-        @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
+        @Valid @RequestPart(value = "data", required = false) ArchiveUpdateRequest request,
         @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         archiveAdminService.updateArchive(Category.BLOG, id, request, image);

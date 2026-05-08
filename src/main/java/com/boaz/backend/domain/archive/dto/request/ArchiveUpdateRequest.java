@@ -2,6 +2,7 @@ package com.boaz.backend.domain.archive.dto.request;
 
 import com.boaz.backend.global.common.enums.Track;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -31,5 +32,6 @@ public class ArchiveUpdateRequest {
     private JsonNullable<LocalDate> contentDate = JsonNullable.undefined();
 
     @Schema(description = "상/하반기 (활동사진만 사용)", example = "26-1")
+    @Pattern(regexp = "^\\d{2}-[12]$", message = "half 형식이 올바르지 않습니다. (예: 26-1)")
     private String half;
 }

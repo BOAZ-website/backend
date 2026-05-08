@@ -4,6 +4,8 @@ import com.boaz.backend.global.common.enums.Track;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -35,9 +37,11 @@ public class ArchiveCreateRequest {
 
     @Schema(description = "콘텐츠 날짜", example = "2024-07-01")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @PastOrPresent(message = "미래 날짜는 입력할 수 없습니다.")
     private LocalDate contentDate;
 
     @Schema(description = "상/하반기 (활동사진만 사용)", example = "26-1")
+    @Pattern(regexp = "^\\d{2}-[12]$", message = "half 형식이 올바르지 않습니다. (예: 26-1)")
     private String half;
 
 }
