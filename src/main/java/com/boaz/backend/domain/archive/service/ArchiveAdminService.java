@@ -41,7 +41,7 @@ public class ArchiveAdminService {
 
     private final ArchiveRepository archiveRepository;
     
-    @Value("${spring.cloud.aws.s3.archiving-bucket:}")
+    @Value("${spring.cloud.aws.s3.archiving-bucket}")
     private String archivingBucket;
 
     private final S3Service s3Service;

@@ -67,7 +67,7 @@ public class RecruitmentService {
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
 
-    @Value("${spring.cloud.aws.s3.recruitment-bucket:}")
+    @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
 
     private final S3Service s3Service;
