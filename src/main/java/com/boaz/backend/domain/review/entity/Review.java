@@ -26,4 +26,22 @@ public class Review extends BaseEntity {
     private String content;
 
     private String imageUrl;
+
+    public static Review create(String name, Track track, Integer term, String content, String imageUrl) {
+        Review review = new Review();
+        review.name = name;
+        review.track = track;
+        review.term = term;
+        review.content = content;
+        review.imageUrl = imageUrl;
+        return review;
+    }
+
+    public void update(String name, Track track, Integer term, String content, String imageUrl) {
+        if (name != null) this.name = name;
+        if (track != null) this.track = track;
+        if (term != null) this.term = term;
+        if (content != null) this.content = content;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+    }
 }
