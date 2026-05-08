@@ -230,6 +230,7 @@ public class ArchiveAdminService {
 
     // 이미지 검증 (형식, 용량)
     private void validateImage(MultipartFile image) {
+        if (image.isEmpty()) throw new CustomException(ErrorCode.INVALID_FILE_TYPE);
         if (image.getSize() > MAX_FILE_SIZE) {
             throw new CustomException(ErrorCode.FILE_SIZE_EXCEEDED);
         }
