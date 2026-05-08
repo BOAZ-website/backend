@@ -64,7 +64,11 @@ public class ArchiveAdminService {
             archiveRepository.flush();
         } catch (Exception e) {
             log.error("DB 저장 실패: category={}, title={}, error={}", category, request.getTitle(), e.getMessage());
-            s3Service.deleteImage(imageUrl);
+            try {
+                s3Service.deleteImage(imageUrl);
+            } catch (Exception cleanupException) {
+                log.error("S3 정리 실패: imageUrl={}, error={}", imageUrl, cleanupException.getMessage());
+            }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
@@ -141,7 +145,11 @@ public class ArchiveAdminService {
         } catch (Exception e) {
             log.error("DB 업데이트 실패: id={}, error={}", id, e.getMessage());
             if (newImageUrl != null) {
-                s3Service.deleteImage(newImageUrl);
+                try {
+                    s3Service.deleteImage(newImageUrl);
+                } catch (Exception cleanupException) {
+                    log.error("S3 정리 실패: imageUrl={}, error={}", newImageUrl, cleanupException.getMessage());
+                }
             }
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
