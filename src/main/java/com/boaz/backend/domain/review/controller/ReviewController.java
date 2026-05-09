@@ -25,7 +25,7 @@ public class ReviewController {
     private final ReviewService reviewService;
 
     @GetMapping
-    @Operation(summary = "후기 전체 조회", description = "트랙/기수 필터링 가능. 기본 정렬은 기수 내림차순.")
+    @Operation(summary = "후기 전체 조회", description = "부문/기수 필터링 가능. 기본 정렬은 기수 내림차순.")
     public ResponseEntity<ApiResponse<List<ReviewResponse>>> getReviews(
             @RequestParam(required = false) Track track,
             @RequestParam(required = false) Integer term) {
