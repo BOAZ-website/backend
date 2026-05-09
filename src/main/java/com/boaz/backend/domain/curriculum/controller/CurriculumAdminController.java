@@ -23,7 +23,7 @@ public class CurriculumAdminController {
 
     private final CurriculumService curriculumService;
 
-    @Operation(summary = "커리큘럼 등록", description = "트랙별 커리큘럼을 등록합니다. 동일 트랙 중복 등록 불가.")
+    @Operation(summary = "커리큘럼 등록", description = "부문별 커리큘럼을 등록합니다. 동일 부문 중복 등록 불가.")
     @PostMapping
     public ResponseEntity<ApiResponse<CurriculumResponse>> createCurriculum(
             @RequestBody @Valid CurriculumCreateRequest request) {
@@ -31,7 +31,7 @@ public class CurriculumAdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.created(response));
     }
 
-    @Operation(summary = "커리큘럼 수정", description = "커리큘럼 단계를 전체 교체합니다. 트랙 변경 불가.")
+    @Operation(summary = "커리큘럼 수정", description = "커리큘럼 단계를 전체 교체합니다. 부문 변경 불가.")
     @PutMapping("/{curriculumId}")
     public ResponseEntity<ApiResponse<CurriculumResponse>> updateCurriculum(
             @PathVariable Long curriculumId,

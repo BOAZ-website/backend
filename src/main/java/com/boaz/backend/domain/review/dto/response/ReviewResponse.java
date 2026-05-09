@@ -14,7 +14,7 @@ public class ReviewResponse {
     @Schema(description = "작성자 이름", example = "김분석")
     private final String name;
 
-    @Schema(description = "트랙", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
+    @Schema(description = "부문", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     private final String track;
 
     @Schema(description = "기수", example = "15")

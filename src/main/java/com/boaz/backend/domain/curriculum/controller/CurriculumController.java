@@ -25,7 +25,7 @@ public class CurriculumController {
     private final CurriculumService curriculumService;
 
     @GetMapping
-    @Operation(summary = "커리큘럼 전체 조회", description = "트랙 필터링 가능. 미입력 시 전체 3개 트랙 반환.")
+    @Operation(summary = "커리큘럼 전체 조회", description = "부문 필터링 가능. 미입력 시 전체 3개 부문 반환.")
     public ResponseEntity<ApiResponse<List<CurriculumResponse>>> getCurriculums(
             @RequestParam(required = false) Track track) {
         return ResponseEntity.ok(ApiResponse.ok(curriculumService.getCurriculums(track)));

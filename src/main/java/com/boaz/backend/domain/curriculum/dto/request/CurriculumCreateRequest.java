@@ -12,8 +12,8 @@ import java.util.List;
 @Getter
 public class CurriculumCreateRequest {
 
-    @NotNull(message = "트랙은 필수입니다.")
-    @Schema(description = "트랙", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
+    @NotNull(message = "부문은 필수입니다.")
+    @Schema(description = "부문", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     private Track track;
 
     @NotNull(message = "커리큘럼 단계 목록은 필수입니다.")

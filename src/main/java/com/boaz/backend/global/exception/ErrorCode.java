@@ -38,7 +38,7 @@ public enum ErrorCode {
     
     // Curriculum
     CURRICULUM_NOT_FOUND(HttpStatus.NOT_FOUND, "CURRICULUM_NOT_FOUND", "해당 커리큘럼을 찾을 수 없습니다."),
-    DUPLICATE_TRACK(HttpStatus.CONFLICT, "DUPLICATE_TRACK", "이미 등록된 트랙입니다."),
+    DUPLICATE_TRACK(HttpStatus.CONFLICT, "DUPLICATE_TRACK", "이미 등록된 부문입니다."),
 
     // Review
     REVIEW_NOT_FOUND(HttpStatus.NOT_FOUND, "REVIEW_NOT_FOUND", "해당 후기를 찾을 수 없습니다."),
