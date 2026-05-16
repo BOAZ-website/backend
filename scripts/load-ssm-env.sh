@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-SSM_PARAMETER_PREFIX="${SSM_PARAMETER_PREFIX:-/boaz/prod}"
-
 mkdir -p /run/boaz
 > /run/boaz/app.env
 
@@ -17,7 +15,7 @@ PARAMS=(
 
 for param in "${PARAMS[@]}"; do
     value=$(aws ssm get-parameter \
-        --name "${SSM_PARAMETER_PREFIX}/${param}" \
+        --name "$param" \
         --with-decryption \
         --region ap-northeast-2 \
         --query "Parameter.Value" \
