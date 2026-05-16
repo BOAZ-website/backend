@@ -2,6 +2,8 @@
   Description=BOAZ Backend API Server
   After=network-online.target
   Wants=network-online.target
+  StartLimitIntervalSec=60
+  StartLimitBurst=3
 
   [Service]
   Type=simple
@@ -23,8 +25,6 @@
 
   Restart=on-failure
   RestartSec=10
-  StartLimitIntervalSec=60
-  StartLimitBurst=3
 
   NoNewPrivileges=true
   PrivateTmp=true
@@ -38,5 +38,4 @@
 
   [Install]
   WantedBy=multi-user.target
-
 

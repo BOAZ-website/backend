@@ -1,12 +1,6 @@
 #!/bin/bash
 set -e
 
-/opt/boaz/scripts/load-ssm-env.sh
-
-set -a
-source /run/boaz/app.env
-set +a
-
 exec /usr/bin/java \
     -Xms512m -Xmx1g \
     -XX:+UseG1GC \

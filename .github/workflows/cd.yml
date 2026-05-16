@@ -51,6 +51,7 @@ jobs:
           cp appspec.yml deploy-bundle/
           cp scripts/* deploy-bundle/scripts/
           cp systemd/* deploy-bundle/systemd/
+          chmod +x deploy-bundle/scripts/*.sh
           cd deploy-bundle && zip -r ../deploy-bundle.zip .
 
       - name: S3에 번들 업로드
