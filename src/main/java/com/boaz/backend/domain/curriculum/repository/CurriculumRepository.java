@@ -13,4 +13,6 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
     List<Curriculum> findAll();
 
     Optional<Curriculum> findByTrack(Track track);
+
+    boolean existsByTrack(Track track);
 }

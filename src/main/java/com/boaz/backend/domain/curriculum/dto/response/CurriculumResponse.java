@@ -13,7 +13,7 @@ public class CurriculumResponse {
     @Schema(description = "커리큘럼 ID", example = "1")
     private final Long id;
 
-    @Schema(description = "트랙", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
+    @Schema(description = "부문", example = "ANALYSIS", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     private final String track;
 
     @JsonProperty("curriculum_steps")

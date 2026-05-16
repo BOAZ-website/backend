@@ -19,7 +19,7 @@ public class ApplicationRequest {
     @JsonProperty("recruitment_id")
     private Long recruitmentId;
 
-    @Schema(description = "지원 트랙", example = "ENGINEERING", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
+    @Schema(description = "지원 부문", example = "ENGINEERING", allowableValues = {"ANALYSIS", "VISUALIZATION", "ENGINEERING"})
     @NotNull(message = "지원 부문을 입력해주세요.")
     private Track track;
 

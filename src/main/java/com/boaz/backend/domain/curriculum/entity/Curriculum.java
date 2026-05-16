@@ -20,4 +20,15 @@ public class Curriculum extends BaseEntity {
 
     @Column(columnDefinition = "JSON")
     private String curriculumSteps;
+
+    public static Curriculum create(Track track, String curriculumSteps) {
+        Curriculum curriculum = new Curriculum();
+        curriculum.track = track;
+        curriculum.curriculumSteps = curriculumSteps;
+        return curriculum;
+    }
+
+    public void updateSteps(String curriculumSteps) {
+        this.curriculumSteps = curriculumSteps;
+    }
 }
