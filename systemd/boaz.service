@@ -9,18 +9,7 @@ User=boaz
 Group=boaz
 WorkingDirectory=/opt/boaz
 
-PermissionsStartOnly=true
-ExecStartPre=/opt/boaz/scripts/load-ssm-env.sh
-EnvironmentFile=/run/boaz/app.env
-Environment=SPRING_PROFILES_ACTIVE=prod
-
-ExecStart=/usr/bin/java \
-    -Xms512m -Xmx1g \
-    -XX:+UseG1GC \
-    -XX:MaxGCPauseMillis=200 \
-    -Dfile.encoding=UTF-8 \
-    -Dspring.profiles.active=prod \
-    -jar /opt/boaz/app.jar
+ExecStart=/opt/boaz/scripts/start.sh
 
 KillSignal=SIGTERM
 KillMode=mixed

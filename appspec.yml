@@ -8,6 +8,9 @@ files:
   - source: /scripts/load-ssm-env.sh
     destination: /opt/boaz/scripts
     overwrite: true
+  - source: /scripts/start.sh
+    destination: /opt/boaz/scripts
+    overwrite: true
   - source: /systemd/boaz.service
     destination: /etc/systemd/system
     overwrite: true
