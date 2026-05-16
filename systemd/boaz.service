@@ -1,35 +1,42 @@
 [Unit]
-Description=BOAZ Backend API Server
-After=network-online.target
-Wants=network-online.target
+  Description=BOAZ Backend API Server
+  After=network-online.target
+  Wants=network-online.target
 
-[Service]
-Type=simple
-User=boaz
-Group=boaz
-WorkingDirectory=/opt/boaz
+  [Service]
+  Type=simple
+  User=boaz
+  Group=boaz
+  WorkingDirectory=/opt/boaz
 
-ExecStart=/opt/boaz/scripts/start.sh
+  PermissionsStartOnly=true
+  ExecStartPre=/opt/boaz/scripts/load-ssm-env.sh
+  EnvironmentFile=/run/boaz/app.env
+  Environment=SPRING_PROFILES_ACTIVE=prod
 
-KillSignal=SIGTERM
-KillMode=mixed
-TimeoutStopSec=30
-SuccessExitStatus=143
+  ExecStart=/opt/boaz/scripts/start.sh
 
-Restart=on-failure
-RestartSec=10
-StartLimitIntervalSec=60
-StartLimitBurst=3
+  KillSignal=SIGTERM
+  KillMode=mixed
+  TimeoutStopSec=30
+  SuccessExitStatus=143
 
-NoNewPrivileges=true
-PrivateTmp=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/boaz/logs /run/boaz /var/log/boaz
+  Restart=on-failure
+  RestartSec=10
+  StartLimitIntervalSec=60
+  StartLimitBurst=3
 
-StandardOutput=journal
-StandardError=journal
-SyslogIdentifier=boaz
+  NoNewPrivileges=true
+  PrivateTmp=true
+  ProtectSystem=strict
+  ProtectHome=true
+  ReadWritePaths=/opt/boaz/logs /run/boaz /var/log/boaz
 
-[Install]
-WantedBy=multi-user.target
+  StandardOutput=journal
+  StandardError=journal
+  SyslogIdentifier=boaz
+
+  [Install]
+  WantedBy=multi-user.target
+
+
