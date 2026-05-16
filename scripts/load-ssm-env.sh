@@ -4,7 +4,7 @@ set -e
 mkdir -p /run/boaz
 
 aws ssm get-parameters-by-path \
-    --path /boaz/prod \
+    --path / \
     --with-decryption \
     --region ap-northeast-2 \
     --query "Parameters[*].[Name,Value]" \
