@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ dev , feat/#39-CI/CD-pipeline]
+    branches: [ dev , main]
   pull_request:
-    branches: [ dev , feat/#39-CI/CD-pipeline]
+    branches: [ dev , main]
 
 jobs:
   build:

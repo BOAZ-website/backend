@@ -1,0 +1,31 @@
+version: 0.0
+os: linux
+
+files:
+  - source: /app.jar
+    destination: /opt/boaz
+    overwrite: true
+  - source: /scripts/load-ssm-env.sh
+    destination: /opt/boaz/scripts
+    overwrite: true
+  - source: /systemd/boaz.service
+    destination: /etc/systemd/system
+    overwrite: true
+
+hooks:
+  BeforeInstall:
+    - location: scripts/before_install.sh
+      timeout: 60
+      runas: root
+  AfterInstall:
+    - location: scripts/after_install.sh
+      timeout: 60
+      runas: root
+  ApplicationStart:
+    - location: scripts/application_start.sh
+      timeout: 120
+      runas: root
+  ValidateService:
+    - location: scripts/validate_service.sh
+      timeout: 180
+      runas: root
