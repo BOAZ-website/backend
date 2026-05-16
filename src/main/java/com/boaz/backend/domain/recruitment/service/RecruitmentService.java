@@ -2,13 +2,22 @@ package com.boaz.backend.domain.recruitment.service;
 
 import com.boaz.backend.domain.recruitment.dto.request.AnswerRequest;
 import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
+import com.boaz.backend.domain.recruitment.dto.response.QuestionIdResponse;
+import com.boaz.backend.domain.recruitment.dto.response.QuestionIdsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
+import org.openapitools.jackson.nullable.JsonNullable;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
@@ -31,6 +40,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -41,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -55,6 +66,10 @@ public class RecruitmentService {
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
+
+    @Value("${spring.cloud.aws.s3.recruitment-bucket}")
+    private String recruitmentBucket;
+
     private final S3Service s3Service;
 
     // 모집 중 여부 조회
@@ -84,10 +99,7 @@ public class RecruitmentService {
         boolean isActive = !now.isBefore(recruitment.getStartDate()) 
                         && !now.isAfter(recruitment.getEndDate());
 
-        if (!isActive) {
-            return RecruitmentResponse.inactive();
-        }
-        return RecruitmentResponse.from(recruitment);
+        return RecruitmentResponse.from(recruitment, isActive);
     }
 
     // 지원서 질문 조회하기
@@ -104,6 +116,9 @@ public class RecruitmentService {
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
+        
+        // 부문 검증
+        track.validateNotAll();
 
         // Track → ApplicationQuestion.Category 변환
         ApplicationQuestion.Category trackCategory = toQuestionCategory(track);
@@ -141,6 +156,9 @@ public class RecruitmentService {
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
+
+        // 부문 검증
+        request.getTrack().validateNotAll();
 
         // 이메일 형식 검증
         if (!request.getEmail().matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) {
@@ -314,6 +332,11 @@ public class RecruitmentService {
         }
     }
 
+    
+    // ========================
+    // Admin 전용 메서드
+    // ========================
+
     // 지원서 파일 다운로드
     public void downloadApplications(Integer term) {
 
@@ -359,7 +382,7 @@ public class RecruitmentService {
             // S3 업로드
             String key = String.format("%d/applicants_%s_%s.csv",
                     term, track.name(), timestamp);
-            s3Service.uploadCsv(key, csv);
+            s3Service.uploadCsv(recruitmentBucket, key, csv);
         }
     }
 
@@ -370,5 +393,270 @@ public class RecruitmentService {
             case ENGINEERING -> ApplicationQuestion.Category.ENGINEERING;
             default -> throw new CustomException(ErrorCode.INVALID_PARAMETER_TYPE);
         };
+    }
+
+    // 모든 모집 공고 조회 (term 내림차순)
+    public List<RecruitmentResponse> getAllRecruitments() {
+        return recruitmentRepository.findAllByOrderByTermDesc().stream()
+                .map(RecruitmentResponse::from)
+                .toList();
+    }
+
+    // 모집 공고 등록
+    @Transactional
+    public RecruitmentIdResponse createRecruitment(RecruitmentCreateRequest request) {
+        if (recruitmentRepository.existsByTerm(request.getTerm())) {
+            throw new CustomException(ErrorCode.DUPLICATE_TERM);
+        }
+
+        if (!request.getEndDate().isAfter(request.getStartDate())) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String scheduleJson;
+        try {
+            scheduleJson = objectMapper.writeValueAsString(request.getSchedule());
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        Recruitment recruitment = Recruitment.create(
+                request.getTerm(),
+                request.getStartDate(),
+                request.getEndDate(),
+                scheduleJson,
+                request.getBrochureUrl()
+        );
+
+        recruitmentRepository.save(recruitment);
+
+        return RecruitmentIdResponse.of(recruitment.getId());
+    }
+
+    // 모집 공고 수정
+    @Transactional
+    public RecruitmentIdResponse updateRecruitment(Long id, RecruitmentUpdateRequest request) {
+        Recruitment recruitment = recruitmentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (request.getTerm() != null &&
+                recruitmentRepository.existsByTermAndIdNot(request.getTerm(), id)) {
+            throw new CustomException(ErrorCode.DUPLICATE_TERM);
+        }
+
+        LocalDateTime resolvedStart = request.getStartDate() != null ? request.getStartDate() : recruitment.getStartDate();
+        LocalDateTime resolvedEnd = request.getEndDate() != null ? request.getEndDate() : recruitment.getEndDate();
+        if (!resolvedEnd.isAfter(resolvedStart)) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        String scheduleJson = null;
+        if (request.getSchedule() != null) {
+            try {
+                scheduleJson = objectMapper.writeValueAsString(request.getSchedule());
+            } catch (Exception e) {
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+        }
+
+        recruitment.update(
+                request.getTerm(),
+                request.getStartDate(),
+                request.getEndDate(),
+                scheduleJson,
+                request.getBrochureUrl()
+        );
+
+        return RecruitmentIdResponse.of(recruitment.getId());
+    }
+
+    // 모집 공고 삭제
+    @Transactional
+    public void deleteRecruitment(Long id) {
+        Recruitment recruitment = recruitmentRepository.findById(id)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (applicantRepository.existsByRecruitmentId(id) ||
+                applicationQuestionRepository.existsByRecruitmentId(id)) {
+            throw new CustomException(ErrorCode.RECRUITMENT_HAS_REFERENCES);
+        }
+
+        recruitmentRepository.delete(recruitment);
+    }
+
+    // 지원서 전체 삭제 (모집 진행 중이면 거부)
+    @Transactional
+    public void deleteApplicants(Long recruitmentId) {
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        if (recruitment.isActive()) {
+            throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
+        }
+
+        applicantAnswerRepository.deleteByRecruitmentId(recruitmentId);
+        applicantRepository.deleteByRecruitmentId(recruitmentId);
+    }
+
+    // 지원서 질문 목록 조회 (어드민 전용, 모집 중 여부 무관)
+    public List<QuestionResponse> getAdminQuestions(Long recruitmentId) {
+        recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+        return applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(recruitmentId)
+                .stream()
+                .map(QuestionResponse::from)
+                .toList();
+    }
+
+    // 지원서 질문 등록 (다건, 실패 시 전체 롤백)
+    @Transactional
+    public QuestionIdsResponse createQuestions(QuestionsCreateRequest request) {
+        Recruitment recruitment = recruitmentRepository.findById(request.getRecruitmentId())
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        Set<String> labelSet = new java.util.HashSet<>();
+        Map<ApplicationQuestion.Category, Set<Integer>> orderNumByCategory = new java.util.HashMap<>();
+        for (QuestionItemRequest item : request.getQuestions()) {
+            if (!labelSet.add(item.getLabel())) throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
+            if (!orderNumByCategory.computeIfAbsent(item.getCategory(), k -> new java.util.HashSet<>()).add(item.getOrderNum())) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            }
+        }
+
+        for (QuestionItemRequest item : request.getQuestions()) {
+            validateQuestionType(item.getType(), item.getLimitLength(), item.getMetadata());
+
+            if (applicationQuestionRepository.existsByRecruitmentIdAndLabel(
+                    request.getRecruitmentId(), item.getLabel())) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
+            }
+            if (applicationQuestionRepository.existsByRecruitmentIdAndCategoryAndOrderNum(
+                    request.getRecruitmentId(), item.getCategory(), item.getOrderNum())) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            }
+        }
+
+        List<Long> ids = new java.util.ArrayList<>();
+        for (QuestionItemRequest item : request.getQuestions()) {
+            String metadataJson = serializeMetadata(item.getMetadata());
+            ApplicationQuestion question = ApplicationQuestion.create(
+                    recruitment,
+                    item.getLabel(),
+                    item.getCategory(),
+                    item.getType(),
+                    item.getContent(),
+                    item.getType() == ApplicationQuestion.Type.TEXT ? item.getLimitLength() : null,
+                    item.getType() == ApplicationQuestion.Type.TABLE ? metadataJson : null,
+                    item.getOrderNum(),
+                    item.getIsRequired()
+            );
+            applicationQuestionRepository.save(question);
+            ids.add(question.getId());
+        }
+
+        return QuestionIdsResponse.of(ids);
+    }
+
+    // 지원서 질문 수정
+    @Transactional
+    public QuestionIdResponse updateQuestion(Long questionId, QuestionUpdateRequest request) {
+        ApplicationQuestion question = applicationQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTIONS_NOT_FOUND));
+
+        if (request.getLabel() != null &&
+                applicationQuestionRepository.existsByRecruitmentIdAndLabelAndIdNot(
+                        question.getRecruitment().getId(), request.getLabel(), questionId)) {
+            throw new CustomException(ErrorCode.DUPLICATE_QUESTION_LABEL);
+        }
+        if (request.getOrderNum() != null) {
+            ApplicationQuestion.Category resolvedCategory = request.getCategory() != null ? request.getCategory() : question.getCategory();
+            if (applicationQuestionRepository.existsByRecruitmentIdAndCategoryAndOrderNumAndIdNot(
+                    question.getRecruitment().getId(), resolvedCategory, request.getOrderNum(), questionId)) {
+                throw new CustomException(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            }
+        }
+
+        ApplicationQuestion.Type resolvedType = request.getType() != null ? request.getType() : question.getType();
+        JsonNullable<Integer> limitLength = request.getLimitLength();
+        JsonNullable<com.fasterxml.jackson.databind.JsonNode> metadata = request.getMetadata();
+
+        if (request.getType() != null) {
+            if (resolvedType == ApplicationQuestion.Type.TEXT) {
+                if (!limitLength.isPresent() || limitLength.get() == null) {
+                    throw new CustomException(ErrorCode.MISSING_PARAMETER);
+                }
+                metadata = JsonNullable.of(null);
+            } else {
+                if (!metadata.isPresent() || metadata.get() == null) {
+                    throw new CustomException(ErrorCode.MISSING_PARAMETER);
+                }
+                limitLength = JsonNullable.of(null);
+            }
+        }
+
+        JsonNullable<String> metadataJson = JsonNullable.undefined();
+        if (metadata != null && metadata.isPresent()) {
+            metadataJson = JsonNullable.of(
+                    metadata.get() != null ? serializeMetadata(metadata.get()) : null
+            );
+        }
+
+        question.update(
+                request.getLabel(),
+                request.getCategory(),
+                request.getType(),
+                request.getContent(),
+                limitLength,
+                metadataJson,
+                request.getOrderNum(),
+                request.getIsRequired()
+        );
+
+        return QuestionIdResponse.of(question.getId());
+    }
+
+    // 지원서 질문 삭제
+    @Transactional
+    public void deleteQuestion(Long questionId) {
+        ApplicationQuestion question = applicationQuestionRepository.findById(questionId)
+                .orElseThrow(() -> new CustomException(ErrorCode.QUESTIONS_NOT_FOUND));
+
+        if (applicantAnswerRepository.existsByQuestionId(questionId)) {
+            throw new CustomException(ErrorCode.QUESTION_HAS_ANSWERS);
+        }
+
+        applicationQuestionRepository.delete(question);
+    }
+
+    private void validateQuestionType(ApplicationQuestion.Type type, Integer limitLength, com.fasterxml.jackson.databind.JsonNode metadata) {
+        if (type == ApplicationQuestion.Type.TEXT && limitLength == null) {
+            throw new CustomException(ErrorCode.MISSING_PARAMETER);
+        }
+        if (type == ApplicationQuestion.Type.TABLE && metadata == null) {
+            throw new CustomException(ErrorCode.MISSING_PARAMETER);
+        }
+    }
+
+    private String serializeMetadata(com.fasterxml.jackson.databind.JsonNode metadata) {
+        if (metadata == null) return null;
+        try {
+            return objectMapper.writeValueAsString(metadata);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    // 모집 사전 알림 신청 목록 조회 (어드민 전용)
+    public List<SubscriptionResponse> getAllSubscriptions() {
+        return subscriptionRepository.findAllByOrderByCreatedAtDesc()
+                .stream()
+                .map(SubscriptionResponse::from)
+                .toList();
+    }
+
+    // 모집 사전 알림 신청 전체 삭제 (어드민 전용)
+    @Transactional
+    public void deleteAllSubscriptions() {
+        subscriptionRepository.deleteAll();
     }
 }

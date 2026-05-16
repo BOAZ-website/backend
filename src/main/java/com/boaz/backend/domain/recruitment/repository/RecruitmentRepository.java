@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface RecruitmentRepository extends JpaRepository<Recruitment, Long> {
@@ -15,4 +16,13 @@ public interface RecruitmentRepository extends JpaRepository<Recruitment, Long> 
 
     // 기수로 공고 조회
     Optional<Recruitment> findByTerm(Integer term);
+
+    // 전체 공고 term 내림차순 조회
+    List<Recruitment> findAllByOrderByTermDesc();
+
+    // 기수 중복 확인
+    boolean existsByTerm(Integer term);
+
+    // 수정 시 기수 중복 확인 (자기 자신 제외)
+    boolean existsByTermAndIdNot(Integer term, Long id);
 }

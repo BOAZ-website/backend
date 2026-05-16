@@ -36,6 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Local tools ###
+.omc/
+
 ### Spring Boot ###
 *.jar
 *.war

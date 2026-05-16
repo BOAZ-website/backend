@@ -51,11 +51,12 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/admin/**").authenticated()
+                        .requestMatchers("/api/v1/auth/logout").authenticated()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(authenticationEntryPoint)
-                        .accessDeniedHandler(accessDeniedHandler)
+                        .authenticationEntryPoint(authenticationEntryPoint)  // 인증 실패 시
+                        .accessDeniedHandler(accessDeniedHandler)   // 권한 없을 시 
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, adminUserDetailsService),

@@ -9,6 +9,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDate;
 
 @Entity
@@ -17,9 +19,16 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Archive extends BaseEntity {
 
-    // 아카이브 카테고리 (프로젝트, 활동사진, 기술블로그)
     public enum Category {
-        PROJECT, ACTIVITY, BLOG
+
+        @Schema(description = "프로젝트")
+        PROJECT, 
+
+        @Schema(description = "활동사진")
+        ACTIVITY, 
+
+        @Schema(description = "기술블로그")
+        BLOG
     }
 
     @Id
@@ -70,6 +79,24 @@ public class Archive extends BaseEntity {
         this.track = track;
         this.imageUrl = imageUrl;
         this.links = links;
+        this.contentDate = contentDate;
+    }
+
+    public void update(
+        Integer term, 
+        String title, 
+        String teamName, 
+        Track track, 
+        String imageUrl, 
+        String links, 
+        LocalDate contentDate
+    ) {
+        if (term != null) this.term = term;
+        if (title != null) this.title = title;
+        this.teamName = teamName;
+        if (track != null) this.track = track;
+        if (imageUrl != null) this.imageUrl = imageUrl;
+        if (links != null) this.links = links;
         this.contentDate = contentDate;
     }
 }

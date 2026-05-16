@@ -24,7 +24,7 @@ public class ArchiveController {
 
     private final ArchiveService archiveService;
 
-    @Operation(summary = "프로젝트 아카이빙 목록 조회")
+    @Operation(summary = "프로젝트 아카이빙 목록 조회", description = "트랙, 기수, 제목 기반 필터링. 페이지 단위 반환")
     @GetMapping("/projects")
     public ResponseEntity<ApiResponse<ArchivePageResponse>> getProjects(
         @RequestParam(defaultValue = "ALL") Track track, 
@@ -45,7 +45,7 @@ public class ArchiveController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @Operation(summary = "활동 사진 아카이빙 조회")
+    @Operation(summary = "활동 사진 아카이빙 조회", description = "기수, 제목 기반 필터링. 페이지 단위 반환")
     @GetMapping("/activities")
     public ResponseEntity<ApiResponse<ArchivePageResponse>> getActivities(
         @RequestParam(required = false) Integer term, 
@@ -65,7 +65,7 @@ public class ArchiveController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
-    @Operation(summary = "기술 블로그 아카이빙 조회")
+    @Operation(summary = "기술 블로그 아카이빙 조회", description = "트랙, 제목 기반 필터링. 페이지 단위 반환")
     @GetMapping("/blogs")
     public ResponseEntity<ApiResponse<ArchivePageResponse>> getBlogs(
         @RequestParam(defaultValue = "ALL") Track track, 
