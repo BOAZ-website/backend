@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 public class ApiResponse<T> {
 
     private final int status;
+    @JsonInclude(JsonInclude.Include.ALWAYS)
     private final T data;
     private final String errorCode;
     private final String message;

@@ -48,8 +48,8 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
-              - openid
               - profile
+            user-name-attribute: id
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize

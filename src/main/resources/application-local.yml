@@ -3,7 +3,7 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/boaz?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:}
+    password: ${DB_PASSWORD:0000}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   sql:
@@ -52,8 +52,8 @@ spring:
             client-secret: ${GOOGLE_CLIENT_SECRET}
             redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             scope:
-              - openid
               - profile
+            user-name-attribute: id
         provider:
           kakao:
             authorization-uri: https://kauth.kakao.com/oauth/authorize
