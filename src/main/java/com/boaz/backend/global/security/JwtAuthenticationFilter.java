@@ -48,12 +48,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(principal, null, List.of());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
+                } else if ("ADMIN".equals(type)) {
                     String username = claims.get("username", String.class);
                     UserDetails userDetails = adminUserDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    throw new CustomException(ErrorCode.INVALID_TOKEN);
                 }
             } catch (CustomException e) {
                 SecurityContextHolder.clearContext();

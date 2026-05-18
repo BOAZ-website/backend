@@ -35,6 +35,7 @@ public class JwtProvider {
     public String generateAdminAccessToken(Long adminId, String username, String role) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
+                .claim("type", "ADMIN")
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date())
@@ -47,6 +48,7 @@ public class JwtProvider {
     public String generateAdminRefreshToken(Long adminId) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
+                .claim("type", "ADMIN")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(secretKey)
