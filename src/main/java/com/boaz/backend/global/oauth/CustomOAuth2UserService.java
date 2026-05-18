@@ -32,6 +32,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         return switch (provider) {
             case "kakao" -> new KakaoOAuth2UserInfo(attributes);
             case "google" -> new GoogleOAuth2UserInfo(attributes);
+            case "naver" -> new NaverOAuth2UserInfo(attributes);
             default -> throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
         };
     }
