@@ -1,19 +1,22 @@
-package com.boaz.backend.global.security.oauth2;
+package com.boaz.backend.global.oauth;
 
-import jakarta.servlet.http.Cookie;
+import com.boaz.backend.global.util.CookieProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 @Component
+@RequiredArgsConstructor
 public class CookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final String COOKIE_NAME = "oauth2_auth_request";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
+
+    private final CookieProvider cookieProvider;
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -29,10 +32,10 @@ public class CookieOAuth2AuthorizationRequestRepository
             HttpServletResponse response
     ) {
         if (authorizationRequest == null) {
-            CookieUtils.deleteCookie(request, response, COOKIE_NAME);
+            cookieProvider.deleteOAuth2StateCookie(response, COOKIE_NAME);
             return;
         }
-        CookieUtils.addCookie(response, COOKIE_NAME,
+        cookieProvider.addOAuth2StateCookie(response, COOKIE_NAME,
                 CookieUtils.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
     }
 
@@ -42,7 +45,7 @@ public class CookieOAuth2AuthorizationRequestRepository
             HttpServletResponse response
     ) {
         OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
-        CookieUtils.deleteCookie(request, response, COOKIE_NAME);
+        cookieProvider.deleteOAuth2StateCookie(response, COOKIE_NAME);
         return authRequest;
     }
 }

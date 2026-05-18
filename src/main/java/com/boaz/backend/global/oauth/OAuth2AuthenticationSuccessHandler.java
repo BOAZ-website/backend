@@ -1,7 +1,6 @@
-package com.boaz.backend.domain.auth.handler;
+package com.boaz.backend.global.oauth;
 
 import com.boaz.backend.domain.auth.entity.RefreshToken;
-import com.boaz.backend.domain.auth.oauth2.CustomOAuth2User;
 import com.boaz.backend.domain.auth.repository.RefreshTokenRepository;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.global.common.enums.AccountType;
@@ -36,8 +35,8 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
             HttpServletResponse response,
             Authentication authentication
     ) throws IOException {
-        CustomOAuth2User customUser = (CustomOAuth2User) authentication.getPrincipal();
-        User user = customUser.getUser();
+        OAuth2UserAdapter userAdapter = (OAuth2UserAdapter) authentication.getPrincipal();
+        User user = userAdapter.getUser();
 
         String accessToken = jwtProvider.generateUserAccessToken(user.getId());
         String refreshToken = jwtProvider.generateUserRefreshToken(user.getId());

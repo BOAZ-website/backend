@@ -12,15 +12,13 @@ import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.boaz.backend.global.security.JwtProvider;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 @RequiredArgsConstructor
-public class AuthService {
+public class AdminAuthService {
 
     private final AdminRepository adminRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -29,58 +27,41 @@ public class AuthService {
 
     @Transactional
     public LoginResponse login(LoginRequest request) {
-
         Admin admin = adminRepository.findByUsernameAndDeletedAtIsNull(request.getUsername())
-            .filter(a -> passwordEncoder.matches(request.getPassword(), a.getPassword()))
-            .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
+                .filter(a -> passwordEncoder.matches(request.getPassword(), a.getPassword()))
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
         String accessToken = jwtProvider.generateAdminAccessToken(
-            admin.getId(),
-            admin.getUsername(),
-            admin.getRole().name()
-        );
-
+                admin.getId(), admin.getUsername(), admin.getRole().name());
         String newRefreshToken = jwtProvider.generateAdminRefreshToken(admin.getId());
 
-        RefreshToken savedToken = refreshTokenRepository
-            .findByAccountTypeAndAccountId(AccountType.ADMIN, admin.getId())
-            .orElse(null);
-
-        if (savedToken == null) {
-            savedToken = RefreshToken.builder()
-                .accountType(AccountType.ADMIN)
-                .accountId(admin.getId())
-                .token(newRefreshToken)
-                .expiresAt(jwtProvider.getRefreshTokenExpiry())
-                .build();
-        } else {
-            savedToken.update(newRefreshToken, jwtProvider.getRefreshTokenExpiry());
-        }
-
-        refreshTokenRepository.save(savedToken);
+        refreshTokenRepository.findByAccountTypeAndAccountId(AccountType.ADMIN, admin.getId())
+                .ifPresentOrElse(
+                        rt -> rt.update(newRefreshToken, jwtProvider.getRefreshTokenExpiry()),
+                        () -> refreshTokenRepository.save(RefreshToken.builder()
+                                .accountType(AccountType.ADMIN)
+                                .accountId(admin.getId())
+                                .token(newRefreshToken)
+                                .expiresAt(jwtProvider.getRefreshTokenExpiry())
+                                .build())
+                );
 
         return new LoginResponse(accessToken, newRefreshToken);
     }
 
     @Transactional(readOnly = true)
     public TokenRefreshResponse refresh(String refreshToken) {
-
         jwtProvider.validateToken(refreshToken);
 
-        RefreshToken savedToken = refreshTokenRepository
-            .findByAccountTypeAndToken(AccountType.ADMIN, refreshToken)
-            .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
+        RefreshToken saved = refreshTokenRepository
+                .findByAccountTypeAndToken(AccountType.ADMIN, refreshToken)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
 
-        Admin admin = adminRepository.findById(savedToken.getAccountId())
-            .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
+        Admin admin = adminRepository.findById(saved.getAccountId())
+                .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
-        String newAccessToken = jwtProvider.generateAdminAccessToken(
-            admin.getId(),
-            admin.getUsername(),
-            admin.getRole().name()
-        );
-
-        return new TokenRefreshResponse(newAccessToken);
+        return new TokenRefreshResponse(jwtProvider.generateAdminAccessToken(
+                admin.getId(), admin.getUsername(), admin.getRole().name()));
     }
 
     @Transactional

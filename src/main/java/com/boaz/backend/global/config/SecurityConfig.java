@@ -1,14 +1,14 @@
 package com.boaz.backend.global.config;
 
-import com.boaz.backend.domain.auth.handler.OAuth2AuthenticationFailureHandler;
-import com.boaz.backend.domain.auth.handler.OAuth2AuthenticationSuccessHandler;
-import com.boaz.backend.domain.auth.oauth2.CustomOAuth2UserService;
+import com.boaz.backend.global.oauth.CookieOAuth2AuthorizationRequestRepository;
+import com.boaz.backend.global.oauth.CustomOAuth2UserService;
+import com.boaz.backend.global.oauth.OAuth2AuthenticationFailureHandler;
+import com.boaz.backend.global.oauth.OAuth2AuthenticationSuccessHandler;
 import com.boaz.backend.global.security.AdminUserDetailsService;
 import com.boaz.backend.global.security.CustomAccessDeniedHandler;
 import com.boaz.backend.global.security.CustomAuthenticationEntryPoint;
 import com.boaz.backend.global.security.JwtAuthenticationFilter;
 import com.boaz.backend.global.security.JwtProvider;
-import com.boaz.backend.global.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -59,7 +59,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/admin/**").authenticated()
-                        .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/admin/logout").authenticated()
                         .requestMatchers("/api/v1/auth/user/logout").authenticated()
                         .anyRequest().permitAll()
                 )

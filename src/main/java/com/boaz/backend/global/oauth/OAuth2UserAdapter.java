@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.auth.oauth2;
+package com.boaz.backend.global.oauth;
 
 import com.boaz.backend.domain.user.entity.User;
 import lombok.Getter;
@@ -9,12 +9,12 @@ import java.util.Collection;
 import java.util.Map;
 
 @Getter
-public class CustomOAuth2User implements OAuth2User {
+public class OAuth2UserAdapter implements OAuth2User {
 
     private final OAuth2User delegate;
     private final User user;
 
-    public CustomOAuth2User(OAuth2User delegate, User user) {
+    public OAuth2UserAdapter(OAuth2User delegate, User user) {
         this.delegate = delegate;
         this.user = user;
     }

@@ -1,4 +1,4 @@
-package com.boaz.backend.global.security.oauth2;
+package com.boaz.backend.global.oauth;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,4 +1,4 @@
-package com.boaz.backend.domain.auth.handler;
+package com.boaz.backend.global.oauth;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
