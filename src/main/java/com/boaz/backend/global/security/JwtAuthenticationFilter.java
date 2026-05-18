@@ -40,6 +40,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 jwtProvider.validateToken(token);
                 Claims claims = jwtProvider.parseClaims(token);
+                if (!"ACCESS".equals(claims.get("tokenType", String.class))) {
+                    throw new CustomException(ErrorCode.INVALID_TOKEN);
+                }
                 String type = claims.get("type", String.class);
 
                 if ("USER".equals(type)) {

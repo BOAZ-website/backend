@@ -36,6 +36,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
                 .claim("type", "ADMIN")
+                .claim("tokenType", "ACCESS")
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date())
@@ -49,17 +50,19 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
                 .claim("type", "ADMIN")
+                .claim("tokenType", "REFRESH")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(secretKey)
                 .compact();
     }
 
-    // User Access Token — "type":"USER" claim으로 Admin token과 구분
+    // User Access Token
     public String generateUserAccessToken(Long userId) {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("type", "USER")
+                .claim("tokenType", "ACCESS")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
                 .signWith(secretKey)
@@ -71,6 +74,7 @@ public class JwtProvider {
         return Jwts.builder()
                 .subject(String.valueOf(userId))
                 .claim("type", "USER")
+                .claim("tokenType", "REFRESH")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(secretKey)
