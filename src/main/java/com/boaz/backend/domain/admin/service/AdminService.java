@@ -8,6 +8,7 @@ import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.auth.repository.RefreshTokenRepository;
+import com.boaz.backend.global.common.enums.AccountType;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -102,7 +103,7 @@ public class AdminService {
         });
 
         if (request.getRole().isPresent()) {
-            refreshTokenRepository.deleteByAdminId(id);
+            refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
         }
 
         admin.update(
@@ -133,7 +134,7 @@ public class AdminService {
         }
 
         admin.softDelete();
-        refreshTokenRepository.deleteByAdminId(id);
+        refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
     }
 
     @Transactional
@@ -156,6 +157,6 @@ public class AdminService {
         }
 
         admin.resetPassword(passwordEncoder.encode(request.getNewPassword()));
-        refreshTokenRepository.deleteByAdminId(id);
+        refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
     }
 }

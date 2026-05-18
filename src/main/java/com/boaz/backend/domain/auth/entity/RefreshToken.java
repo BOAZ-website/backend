@@ -1,5 +1,6 @@
 package com.boaz.backend.domain.auth.entity;
 
+import com.boaz.backend.global.common.enums.AccountType;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,17 +12,24 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name = "refresh_token")
+@Table(
+        name = "refresh_tokens",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"account_type", "account_id"})
+)
 public class RefreshToken {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private Long adminId;
+    @Column(name = "account_id", nullable = false)
+    private Long accountId;
 
-    @Column(nullable = false, unique = true)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_type", nullable = false, length = 10)
+    private AccountType accountType;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String token;
 
     @Column(nullable = false)
@@ -31,20 +39,19 @@ public class RefreshToken {
     private LocalDateTime createdAt;
 
     @Builder
-    public RefreshToken(Long adminId, String token, LocalDateTime expiresAt) {
-        this.adminId = adminId;
+    public RefreshToken(Long accountId, AccountType accountType, String token, LocalDateTime expiresAt) {
+        this.accountId = accountId;
+        this.accountType = accountType;
         this.token = token;
         this.expiresAt = expiresAt;
         this.createdAt = LocalDateTime.now();
     }
 
-    // 토큰이 만료되었는지 확인하는 메서드 
     public boolean isExpired() {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
-    // 기존 토큰 덮어쓰기 (token, expiresAt 교체)
-    public void rotate(String newToken, LocalDateTime newExpiresAt) {
+    public void update(String newToken, LocalDateTime newExpiresAt) {
         this.token = newToken;
         this.expiresAt = newExpiresAt;
     }

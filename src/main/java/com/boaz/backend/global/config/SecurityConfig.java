@@ -1,10 +1,14 @@
 package com.boaz.backend.global.config;
 
+import com.boaz.backend.domain.auth.handler.OAuth2AuthenticationFailureHandler;
+import com.boaz.backend.domain.auth.handler.OAuth2AuthenticationSuccessHandler;
+import com.boaz.backend.domain.auth.oauth2.CustomOAuth2UserService;
 import com.boaz.backend.global.security.AdminUserDetailsService;
 import com.boaz.backend.global.security.CustomAccessDeniedHandler;
 import com.boaz.backend.global.security.CustomAuthenticationEntryPoint;
 import com.boaz.backend.global.security.JwtAuthenticationFilter;
 import com.boaz.backend.global.security.JwtProvider;
+import com.boaz.backend.global.security.oauth2.CookieOAuth2AuthorizationRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +37,10 @@ public class SecurityConfig {
     private final AdminUserDetailsService adminUserDetailsService;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler successHandler;
+    private final OAuth2AuthenticationFailureHandler failureHandler;
+    private final CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     @Value("${cors.allowed-origins}")
     private String allowedOrigins;
@@ -52,11 +60,26 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/v1/admin/**").authenticated()
                         .requestMatchers("/api/v1/auth/logout").authenticated()
+                        .requestMatchers("/api/v1/auth/user/logout").authenticated()
                         .anyRequest().permitAll()
                 )
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(endpoint -> endpoint
+                                .baseUri("/oauth2/authorize")
+                                .authorizationRequestRepository(authorizationRequestRepository)
+                        )
+                        .redirectionEndpoint(endpoint -> endpoint
+                                .baseUri("/login/oauth2/code/*")
+                        )
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(successHandler)
+                        .failureHandler(failureHandler)
+                )
                 .exceptionHandling(exceptions -> exceptions
-                        .authenticationEntryPoint(authenticationEntryPoint)  // 인증 실패 시
-                        .accessDeniedHandler(accessDeniedHandler)   // 권한 없을 시 
+                        .authenticationEntryPoint(authenticationEntryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                 )
                 .addFilterBefore(
                         new JwtAuthenticationFilter(jwtProvider, adminUserDetailsService),

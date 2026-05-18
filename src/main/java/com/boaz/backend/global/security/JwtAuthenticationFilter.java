@@ -2,6 +2,7 @@ package com.boaz.backend.global.security;
 
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,6 +16,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -36,17 +38,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(token)) {
             try {
-                // 서명 및 만료 검증 
                 jwtProvider.validateToken(token);
+                Claims claims = jwtProvider.parseClaims(token);
+                String type = claims.get("type", String.class);
 
-                // 토큰에서 username 추출 후 계정 조회 
-                String username = jwtProvider.getUsernameFromToken(token);
-                UserDetails userDetails = adminUserDetailsService.loadUserByUsername(username);
-
-                // 인증 객체 생성 후 SecurityContext에 저장 (이후 인증된 사용자로 처리)
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                if ("USER".equals(type)) {
+                    Long userId = Long.parseLong(claims.getSubject());
+                    UserPrincipal principal = new UserPrincipal(userId);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(principal, null, List.of());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    String username = claims.get("username", String.class);
+                    UserDetails userDetails = adminUserDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             } catch (CustomException e) {
                 SecurityContextHolder.clearContext();
                 sendErrorResponse(response, e.getErrorCode());
@@ -58,12 +66,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
         }
-    
-        // 다음 필터로 전달 
+
         filterChain.doFilter(request, response);
     }
 
-    // Authorization 헤더에서 "Bearer " 제거 후 토큰 문자열만 반환 (없으면 null 반환)
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_PREFIX)) {
@@ -72,7 +78,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return null;
     }
 
-    // 에러 응답 JSON 작성 후 클라이언트에게 반환 
     private void sendErrorResponse(HttpServletResponse response, ErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json;charset=UTF-8");
