@@ -3,7 +3,7 @@ package com.boaz.backend.domain.auth.controller;
 import com.boaz.backend.domain.auth.dto.request.LoginRequest;
 import com.boaz.backend.domain.auth.dto.response.LoginResponse;
 import com.boaz.backend.domain.auth.dto.response.TokenRefreshResponse;
-import com.boaz.backend.domain.auth.service.AdminAuthService;
+import com.boaz.backend.domain.auth.service.AuthService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.security.AdminUserDetails;
 import com.boaz.backend.global.util.CookieProvider;
@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth/admin")
 public class AdminAuthController {
 
-    private final AdminAuthService adminAuthService;
+    private final AuthService authService;
     private final CookieProvider cookieProvider;
 
     @Operation(summary = "어드민 로그인", description = "아이디/비밀번호로 로그인. Access Token 반환 및 Refresh Token 쿠키 설정")
@@ -32,7 +32,7 @@ public class AdminAuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response
     ) {
-        LoginResponse result = adminAuthService.login(request);
+        LoginResponse result = authService.adminLogin(request);
         cookieProvider.addAdminRefreshTokenCookie(response, result.getRefreshToken());
         return ResponseEntity.ok(ApiResponse.ok(result));
     }
@@ -42,7 +42,7 @@ public class AdminAuthController {
     public ResponseEntity<ApiResponse<TokenRefreshResponse>> refresh(
             @CookieValue(name = "admin_refresh_token", required = false) String refreshToken
     ) {
-        return ResponseEntity.ok(ApiResponse.ok(adminAuthService.refresh(refreshToken)));
+        return ResponseEntity.ok(ApiResponse.ok(authService.adminRefresh(refreshToken)));
     }
 
     @Operation(summary = "어드민 로그아웃", description = "Refresh Token 무효화 및 쿠키 삭제")
@@ -52,7 +52,7 @@ public class AdminAuthController {
             @AuthenticationPrincipal AdminUserDetails userDetails,
             HttpServletResponse response
     ) {
-        adminAuthService.logout(userDetails.getAdmin().getId());
+        authService.adminLogout(userDetails.getAdmin().getId());
         cookieProvider.expireAdminRefreshTokenCookie(response);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }

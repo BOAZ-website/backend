@@ -1,8 +1,7 @@
-package com.boaz.backend.global.oauth;
+package com.boaz.backend.global.util;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.*;
 import java.util.Arrays;
@@ -17,27 +16,6 @@ public class CookieUtils {
         return Arrays.stream(cookies)
                 .filter(c -> c.getName().equals(name))
                 .findFirst();
-    }
-
-    public static void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
-        Cookie cookie = new Cookie(name, value);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(maxAge);
-        response.addCookie(cookie);
-    }
-
-    public static void deleteCookie(HttpServletRequest request, HttpServletResponse response, String name) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) return;
-        Arrays.stream(cookies)
-                .filter(c -> c.getName().equals(name))
-                .forEach(c -> {
-                    c.setValue("");
-                    c.setPath("/");
-                    c.setMaxAge(0);
-                    response.addCookie(c);
-                });
     }
 
     public static String serialize(Object object) {

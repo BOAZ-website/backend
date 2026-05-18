@@ -15,10 +15,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 @RequiredArgsConstructor
-public class AdminAuthService {
+public class AuthService {
 
     private final AdminRepository adminRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -26,7 +27,7 @@ public class AdminAuthService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse adminLogin(LoginRequest request) {
         Admin admin = adminRepository.findByUsernameAndDeletedAtIsNull(request.getUsername())
                 .filter(a -> passwordEncoder.matches(request.getPassword(), a.getPassword()))
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_CREDENTIALS));
@@ -50,7 +51,7 @@ public class AdminAuthService {
     }
 
     @Transactional(readOnly = true)
-    public TokenRefreshResponse refresh(String refreshToken) {
+    public TokenRefreshResponse adminRefresh(String refreshToken) {
         jwtProvider.validateToken(refreshToken);
 
         RefreshToken saved = refreshTokenRepository
@@ -65,7 +66,33 @@ public class AdminAuthService {
     }
 
     @Transactional
-    public void logout(Long adminId) {
+    public void adminLogout(Long adminId) {
         refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, adminId);
+    }
+
+    @Transactional(readOnly = true)
+    public TokenRefreshResponse userRefresh(String cookieValue) {
+        if (!StringUtils.hasText(cookieValue)) {
+            throw new CustomException(ErrorCode.TOKEN_NOT_FOUND);
+        }
+
+        jwtProvider.validateToken(cookieValue);
+
+        Long userId = Long.parseLong(jwtProvider.parseClaims(cookieValue).getSubject());
+
+        RefreshToken saved = refreshTokenRepository
+                .findByAccountTypeAndAccountId(AccountType.USER, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
+
+        if (!saved.getToken().equals(cookieValue)) {
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
+        }
+
+        return new TokenRefreshResponse(jwtProvider.generateUserAccessToken(userId));
+    }
+
+    @Transactional
+    public void userLogout(Long userId) {
+        refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.USER, userId);
     }
 }
