@@ -23,6 +23,11 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
         String provider = userRequest.getClientRegistration().getRegistrationId();
         OAuth2UserInfo userInfo = createUserInfo(provider, oauth2User.getAttributes());
+
+        if (userInfo.getProviderId() == null) {
+            throw new OAuth2AuthenticationException("Provider ID is missing from OAuth2 response: " + provider);
+        }
+
         User user = userService.findOrCreate(userInfo);
 
         return new OAuth2UserAdapter(oauth2User, user);
