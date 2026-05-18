@@ -1,14 +1,18 @@
 package com.boaz.backend.global.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.jackson2.SecurityJackson2Modules;
 
-import java.io.*;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Optional;
 
 public class CookieUtils {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .registerModules(SecurityJackson2Modules.getModules(CookieUtils.class.getClassLoader()));
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
@@ -19,22 +23,18 @@ public class CookieUtils {
     }
 
     public static String serialize(Object object) {
-        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-            oos.writeObject(object);
-            return Base64.getUrlEncoder().encodeToString(baos.toByteArray());
-        } catch (IOException e) {
+        try {
+            byte[] bytes = OBJECT_MAPPER.writeValueAsBytes(object);
+            return Base64.getUrlEncoder().encodeToString(bytes);
+        } catch (Exception e) {
             throw new RuntimeException("Failed to serialize object", e);
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static <T> T deserialize(Cookie cookie, Class<T> cls) {
         try {
             byte[] bytes = Base64.getUrlDecoder().decode(cookie.getValue());
-            try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
-                return cls.cast(ois.readObject());
-            }
+            return OBJECT_MAPPER.readValue(bytes, cls);
         } catch (Exception e) {
             throw new RuntimeException("Failed to deserialize cookie", e);
         }

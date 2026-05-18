@@ -22,7 +22,13 @@ public class CookieOAuth2AuthorizationRequestRepository
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         return CookieUtils.getCookie(request, COOKIE_NAME)
-                .map(cookie -> CookieUtils.deserialize(cookie, OAuth2AuthorizationRequest.class))
+                .map(cookie -> {
+                    try {
+                        return CookieUtils.deserialize(cookie, OAuth2AuthorizationRequest.class);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
                 .orElse(null);
     }
 
