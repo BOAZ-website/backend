@@ -20,7 +20,7 @@ public class NaverOAuth2UserInfo implements OAuth2UserInfo {
     public String getProviderId() {
         Map<String, Object> response = (Map<String, Object>) attributes.get("response");
         if (response == null) return null;
-        return String.valueOf(response.get("id"));
+        return (String) response.get("id");
     }
 
     @Override
