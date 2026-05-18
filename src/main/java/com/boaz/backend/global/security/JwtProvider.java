@@ -31,10 +31,12 @@ public class JwtProvider {
         this.refreshTokenExpiration = refreshTokenExpiration;
     }
 
-    // Access Token 생성 
-    public String generateAccessToken(Long adminId, String username, String role) {
+    // Admin Access Token
+    public String generateAdminAccessToken(Long adminId, String username, String role) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
+                .claim("type", "ADMIN")
+                .claim("tokenType", "ACCESS")
                 .claim("username", username)
                 .claim("role", role)
                 .issuedAt(new Date())
@@ -43,17 +45,42 @@ public class JwtProvider {
                 .compact();
     }
 
-    // Refresh Token 생성 
-    public String generateRefreshToken(Long adminId) {
+    // Admin Refresh Token
+    public String generateAdminRefreshToken(Long adminId) {
         return Jwts.builder()
                 .subject(String.valueOf(adminId))
+                .claim("type", "ADMIN")
+                .claim("tokenType", "REFRESH")
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
                 .signWith(secretKey)
                 .compact();
     }
 
-    // JWT 토큰을 파싱해서 Claims(내용) 반환 
+    // User Access Token
+    public String generateUserAccessToken(Long userId) {
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("type", "USER")
+                .claim("tokenType", "ACCESS")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + accessTokenExpiration))
+                .signWith(secretKey)
+                .compact();
+    }
+
+    // User Refresh Token
+    public String generateUserRefreshToken(Long userId) {
+        return Jwts.builder()
+                .subject(String.valueOf(userId))
+                .claim("type", "USER")
+                .claim("tokenType", "REFRESH")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + refreshTokenExpiration))
+                .signWith(secretKey)
+                .compact();
+    }
+
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
@@ -62,17 +89,14 @@ public class JwtProvider {
                 .getPayload();
     }
 
-    // 토큰에서 adminId 추출 
     public Long getAdminIdFromToken(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
-    // 토큰에서 username 추출 
     public String getUsernameFromToken(String token) {
         return parseClaims(token).get("username", String.class);
     }
 
-    // 토큰 유효성 검사 
     public void validateToken(String token) {
         try {
             Jwts.parser()
@@ -80,13 +104,12 @@ public class JwtProvider {
                     .build()
                     .parseSignedClaims(token);
         } catch (ExpiredJwtException e) {
-            throw new CustomException(ErrorCode.EXPIRED_TOKEN);  // 토큰 만료
+            throw new CustomException(ErrorCode.EXPIRED_TOKEN);
         } catch (JwtException | IllegalArgumentException e) {
-            throw new CustomException(ErrorCode.INVALID_TOKEN);  // 위변조 시 
+            throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
     }
 
-    // Refresh Token 만료 시각 계산 
     public LocalDateTime getRefreshTokenExpiry() {
         return LocalDateTime.now().plusSeconds(refreshTokenExpiration / 1000);
     }
