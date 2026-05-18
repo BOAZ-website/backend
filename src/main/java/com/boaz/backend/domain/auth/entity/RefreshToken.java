@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Table(
-        name = "refresh_tokens",
+        name = "refresh_token",
         uniqueConstraints = @UniqueConstraint(columnNames = {"account_type", "account_id"})
 )
 public class RefreshToken {

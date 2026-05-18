@@ -38,7 +38,7 @@ spring:
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
             client-secret: ${KAKAO_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://api.bigdataboaz.com/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
             client-authentication-method: client_secret_post
             scope:
@@ -46,13 +46,13 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://api.bigdataboaz.com/login/oauth2/code/{registrationId}"
             scope:
               - profile
           naver:
             client-id: ${NAVER_CLIENT_ID}
             client-secret: ${NAVER_CLIENT_SECRET}
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://api.bigdataboaz.com/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
             scope:
               - name
@@ -104,10 +104,9 @@ cookie:
   secure: true
   domain: bigdataboaz.com
 
-
 oauth2:
-  redirect-uri: https://www.bigdataboaz.com/auth/callback
-  failure-redirect-uri: https://www.bigdataboaz.com/login?error=true
+  redirect-uri: https://prod-www.bigdataboaz.com/auth/callback
+  failure-redirect-uri: https://prod-www.bigdataboaz.com/login?error=true
 
 logging:
   level:
