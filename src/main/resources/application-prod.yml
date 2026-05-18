@@ -104,10 +104,9 @@ cookie:
   secure: true
   domain: bigdataboaz.com
 
-
 oauth2:
-  redirect-uri: https://www.bigdataboaz.com/auth/callback
-  failure-redirect-uri: https://www.bigdataboaz.com/login?error=true
+  redirect-uri: https://prod-www.bigdataboaz.com/auth/callback
+  failure-redirect-uri: https://prod-www.bigdataboaz.com/login?error=true
 
 logging:
   level:
