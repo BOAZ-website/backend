@@ -59,6 +59,7 @@ public class AuthService {
                 .orElseThrow(() -> new CustomException(ErrorCode.INVALID_TOKEN));
 
         Admin admin = adminRepository.findById(saved.getAccountId())
+                .filter(a -> !a.isDeleted())
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
         return new TokenRefreshResponse(jwtProvider.generateAdminAccessToken(
