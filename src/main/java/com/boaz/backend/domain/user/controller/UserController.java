@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "User", description = "User 정보 관련 API")
+@SecurityRequirement(name = "bearerAuth")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/users")
@@ -25,7 +26,6 @@ public class UserController {
     private final UserService userService;
 
     @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 닉네임 및 회원 타입 조회")
-    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> getMyInfo(
             @AuthenticationPrincipal UserPrincipal principal) {
