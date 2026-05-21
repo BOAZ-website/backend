@@ -17,6 +17,7 @@ import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.security.UserPrincipal;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,7 @@ public class RecruitmentController {
     }
 
     @Operation(summary = "지원서 제출")
+    @SecurityRequirement(name = "bearerAuth")
     @PostMapping("/{recruitmentId}/applications")
     public ResponseEntity<ApiResponse<ApplicationResponse>> submitApplication(
             @PathVariable Long recruitmentId,
@@ -75,6 +77,7 @@ public class RecruitmentController {
     }
 
     @Operation(summary = "지원서 임시저장")
+    @SecurityRequirement(name = "bearerAuth")
     @PutMapping("/{recruitmentId}/applications/draft")
     public ResponseEntity<ApiResponse<DraftApplicationResponse>> saveDraft(
             @PathVariable Long recruitmentId,
@@ -85,6 +88,7 @@ public class RecruitmentController {
     }
 
     @Operation(summary = "내 지원서 조회")
+    @SecurityRequirement(name = "bearerAuth")
     @GetMapping("/{recruitmentId}/applications/me")
     public ResponseEntity<ApiResponse<MyApplicationResponse>> getMyApplication(
             @PathVariable Long recruitmentId,
