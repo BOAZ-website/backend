@@ -52,7 +52,7 @@ public class Archive extends BaseEntity {
     @Column(nullable = false, length = 50)
     private Track track;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(nullable = false, columnDefinition = "json")

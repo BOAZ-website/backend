@@ -25,6 +25,7 @@ public class Review extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     public static Review create(String name, Track track, Integer term, String content, String imageUrl) {
