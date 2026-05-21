@@ -434,9 +434,15 @@ public class RecruitmentService {
                     String answerText = null;
                     String answerJson = null;
                     if (question.getType() == ApplicationQuestion.Type.TEXT) {
+                        if (answer != null && !answer.isTextual()) {
+                            throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        }
                         answerText = answer != null ? answer.asText() : null;
                     } else {
                         try {
+                            if (answer != null && !answer.isObject()) {
+                                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                            }
                             answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
                         } catch (Exception e) {
                             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
