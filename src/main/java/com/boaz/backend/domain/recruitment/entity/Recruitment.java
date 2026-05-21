@@ -28,7 +28,7 @@ public class Recruitment extends BaseEntity {
     @Column(columnDefinition = "JSON", nullable = false)
     private String schedule;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String brochureUrl;
 
     public boolean isActive() {
