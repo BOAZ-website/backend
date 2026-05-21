@@ -2,6 +2,7 @@ package com.boaz.backend.domain.recruitment.service;
 
 import com.boaz.backend.domain.recruitment.dto.request.AnswerRequest;
 import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.DraftApplicationRequest;
 import com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest;
 import com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.QuestionUpdateRequest;
@@ -10,6 +11,8 @@ import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
+import com.boaz.backend.domain.recruitment.dto.response.DraftApplicationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.MyApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionIdsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
@@ -28,12 +31,16 @@ import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
 import com.boaz.backend.domain.recruitment.repository.SubscriptionRepository;
+import com.boaz.backend.domain.user.entity.User;
+import com.boaz.backend.domain.user.repository.UserRepository;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.boaz.backend.global.util.S3Service;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 import lombok.RequiredArgsConstructor;
 
@@ -63,6 +70,7 @@ public class RecruitmentService {
     private final ApplicationQuestionRepository applicationQuestionRepository;
     private final ApplicantRepository applicantRepository;
     private final ApplicantAnswerRepository applicantAnswerRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
@@ -76,7 +84,7 @@ public class RecruitmentService {
     public RecruitmentStatusResponse getRecruitmentStatus() {
         Optional<Recruitment> activeRecruitment = recruitmentRepository
                 .findActiveRecruitment(LocalDateTime.now());
-        
+
         return activeRecruitment
                 .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
                 .orElse(RecruitmentStatusResponse.of(false, null));
@@ -94,9 +102,9 @@ public class RecruitmentService {
     public RecruitmentResponse getRecruitment(Integer term) {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
-        
+
         LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate()) 
+        boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
 
         return RecruitmentResponse.from(recruitment, isActive);
@@ -111,12 +119,12 @@ public class RecruitmentService {
 
         // 모집 중 여부 확인
         LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate()) 
+        boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
-        
+
         // 부문 검증
         track.validateNotAll();
 
@@ -143,10 +151,14 @@ public class RecruitmentService {
 
     // 지원서 제출하기
     @Transactional
-    public ApplicationResponse submitApplication(ApplicationRequest request) {
+    public ApplicationResponse submitApplication(Long userId, Long recruitmentId, ApplicationRequest request) {
+
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
         // 공고 존재 여부 확인
-        Recruitment recruitment = recruitmentRepository.findById(request.getRecruitmentId())
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
@@ -155,6 +167,12 @@ public class RecruitmentService {
                         && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
+        }
+
+        // 이미 제출된 지원서 확인
+        Optional<Applicant> existing = applicantRepository.findByRecruitmentIdAndUserId(recruitmentId, userId);
+        if (existing.isPresent() && existing.get().getStatus() == Applicant.ApplicantStatus.SUBMITTED) {
+            throw new CustomException(ErrorCode.ALREADY_SUBMITTED);
         }
 
         // 부문 검증
@@ -177,12 +195,12 @@ public class RecruitmentService {
         } catch (DateTimeParseException e) {
             throw new CustomException(ErrorCode.INVALID_BIRTH_DATE_FORMAT);
         }
-        
+
         // 해당 공고의 질문 목록 조회
         ApplicationQuestion.Category trackCategory = toQuestionCategory(request.getTrack());
         List<ApplicationQuestion> questions = applicationQuestionRepository
                 .findByRecruitmentIdAndCategories(
-                        request.getRecruitmentId(),
+                        recruitmentId,
                         ApplicationQuestion.Category.COMMON,
                         trackCategory
                 );
@@ -200,8 +218,7 @@ public class RecruitmentService {
                 .map(AnswerRequest::getQuestionId)
                 .toList();
 
-        boolean allRequiredAnswered = answeredQuestionIds.containsAll(requiredQuestionIds);
-        if (!allRequiredAnswered) {
+        if (!answeredQuestionIds.containsAll(requiredQuestionIds)) {
             throw new CustomException(ErrorCode.ANSWER_REQUIRED);
         }
 
@@ -210,17 +227,18 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
 
-        // 잘못된 questionId 검증
+        // 유효한 questionId 목록
         List<Long> validQuestionIds = questions.stream()
                 .map(ApplicationQuestion::getId)
                 .toList();
 
+        // 잘못된 questionId 검증
         for (AnswerRequest answerRequest : request.getAnswers()) {
             if (!validQuestionIds.contains(answerRequest.getQuestionId())) {
                 throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
             }
         }
-        
+
         // 답변 형식 검증 (TEXT → String, TABLE → JSON)
         Map<Long, ApplicationQuestion> questionMap = questions.stream()
                 .collect(Collectors.toMap(ApplicationQuestion::getId, q -> q));
@@ -230,8 +248,14 @@ public class RecruitmentService {
             if (question == null) continue;
 
             JsonNode answer = answerRequest.getAnswer();
+            if (answer == null) {
+                throw new CustomException(
+                        question.getIsRequired() ? ErrorCode.ANSWER_REQUIRED : ErrorCode.INVALID_ANSWER_TYPE
+                );
+            }
+
             if (question.getIsRequired()) {
-                if (answer == null || answer.isNull()
+                if (answer.isNull()
                         || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
                         || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
@@ -246,33 +270,41 @@ public class RecruitmentService {
         }
 
         // minorDoubleMajor JSON 변환
-        String minorDoubleMajorJson = null;
-        if (request.getMinorDoubleMajor() != null && !request.getMinorDoubleMajor().isEmpty()) {
-            try {
-                minorDoubleMajorJson = objectMapper.writeValueAsString(request.getMinorDoubleMajor());
-            } catch (Exception e) {
-                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
-            }
+        String minorDoubleMajorJson = serializeList(request.getMinorDoubleMajor());
+
+        // DRAFT 존재 시 덮어쓰기, 없으면 신규 생성
+        Applicant applicant;
+        if (existing.isPresent()) {
+            // DRAFT → SUBMITTED 전환 (overwrite: 전체 교체)
+            applicant = existing.get();
+            applicantAnswerRepository.deleteByApplicantId(applicant.getId());
+            applicant.overwrite(
+                    request.getTrack(), request.getName(), request.getEmail(), request.getPhone(),
+                    request.getUniversity(), request.getMajor(), minorDoubleMajorJson,
+                    request.getLastSemester(), request.getMilitaryStatus(), birthDate,
+                    request.getGraduationDate(), request.getGradSchoolPlan()
+            );
+        } else {
+            applicant = Applicant.builder()
+                    .recruitment(recruitment)
+                    .user(user)
+                    .status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(request.getTrack())
+                    .name(request.getName())
+                    .email(request.getEmail())
+                    .phone(request.getPhone())
+                    .university(request.getUniversity())
+                    .major(request.getMajor())
+                    .minorDoubleMajor(minorDoubleMajorJson)
+                    .lastSemester(request.getLastSemester())
+                    .militaryStatus(request.getMilitaryStatus())
+                    .birthDate(birthDate)
+                    .graduationDate(request.getGraduationDate())
+                    .gradSchoolPlan(request.getGradSchoolPlan())
+                    .build();
+            applicantRepository.save(applicant);
+            applicant.markSubmitted();
         }
-
-        // 지원자 저장
-        Applicant applicant = Applicant.builder()
-                .recruitment(recruitment)
-                .track(request.getTrack())
-                .name(request.getName())
-                .email(request.getEmail())
-                .phone(request.getPhone())
-                .university(request.getUniversity())
-                .major(request.getMajor())
-                .minorDoubleMajor(minorDoubleMajorJson)
-                .lastSemester(request.getLastSemester())
-                .militaryStatus(request.getMilitaryStatus())
-                .birthDate(birthDate)
-                .graduationDate(request.getGraduationDate())
-                .gradSchoolPlan(request.getGradSchoolPlan())
-                .build();
-
-        applicantRepository.save(applicant);
 
         // 답변 저장
         for (AnswerRequest answerRequest : request.getAnswers()) {
@@ -293,17 +325,195 @@ public class RecruitmentService {
                 }
             }
 
-            ApplicantAnswer applicantAnswer = ApplicantAnswer.builder()
+            applicantAnswerRepository.save(ApplicantAnswer.builder()
                     .applicant(applicant)
                     .question(question)
                     .answerText(answerText)
                     .answerJson(answerJson)
-                    .build();
-
-            applicantAnswerRepository.save(applicantAnswer);
+                    .build());
         }
 
-        return ApplicationResponse.of(applicant.getId(), applicant.getCreatedAt());
+        return ApplicationResponse.of(applicant.getId(), applicant.getSubmittedAt());
+    }
+
+    // 지원서 임시저장하기
+    @Transactional
+    public DraftApplicationResponse saveDraft(Long userId, Long recruitmentId, DraftApplicationRequest request) {
+
+        // 사용자 조회
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+        // 공고 존재 여부 확인
+        Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        // 모집 기간 확인
+        LocalDateTime now = LocalDateTime.now();
+        boolean isActive = !now.isBefore(recruitment.getStartDate())
+                        && !now.isAfter(recruitment.getEndDate());
+        if (!isActive) {
+            throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
+        }
+
+        // 기존 지원서 조회
+        Optional<Applicant> existing = applicantRepository.findByRecruitmentIdAndUserId(recruitmentId, userId);
+        if (existing.isPresent() && existing.get().getStatus() == Applicant.ApplicantStatus.SUBMITTED) {
+            throw new CustomException(ErrorCode.APPLICATION_ALREADY_SUBMITTED);
+        }
+
+        // minorDoubleMajor JSON 변환 (null이면 null 유지)
+        String minorDoubleMajorJson = null;
+        if (request.getMinorDoubleMajor() != null) {
+            minorDoubleMajorJson = serializeList(request.getMinorDoubleMajor());
+        }
+
+        // 생년월일 파싱 (null이면 null 유지)
+        LocalDate birthDate = null;
+        if (request.getBirthDate() != null) {
+            try {
+                birthDate = LocalDate.parse(request.getBirthDate());
+            } catch (DateTimeParseException e) {
+                throw new CustomException(ErrorCode.INVALID_BIRTH_DATE_FORMAT);
+            }
+        }
+
+        Applicant applicant;
+        if (existing.isPresent()) {
+            // DRAFT 존재 → 부분 업데이트
+            applicant = existing.get();
+            applicant.update(
+                    request.getTrack(), request.getName(), request.getEmail(), request.getPhone(),
+                    request.getUniversity(), request.getMajor(), minorDoubleMajorJson,
+                    request.getLastSemester(), request.getMilitaryStatus(), birthDate,
+                    request.getGraduationDate(), request.getGradSchoolPlan()
+            );
+        } else {
+            // 신규 생성
+            applicant = Applicant.builder()
+                    .recruitment(recruitment)
+                    .user(user)
+                    .status(Applicant.ApplicantStatus.DRAFT)
+                    .track(request.getTrack())
+                    .name(request.getName())
+                    .email(request.getEmail())
+                    .phone(request.getPhone())
+                    .university(request.getUniversity())
+                    .major(request.getMajor())
+                    .minorDoubleMajor(minorDoubleMajorJson)
+                    .lastSemester(request.getLastSemester())
+                    .militaryStatus(request.getMilitaryStatus())
+                    .birthDate(birthDate)
+                    .graduationDate(request.getGraduationDate())
+                    .gradSchoolPlan(request.getGradSchoolPlan())
+                    .build();
+            applicantRepository.save(applicant);
+        }
+
+        // answers 처리: null이면 유지, 빈 배열이면 전체 삭제, 값이 있으면 교체
+        if (request.getAnswers() != null) {
+            applicantAnswerRepository.deleteByApplicantId(applicant.getId());
+
+            if (!request.getAnswers().isEmpty()) {
+                // 해당 공고에 등록된 유효한 questionId 로드
+                List<ApplicationQuestion> allQuestions =
+                        applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(recruitmentId);
+                Set<Long> validQuestionIds = allQuestions.stream()
+                        .map(ApplicationQuestion::getId)
+                        .collect(Collectors.toSet());
+                Map<Long, ApplicationQuestion> questionMap = allQuestions.stream()
+                        .collect(Collectors.toMap(ApplicationQuestion::getId, q -> q));
+
+                for (AnswerRequest answerRequest : request.getAnswers()) {
+                    // 알 수 없는 questionId는 skip
+                    if (!validQuestionIds.contains(answerRequest.getQuestionId())) continue;
+
+                    ApplicationQuestion question = questionMap.get(answerRequest.getQuestionId());
+                    JsonNode answer = answerRequest.getAnswer();
+
+                    String answerText = null;
+                    String answerJson = null;
+                    if (question.getType() == ApplicationQuestion.Type.TEXT) {
+                        if (answer != null && !answer.isTextual()) {
+                            throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        }
+                        answerText = answer != null ? answer.asText() : null;
+                    } else {
+                        try {
+                            if (answer != null && !answer.isObject()) {
+                                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                            }
+                            answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
+                        } catch (Exception e) {
+                            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+                        }
+                    }
+
+                    applicantAnswerRepository.save(ApplicantAnswer.builder()
+                            .applicant(applicant)
+                            .question(question)
+                            .answerText(answerText)
+                            .answerJson(answerJson)
+                            .build());
+                }
+            }
+        }
+
+        return DraftApplicationResponse.of(applicant.getId());
+    }
+
+    // 내 지원서 조회하기 (DRAFT만 허용)
+    public MyApplicationResponse getMyApplication(Long userId, Long recruitmentId) {
+
+        // 공고 존재 여부 확인
+        recruitmentRepository.findById(recruitmentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        // 지원서 조회
+        Applicant applicant = applicantRepository.findByRecruitmentIdAndUserId(recruitmentId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        // SUBMITTED 상태 접근 불가
+        if (applicant.getStatus() == Applicant.ApplicantStatus.SUBMITTED) {
+            throw new CustomException(ErrorCode.APPLICATION_ALREADY_SUBMITTED);
+        }
+
+        // minorDoubleMajor 파싱
+        List<String> minorDoubleMajor = null;
+        if (applicant.getMinorDoubleMajor() != null) {
+            try {
+                minorDoubleMajor = objectMapper.readValue(
+                        applicant.getMinorDoubleMajor(),
+                        new TypeReference<List<String>>() {}
+                );
+            } catch (Exception e) {
+                minorDoubleMajor = Collections.emptyList();
+            }
+        }
+
+        // 답변 조회 및 변환
+        List<ApplicantAnswer> rawAnswers =
+                applicantAnswerRepository.findByApplicantIds(List.of(applicant.getId()));
+
+        List<MyApplicationResponse.AnswerItemResponse> answers = rawAnswers.stream()
+                .map(aa -> {
+                    JsonNode answerNode;
+                    if (aa.getAnswerText() != null) {
+                        answerNode = TextNode.valueOf(aa.getAnswerText());
+                    } else {
+                        try {
+                            answerNode = objectMapper.readTree(aa.getAnswerJson());
+                        } catch (Exception e) {
+                            answerNode = objectMapper.nullNode();
+                        }
+                    }
+                    return new MyApplicationResponse.AnswerItemResponse(
+                            aa.getQuestion().getId(), answerNode
+                    );
+                })
+                .toList();
+
+        return MyApplicationResponse.of(applicant, minorDoubleMajor, answers);
     }
 
     // 모집 사전 알림 신청하기
@@ -332,7 +542,7 @@ public class RecruitmentService {
         }
     }
 
-    
+
     // ========================
     // Admin 전용 메서드
     // ========================
@@ -350,15 +560,16 @@ public class RecruitmentService {
         // 부문별 CSV 생성 및 S3 업로드
         for (Track track : List.of(Track.VISUALIZATION, Track.ANALYSIS, Track.ENGINEERING)) {
 
-            // 해당 부문 지원자 조회
+            // 해당 부문 제출된 지원자 조회
             List<Applicant> applicants = applicantRepository
-                    .findLatestByRecruitmentIdAndTrack(recruitment.getId(), track);
+                    .findByRecruitmentIdAndTrackAndStatus(
+                            recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED);
 
             // 공통 + 해당 부문 질문 조회
             List<ApplicationQuestion> questions = applicationQuestionRepository
                     .findByRecruitmentIdAndCategories(
                             recruitment.getId(),
-                            ApplicationQuestion.Category.COMMON, 
+                            ApplicationQuestion.Category.COMMON,
                             toQuestionCategory(track)
                     );
 
@@ -641,6 +852,15 @@ public class RecruitmentService {
         if (metadata == null) return null;
         try {
             return objectMapper.writeValueAsString(metadata);
+        } catch (Exception e) {
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    private String serializeList(List<String> list) {
+        if (list == null || list.isEmpty()) return null;
+        try {
+            return objectMapper.writeValueAsString(list);
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }

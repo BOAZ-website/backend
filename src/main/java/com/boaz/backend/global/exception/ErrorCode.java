@@ -20,6 +20,9 @@ public enum ErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "EXPIRED_TOKEN", "만료된 토큰입니다."),
     INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "아이디 또는 비밀번호가 올바르지 않습니다."),
 
+    // User
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+
     // Admin
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_NOT_FOUND", "해당 계정을 찾을 수 없습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "DUPLICATE_USERNAME", "이미 존재하는 아이디입니다."),
@@ -38,6 +41,7 @@ public enum ErrorCode {
     QUESTIONS_NOT_FOUND(HttpStatus.NOT_FOUND, "QUESTIONS_NOT_FOUND", "등록된 질문이 없습니다."),
     RECRUITMENT_CLOSED(HttpStatus.CONFLICT, "RECRUITMENT_CLOSED", "모집이 마감되었습니다."),
     ALREADY_SUBMITTED(HttpStatus.CONFLICT, "ALREADY_SUBMITTED", "이미 제출된 지원서가 있습니다."),
+    APPLICATION_ALREADY_SUBMITTED(HttpStatus.FORBIDDEN, "APPLICATION_ALREADY_SUBMITTED", "제출된 지원서에 접근할 수 없습니다."),
     APPLICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "APPLICATION_NOT_FOUND", "지원서를 찾을 수 없습니다."),
     RECRUITMENT_NOT_CLOSED(HttpStatus.BAD_REQUEST, "RECRUITMENT_NOT_CLOSED", "모집이 진행 중인 공고의 지원서는 삭제할 수 없습니다."),
     ANSWER_REQUIRED(HttpStatus.BAD_REQUEST, "ANSWER_REQUIRED", "필수 질문에 답변해주세요."),
