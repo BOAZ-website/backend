@@ -67,6 +67,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/recruitment/*/applications").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/recruitment/*/applications/draft").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/recruitment/*/applications/me").authenticated()
+                        // 내 정보 조회 (User 인증 필요)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/users/me").authenticated()
                         .anyRequest().permitAll()
                 )
                 .oauth2Login(oauth2 -> oauth2
