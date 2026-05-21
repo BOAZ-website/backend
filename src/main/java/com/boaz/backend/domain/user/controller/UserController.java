@@ -25,7 +25,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 닉네임 및 회원 타입 조회")
+    @Operation(summary = "내 정보 조회", description = "로그인한 사용자의 닉네임 조회")
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserInfoResponse>> getMyInfo(
             @AuthenticationPrincipal UserPrincipal principal) {
