@@ -248,8 +248,14 @@ public class RecruitmentService {
             if (question == null) continue;
 
             JsonNode answer = answerRequest.getAnswer();
+            if (answer == null) {
+                throw new CustomException(
+                        question.getIsRequired() ? ErrorCode.ANSWER_REQUIRED : ErrorCode.INVALID_ANSWER_TYPE
+                );
+            }
+
             if (question.getIsRequired()) {
-                if (answer == null || answer.isNull()
+                if (answer.isNull()
                         || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
                         || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
