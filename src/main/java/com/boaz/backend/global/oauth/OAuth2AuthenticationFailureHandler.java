@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
@@ -29,9 +30,13 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
         String targetUri = CookieOAuth2AuthorizationRequestRepository
                 .resolveRedirectUriFromCookie(request)
                 .filter(allowedRedirectUris::contains)
-                .map(uri -> {
-                    URI parsed = URI.create(uri);
-                    return parsed.getScheme() + "://" + parsed.getAuthority() + "/login?error=true";
+                .flatMap(uri -> {
+                    try {
+                        URI parsed = URI.create(uri);
+                        return Optional.of(parsed.getScheme() + "://" + parsed.getAuthority() + "/login?error=true");
+                    } catch (Exception e) {
+                        return Optional.empty();
+                    }
                 })
                 .orElse(defaultFailureRedirectUri);
 
