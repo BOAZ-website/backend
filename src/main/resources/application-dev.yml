@@ -113,3 +113,4 @@ cookie:
 oauth2:
   redirect-uri: https://boazwebv1.vercel.app/auth/callback
   failure-redirect-uri: https://boazwebv1.vercel.app/login?error=true
+  allowed-redirect-uris: "https://boazwebv1.vercel.app/auth/callback,https://dev.bigdataboaz.com/auth/callback"

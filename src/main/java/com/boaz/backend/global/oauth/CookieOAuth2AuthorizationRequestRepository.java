@@ -9,12 +9,18 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class CookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     private static final String COOKIE_NAME = "oauth2_auth_request";
+    private static final String REDIRECT_URI_COOKIE_NAME = "oauth2_redirect_uri";
+    private static final String REDIRECT_URI_PARAM = "redirect_uri";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
 
     private final CookieProvider cookieProvider;
@@ -40,10 +46,19 @@ public class CookieOAuth2AuthorizationRequestRepository
     ) {
         if (authorizationRequest == null) {
             cookieProvider.deleteOAuth2StateCookie(response, COOKIE_NAME);
+            cookieProvider.deleteOAuth2StateCookie(response, REDIRECT_URI_COOKIE_NAME);
             return;
         }
         cookieProvider.addOAuth2StateCookie(response, COOKIE_NAME,
                 CookieUtils.serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
+
+        String redirectUri = request.getParameter(REDIRECT_URI_PARAM);
+        if (redirectUri != null && !redirectUri.isBlank()) {
+            String encoded = Base64.getUrlEncoder()
+                    .encodeToString(redirectUri.getBytes(StandardCharsets.UTF_8));
+            cookieProvider.addOAuth2StateCookie(response, REDIRECT_URI_COOKIE_NAME,
+                    encoded, COOKIE_EXPIRE_SECONDS);
+        }
     }
 
     @Override
@@ -53,6 +68,19 @@ public class CookieOAuth2AuthorizationRequestRepository
     ) {
         OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
         cookieProvider.deleteOAuth2StateCookie(response, COOKIE_NAME);
+        cookieProvider.deleteOAuth2StateCookie(response, REDIRECT_URI_COOKIE_NAME);
         return authRequest;
+    }
+
+    public static Optional<String> resolveRedirectUriFromCookie(HttpServletRequest request) {
+        return CookieUtils.getCookie(request, REDIRECT_URI_COOKIE_NAME)
+                .map(cookie -> {
+                    try {
+                        return new String(Base64.getUrlDecoder().decode(cookie.getValue()),
+                                StandardCharsets.UTF_8);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                });
     }
 }

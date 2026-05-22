@@ -88,7 +88,7 @@ swagger:
   server-url: "https://api.bigdataboaz.com"
 
 cors:
-  allowed-origins: "https://www.bigdataboaz.com,https://prod-www.bigdataboaz.com,https://api.bigdataboaz.com,http://localhost:5173,http://localhost:5173/,http://localhost:5174,http://localhost:5174/,http://localhost:5174,http://localhost:8080"
+  allowed-origins: "https://www.bigdataboaz.com,https://prod-www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com,http://localhost:5173,http://localhost:5173/,http://localhost:5174,http://localhost:5174/,http://localhost:5174,http://localhost:8080"
 
 jwt:
   secret: ${JWT_SECRET}
@@ -112,6 +112,7 @@ cookie:
 oauth2:
   redirect-uri: https://prod-www.bigdataboaz.com/auth/callback
   failure-redirect-uri: https://prod-www.bigdataboaz.com/login?error=true
+  allowed-redirect-uris: "https://prod-www.bigdataboaz.com/auth/callback,https://www.bigdataboaz.com/auth/callback,https://dev.bigdataboaz.com/auth/callback"
 
 logging:
   level:
