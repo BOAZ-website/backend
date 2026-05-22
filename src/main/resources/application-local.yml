@@ -105,4 +105,5 @@ cookie:
 
 oauth2:
   redirect-uri: http://localhost:3000/auth/callback
-  failure-redirect-uri: http://localhost:3000/login?error=true 
+  failure-redirect-uri: http://localhost:3000/login?error=true
+  allowed-redirect-uris: "http://localhost:3000/auth/callback,http://localhost:5173/auth/callback"

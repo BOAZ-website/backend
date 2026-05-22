@@ -8,12 +8,18 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationFa
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationFailureHandler {
 
     @Value("${oauth2.failure-redirect-uri}")
-    private String failureRedirectUri;
+    private String defaultFailureRedirectUri;
+
+    @Value("${oauth2.allowed-redirect-uris}")
+    private List<String> allowedRedirectUris;
 
     @Override
     public void onAuthenticationFailure(
@@ -21,6 +27,19 @@ public class OAuth2AuthenticationFailureHandler extends SimpleUrlAuthenticationF
             HttpServletResponse response,
             AuthenticationException exception
     ) throws IOException {
-        getRedirectStrategy().sendRedirect(request, response, failureRedirectUri);
+        String targetUri = CookieOAuth2AuthorizationRequestRepository
+                .resolveRedirectUriFromCookie(request)
+                .filter(allowedRedirectUris::contains)
+                .flatMap(uri -> {
+                    try {
+                        URI parsed = URI.create(uri);
+                        return Optional.of(parsed.getScheme() + "://" + parsed.getAuthority() + "/login?error=true");
+                    } catch (Exception e) {
+                        return Optional.empty();
+                    }
+                })
+                .orElse(defaultFailureRedirectUri);
+
+        getRedirectStrategy().sendRedirect(request, response, targetUri);
     }
 }

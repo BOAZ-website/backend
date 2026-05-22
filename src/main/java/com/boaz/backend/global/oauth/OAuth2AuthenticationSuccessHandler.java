@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -26,7 +27,10 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     private final CookieProvider cookieProvider;
 
     @Value("${oauth2.redirect-uri}")
-    private String redirectUri;
+    private String defaultRedirectUri;
+
+    @Value("${oauth2.allowed-redirect-uris}")
+    private List<String> allowedRedirectUris;
 
     @Override
     @Transactional
@@ -54,6 +58,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
         cookieProvider.addUserRefreshTokenCookie(response, refreshToken);
 
-        getRedirectStrategy().sendRedirect(request, response, redirectUri + "#token=" + accessToken);
+        String targetUri = CookieOAuth2AuthorizationRequestRepository
+                .resolveRedirectUriFromCookie(request)
+                .filter(allowedRedirectUris::contains)
+                .orElse(defaultRedirectUri);
+
+        getRedirectStrategy().sendRedirect(request, response, targetUri + "#token=" + accessToken);
     }
 }
