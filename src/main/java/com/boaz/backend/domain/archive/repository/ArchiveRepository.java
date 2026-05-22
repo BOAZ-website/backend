@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 
 // 메서드 호출 시 JPQL 쿼리 실행 
 public interface ArchiveRepository extends JpaRepository<Archive, Long> {
@@ -37,4 +39,12 @@ public interface ArchiveRepository extends JpaRepository<Archive, Long> {
         @Param("keyword") String keyword, 
         Pageable pageable
     );
+
+    @Query("""
+            SELECT DISTINCT a.term FROM Archive a
+            ORDER BY
+                CASE WHEN a.term = 0 THEN 1 ELSE 0 END ASC, 
+                a.term DESC
+    """)
+    List<Integer> findDistinctTermsOrdered();
 }

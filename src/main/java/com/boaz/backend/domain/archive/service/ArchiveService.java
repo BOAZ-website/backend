@@ -2,6 +2,7 @@ package com.boaz.backend.domain.archive.service;
 
 import com.boaz.backend.domain.archive.dto.response.ArchiveItemResponse;
 import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchiveTermsResponse;
 import com.boaz.backend.domain.archive.entity.Archive;
 import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.repository.ArchiveRepository;
@@ -11,6 +12,7 @@ import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 
 import lombok.RequiredArgsConstructor;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,6 +66,11 @@ public class ArchiveService {
 
         // 페이지 메타데이터 + 게시글 목록을 포함한 응답 DTO로 변환  
         return ArchivePageResponse.from(itemPage);   
+    }
+
+    public ArchiveTermsResponse getTerms() {
+        List<Integer> terms = archiveRepository.findDistinctTermsOrdered();
+        return ArchiveTermsResponse.from(terms);
     }
 
     // 페이지 값 검증
