@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.archive.controller;
 
 import com.boaz.backend.domain.archive.dto.response.ArchivePageResponse;
+import com.boaz.backend.domain.archive.dto.response.ArchiveTermsResponse;
 import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.service.ArchiveService;
 import com.boaz.backend.global.common.ApiResponse;
@@ -84,4 +85,12 @@ public class ArchiveController {
 
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
+
+    @Operation(summary = "아카이빙 기수 목록 조회", description = "필터 드롭다운용 기수 목록 반환")
+    @GetMapping("/terms")
+    public ResponseEntity<ApiResponse<ArchiveTermsResponse>> getTerms() {
+
+        return ResponseEntity.ok(ApiResponse.ok(archiveService.getTerms()));
+    }
+
 }
