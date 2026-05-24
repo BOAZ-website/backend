@@ -13,7 +13,7 @@
 
   PermissionsStartOnly=true
   ExecStartPre=/opt/boaz/scripts/load-ssm-env.sh
-  EnvironmentFile=/run/boaz/app.env
+  EnvironmentFile=-/run/boaz/app.env
   Environment=SPRING_PROFILES_ACTIVE=prod
 
   ExecStart=/opt/boaz/scripts/start.sh
