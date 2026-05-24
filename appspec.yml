@@ -14,6 +14,9 @@ files:
   - source: /systemd/boaz.service
     destination: /etc/systemd/system
     overwrite: true
+  - source: /systemd/boaz-tmpfiles.conf
+    destination: /etc/tmpfiles.d
+    overwrite: true
 
 hooks:
   BeforeInstall:
