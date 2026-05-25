@@ -60,7 +60,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/admin/**").authenticated()
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER", "TEAM")
                         .requestMatchers("/api/v1/auth/admin/logout").authenticated()
                         .requestMatchers("/api/v1/auth/user/logout").authenticated()
                         // 지원서 제출/임시저장/조회 (User 인증 필요)
