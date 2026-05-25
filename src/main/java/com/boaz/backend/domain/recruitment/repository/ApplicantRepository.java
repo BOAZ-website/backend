@@ -32,4 +32,11 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             @Param("track") Track track,
             @Param("status") Applicant.ApplicantStatus status
     );
+
+    // userId + status 기반 조회 (합격자 승격용, recruitment JOIN FETCH로 term 접근)
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.recruitment WHERE a.user.id = :userId AND a.status = :status")
+    Optional<Applicant> findByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") Applicant.ApplicantStatus status
+    );
 }
