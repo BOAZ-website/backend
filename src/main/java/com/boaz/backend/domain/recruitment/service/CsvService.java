@@ -20,7 +20,7 @@ public class CsvService {
     private final ObjectMapper objectMapper;
 
     private static final List<String> BASE_HEADERS = List.of(
-            "지원 부문", "성명", "이메일 주소", "전화번호", "대학교", "본전공",
+            "user_id", "지원 부문", "성명", "이메일 주소", "전화번호", "대학교", "본전공",
             "복수/부전공", "마지막 재학 학기", "병역 이수 여부", "생년월일",
             "졸업 예정 시점", "대학원 진학 여부", "지원서 제출 일시"
     );
@@ -59,6 +59,7 @@ public class CsvService {
             // 지원자별 행 작성
             for (Applicant applicant : applicants) {
                 List<String> row = new ArrayList<>();
+                row.add(applicant.getUser().getId().toString());
                 row.add(applicant.getTrack() != null ? applicant.getTrack().name() : "");
                 row.add(applicant.getName());
                 row.add(applicant.getEmail());
@@ -71,7 +72,7 @@ public class CsvService {
                 row.add(applicant.getBirthDate() != null ? applicant.getBirthDate().toString() : "");
                 row.add(applicant.getGraduationDate() != null ? applicant.getGraduationDate() : "");
                 row.add(applicant.getGradSchoolPlan() != null ? (applicant.getGradSchoolPlan() ? "Y" : "N") : "");
-                row.add(applicant.getCreatedAt().toString());
+                row.add(applicant.getSubmittedAt() != null ? applicant.getSubmittedAt().toString() : "");
 
                 Map<Long, ApplicantAnswer> applicantAnswers = answerMap.getOrDefault(applicant.getId(), Collections.emptyMap());
                 for (Long questionId : questionIds) {
