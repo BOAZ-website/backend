@@ -27,8 +27,6 @@ INSERT INTO admin (username, password, role, name, track, term, team_name, creat
 VALUES ('boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
 
 -- users 임시 데이터
--- id=1~3: 기존 테스트 지원자에 대응하는 더미 유저
--- id=4: Swagger API 테스트용 (지원서 없음 → submit/draft 흐름 테스트)
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
 VALUES (1, 'kakao', 'dummy_kakao_001', '김엔지', 'OUTSIDER', NOW(), NOW());
 
@@ -42,7 +40,7 @@ INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at,
 VALUES (4, 'kakao', 'dummy_kakao_004', '스웨거테스터', 'OUTSIDER', NOW(), NOW());
 
 -- recruitment 임시 데이터
--- id=1: 26기 (종료된 공고) - 어드민 CSV 다운로드 테스트용
+-- id=1: 26기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
 VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
 '[
@@ -52,7 +50,7 @@ VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
   { "step": "최종 합격 발표", "start": "2026-04-10", "end": "2026-04-10", "sequence": 4 }
 ]', 'https://example.com/brochure.pdf', NOW(), NOW());
 
--- id=2: 27기 (현재 활성) - User API 테스트용 (지원서 제출/임시저장/조회)
+-- id=2: 27기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
 VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
 '[
@@ -167,7 +165,7 @@ VALUES (15, 26, 'ACTIVITY', '26기 데이터 ENGINEERING 워크샵', NULL, 'ENGI
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
 VALUES (16, 26, 'ACTIVITY', '26기 데이터 VISUALIZATION 세션', NULL, 'VISUALIZATION', 'https://example.com/activity5.png', '{"instagram":"https://instagram.com/p/example5","youtube":"https://youtube.com/watch?v=visualization-session"}', '2025-04-15', NOW(), NOW());
 
--- applicant 임시 데이터 (26기 recruitment_id=1, 종료된 공고 - 어드민 CSV 다운로드 테스트용)
+-- applicant 임시 데이터
 -- user OneToOne 적용: user_id=1~3 각 트랙 1명씩
 -- status=SUBMITTED, submitted_at 설정
 INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, submitted_at, created_at, updated_at)
