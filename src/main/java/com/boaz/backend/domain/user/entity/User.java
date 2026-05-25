@@ -53,4 +53,15 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.memberType = memberType;
     }
+
+    // 합격자 승격: memberType → MEMBER, 지원서 개인정보 복사
+    public void promote(String name, String phone, String university, String major, Track track, Integer term) {
+        this.memberType = MemberType.MEMBER;
+        this.name = name;
+        this.phone = phone;
+        this.university = university;
+        this.major = major;
+        this.track = track;
+        this.term = term;
+    }
 }

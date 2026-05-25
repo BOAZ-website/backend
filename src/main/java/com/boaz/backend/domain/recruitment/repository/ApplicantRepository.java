@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.global.common.enums.Track;
@@ -24,5 +26,12 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             Long recruitmentId,
             Track track,
             Applicant.ApplicantStatus status
+    );
+
+    // userId + status 기반 조회 (합격자 승격용, recruitment JOIN FETCH로 term 접근)
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.recruitment WHERE a.user.id = :userId AND a.status = :status")
+    Optional<Applicant> findByUserIdAndStatus(
+            @Param("userId") Long userId,
+            @Param("status") Applicant.ApplicantStatus status
     );
 }

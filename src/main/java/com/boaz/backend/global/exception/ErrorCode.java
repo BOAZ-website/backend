@@ -22,6 +22,7 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "사용자를 찾을 수 없습니다."),
+    ALREADY_MEMBER(HttpStatus.CONFLICT, "ALREADY_MEMBER", "이미 동아리원으로 등록된 유저입니다."),
 
     // Admin
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_NOT_FOUND", "해당 계정을 찾을 수 없습니다."),
