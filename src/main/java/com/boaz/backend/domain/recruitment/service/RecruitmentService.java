@@ -560,9 +560,9 @@ public class RecruitmentService {
         // 부문별 CSV 생성 및 S3 업로드
         for (Track track : List.of(Track.VISUALIZATION, Track.ANALYSIS, Track.ENGINEERING)) {
 
-            // 해당 부문 제출된 지원자 조회
+            // 해당 부문 제출된 지원자 조회 (submittedAt 오름차순 + user JOIN FETCH)
             List<Applicant> applicants = applicantRepository
-                    .findByRecruitmentIdAndTrackAndStatus(
+                    .findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
                             recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED);
 
             // 공통 + 해당 부문 질문 조회
