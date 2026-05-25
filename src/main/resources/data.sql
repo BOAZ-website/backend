@@ -62,7 +62,7 @@ VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
   { "step": "최종 합격 발표", "start": "2026-09-12", "end": "2026-09-12", "sequence": 4 }
 ]', 'https://example.com/brochure27.pdf', NOW(), NOW());
 
--- application_question 임시 데이터 (recruitment_id = 1, 26기)
+-- application_question 임시 데이터 (recruitment_id = 1, 26기 - 현재 활성, Swagger 테스트용)
 INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
 VALUES (1, 1, 'COMMON', 'TEXT', 'COMMON1', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, 500, 1, true, NOW(), NOW());
 
@@ -90,7 +90,7 @@ VALUES (8, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '[빅데이터 / 인공지능 / �
 INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
 VALUES (9, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '본인이 진행했던 [머신러닝 / 딥러닝 / 데이터ANALYSIS] 관련 PROJECT를 소개.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
 
--- application_question 임시 데이터 (recruitment_id = 2, 27기 - 현재 활성, Swagger 테스트용)
+-- application_question 임시 데이터 (recruitment_id = 2, 27기)
 INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
 VALUES (10, 2, 'COMMON', 'TEXT', 'COMMON1', 'BOAZ에 지원하게 된 동기를 작성해주세요. (500자 이내)', null, 500, 1, true, NOW(), NOW());
 
