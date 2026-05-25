@@ -44,7 +44,7 @@ VALUES (4, 'kakao', 'dummy_kakao_004', '스웨거테스터', 'OUTSIDER', NOW(), 
 -- recruitment 임시 데이터
 -- id=1: 26기 (종료된 공고) - 어드민 CSV 다운로드 테스트용
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (1, 26, '2026-03-01 00:00:00', '2026-04-29 23:59:59',
+VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-03-01", "end": "2026-03-29", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-04-04", "end": "2026-04-04", "sequence": 2 },
@@ -54,7 +54,7 @@ VALUES (1, 26, '2026-03-01 00:00:00', '2026-04-29 23:59:59',
 
 -- id=2: 27기 (현재 활성) - User API 테스트용 (지원서 제출/임시저장/조회)
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (2, 27, '2026-05-01 00:00:00', '2026-08-31 23:59:59',
+VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-05-01", "end": "2026-08-31", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-09-05", "end": "2026-09-05", "sequence": 2 },
