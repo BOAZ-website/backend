@@ -117,53 +117,65 @@ INSERT INTO application_question (id, recruitment_id, category, type, label, con
 VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프로젝트 경험을 소개해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
 
 -- archive 임시 데이터
+-- 정렬 기준: contentDate DESC → title ASC (NULL은 마지막)
+-- 예상 PROJECT 조회 순서:
+--   1. 나. 자연어처리 발표       (2025-12-01 - 가장 최신)
+--   2. 가. AI 추천 시스템 발표   (2025-08-15 - 같은 날짜 중 가나다 첫번째)
+--   3. 다. 데이터 파이프라인 발표 (2025-08-15 - 같은 날짜 중 가나다 두번째)
+--   4. 라. 실시간 처리 발표      (2025-08-15 - 같은 날짜 중 가나다 세번째)
+--   5. 마. 미정 프로젝트 A       (NULL - 마지막 그룹 가나다 첫번째)
+--   6. 바. 미정 프로젝트 B       (NULL - 마지막 그룹 가나다 두번째)
+
+-- [PROJECT] 최신 날짜 (2025-12-01)
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (1, 25, 'PROJECT', '사용자 맞춤형 뭐뭐뭐뭐 추천시스템 발표', '자료연구팀', 'ANALYSIS', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', '2024-08-10', NOW(), NOW());
+VALUES (1, 27, 'PROJECT', '나. 자연어처리 발표', 'NLP팀', 'ANALYSIS', 'https://example.com/img1.png', '{"slideshare":"https://slideshare.net/1"}', '2025-12-01', NOW(), NOW());
+
+-- [PROJECT] 같은 날짜 그룹 (2025-08-15) - title 가나다 순으로 정렬되는지 검증
+-- DB 등록 순서를 의도적으로 가나다 역순(라→다→가)으로 삽입하여 ID 기반 정렬과 title 기반 정렬의 차이를 확인
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (2, 26, 'PROJECT', '라. 실시간 처리 발표', '스트림팀', 'ENGINEERING', 'https://example.com/img2.png', '{"slideshare":"https://slideshare.net/2"}', '2025-08-15', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (2, 0, 'PROJECT', '누구구구의 뭐뭐뭐뭐 오오오오우 발표', NULL, 'ANALYSIS', 'https://example.com/conf1.png', '{"slideshare":"https://slideshare.net/example1"}', NULL, NOW(), NOW());
+VALUES (3, 26, 'PROJECT', '다. 데이터 파이프라인 발표', '파이프팀', 'ENGINEERING', 'https://example.com/img3.png', '{"slideshare":"https://slideshare.net/3"}', '2025-08-15', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (3, 25, 'PROJECT', '무엇무엇 데이터 파이프라인 발표', '자료연구팀', 'ENGINEERING', 'https://example.com/conf2.png', '{"slideshare":"https://slideshare.net/example2"}', '2024-08-10', NOW(), NOW());
+VALUES (4, 26, 'PROJECT', '가. AI 추천 시스템 발표', '추천팀', 'ANALYSIS', 'https://example.com/img4.png', '{"slideshare":"https://slideshare.net/4"}', '2025-08-15', NOW(), NOW());
+
+-- [PROJECT] contentDate NULL - 맨 마지막 + title 가나다 순 검증
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (5, 25, 'PROJECT', '바. 미정 프로젝트 B', NULL, 'VISUALIZATION', 'https://example.com/img5.png', '{"slideshare":"https://slideshare.net/5"}', NULL, NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (4, 25, 'BLOG', 'Spring Boot 예외 처리 구조 정리', NULL, 'ENGINEERING', 'https://example.com/blog1.png', '{"medium":"https://medium.com/@boaz/example1"}', '2025-02-14', NOW(), NOW());
+VALUES (6, 25, 'PROJECT', '마. 미정 프로젝트 A', NULL, 'ANALYSIS', 'https://example.com/img6.png', '{"slideshare":"https://slideshare.net/6"}', NULL, NOW(), NOW());
+
+-- [BLOG] 같은 날짜 그룹 (2025-03-05) - 역순 삽입
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (7, 26, 'BLOG', 'Spark 기반 대용량 데이터 처리', NULL, 'ENGINEERING', 'https://example.com/blog1.png', '{"medium":"https://medium.com/@boaz/spark"}', '2025-03-05', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (5, 25, 'BLOG', '데이터 ANALYSIS PROJECT 회고', NULL, 'ANALYSIS', 'https://example.com/blog2.png', '{"medium":"https://medium.com/@boaz/example2"}', '2025-01-20', NOW(), NOW());
+VALUES (8, 26, 'BLOG', 'Kafka 기반 스트리밍 아키텍처 정리', NULL, 'ENGINEERING', 'https://example.com/blog2.png', '{"medium":"https://medium.com/@boaz/kafka"}', '2025-03-05', NOW(), NOW());
+
+-- [BLOG] 이전 날짜 (2025-01-20)
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (9, 25, 'BLOG', '추천 시스템 협업 필터링 구현 과정', NULL, 'ANALYSIS', 'https://example.com/blog3.png', '{"medium":"https://medium.com/@boaz/cf"}', '2025-01-20', NOW(), NOW());
+
+-- [BLOG] contentDate NULL
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (10, 25, 'BLOG', 'Spring Boot 예외 처리 구조 정리', NULL, 'ENGINEERING', 'https://example.com/blog4.png', '{"medium":"https://medium.com/@boaz/spring"}', NULL, NOW(), NOW());
+
+-- [ACTIVITY] 같은 날짜 그룹 (2025-04-10) - 역순 삽입
+INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
+VALUES (11, 26, 'ACTIVITY', '다. VISUALIZATION 세션', NULL, 'VISUALIZATION', 'https://example.com/act1.png', '{"instagram":"https://instagram.com/p/1"}', '2025-04-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (6, 25, 'ACTIVITY', '250402 ANALYSIS 7주차 Base세션', NULL, 'ANALYSIS', 'https://example.com/activity1.png', '{"instagram":"https://instagram.com/p/example1"}', '2025-04-02', NOW(), NOW());
+VALUES (12, 26, 'ACTIVITY', '나. ENGINEERING 워크샵', NULL, 'ENGINEERING', 'https://example.com/act2.png', '{"instagram":"https://instagram.com/p/2"}', '2025-04-10', NOW(), NOW());
 
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (7, 25, 'ACTIVITY', '25기 신입기수 OT', NULL, 'ALL', 'https://example.com/activity2.png', '{"instagram":"https://instagram.com/p/example2"}', '2025-03-01', NOW(), NOW());
+VALUES (13, 26, 'ACTIVITY', '가. ANALYSIS 스터디 세션', NULL, 'ANALYSIS', 'https://example.com/act3.png', '{"instagram":"https://instagram.com/p/3"}', '2025-04-10', NOW(), NOW());
 
+-- [ACTIVITY] 이전 날짜 (2025-03-01)
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (8, 26, 'PROJECT', '추천 시스템 고도화 땡땡 발표', NULL, 'ENGINEERING', 'https://example.com/conf3.png', '{"slideshare":"https://slideshare.net/example3","github":"https://github.com/boaz/recommendation-system"}', '2025-08-12', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (9, 26, 'PROJECT', '실시간 데이터 처리 뭐뭐뭐뭐 시스템 발표', '데이터ENGINEERING팀', 'ENGINEERING', 'https://example.com/conf4.png', '{"slideshare":"https://slideshare.net/example4","github":"https://github.com/boaz/stream-processing"}', '2025-08-18', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (10, 26, 'PROJECT', '데이터 VISUALIZATION 대시보드 블라블라 발표', '데이터VISUALIZATION팀', 'VISUALIZATION', 'https://example.com/conf5.png', '{"slideshare":"https://slideshare.net/example5","github":"https://github.com/boaz/dashboard-project"}', '2025-08-25', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (11, 26, 'BLOG', 'Kafka 기반 데이터 스트리밍 아키텍처 정리', NULL, 'ENGINEERING', 'https://example.com/blog3.png', '{"medium":"https://medium.com/@boaz/kafka-stream","github":"https://github.com/boaz/kafka-stream-example"}', '2025-03-01', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (12, 26, 'BLOG', 'Spark 기반 대용량 데이터 처리 경험 정리', NULL, 'ENGINEERING', 'https://example.com/blog4.png', '{"medium":"https://medium.com/@boaz/spark-processing","github":"https://github.com/boaz/spark-example"}', '2025-03-05', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (13, 26, 'BLOG', '추천 시스템 협업 필터링 구현 과정', NULL, 'ANALYSIS', 'https://example.com/blog5.png', '{"medium":"https://medium.com/@boaz/collaborative-filtering","github":"https://github.com/boaz/cf-recommendation"}', '2025-03-10', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (14, 26, 'ACTIVITY', '26기 데이터 ANALYSIS 스터디 세션', NULL, 'ANALYSIS', 'https://example.com/activity3.png', '{"instagram":"https://instagram.com/p/example3","youtube":"https://youtube.com/watch?v=analysis-session"}', '2025-04-05', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (15, 26, 'ACTIVITY', '26기 데이터 ENGINEERING 워크샵', NULL, 'ENGINEERING', 'https://example.com/activity4.png', '{"instagram":"https://instagram.com/p/example4","youtube":"https://youtube.com/watch?v=engineering-workshop"}', '2025-04-10', NOW(), NOW());
-
-INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
-VALUES (16, 26, 'ACTIVITY', '26기 데이터 VISUALIZATION 세션', NULL, 'VISUALIZATION', 'https://example.com/activity5.png', '{"instagram":"https://instagram.com/p/example5","youtube":"https://youtube.com/watch?v=visualization-session"}', '2025-04-15', NOW(), NOW());
+VALUES (14, 25, 'ACTIVITY', '26기 신입기수 OT', NULL, 'ALL', 'https://example.com/act4.png', '{"instagram":"https://instagram.com/p/4"}', '2025-03-01', NOW(), NOW());
 
 -- applicant 임시 데이터
 -- user OneToOne 적용: user_id=1~3 각 트랙 1명씩
