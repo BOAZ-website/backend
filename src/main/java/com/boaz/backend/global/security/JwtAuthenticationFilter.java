@@ -49,7 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Long userId = Long.parseLong(claims.getSubject());
                     UserPrincipal principal = new UserPrincipal(userId);
                     UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(principal, null, List.of());
+                            new UsernamePasswordAuthenticationToken(
+                                    principal, null,
+                                    List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else if ("ADMIN".equals(type)) {
                     String username = claims.get("username", String.class);
@@ -87,7 +89,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.setStatus(errorCode.getHttpStatus().value());
         response.setContentType("application/json;charset=UTF-8");
         String body = String.format(
-                "{\"status\":%d,\"errorCode\":\"%s\",\"message\":\"%s\"}",
+                "{\"status\":%d,\"error_code\":\"%s\",\"message\":\"%s\"}",
                 errorCode.getHttpStatus().value(),
                 errorCode.getCode(),
                 errorCode.getMessage()
