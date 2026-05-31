@@ -454,7 +454,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 전화번호 형식 오류(하이픈) → INVALID_PHONE_FORMAT")
+        @DisplayName("TC-006a 전화번호 형식 오류(하이픈 포함) → INVALID_PHONE_FORMAT")
         void invalidPhoneHyphen() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -470,7 +470,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 전화번호 형식 오류(9자리) → INVALID_PHONE_FORMAT")
+        @DisplayName("TC-006b 전화번호 형식 오류(9자리 이하) → INVALID_PHONE_FORMAT")
         void invalidPhoneTooShort() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -558,7 +558,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 TEXT 질문(is_required=false)에 객체 답변 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-011a TEXT 질문(is_required=false)에 객체 답변 → INVALID_ANSWER_TYPE")
         void invalidAnswerType() throws Exception {
             ApplicationQuestion optional = createTextQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -572,12 +572,50 @@ class RecruitmentServiceTest {
             JsonNode objNode = objectMapper.readTree("{\"key\":\"value\"}");
             ApplicationRequest req = buildApplicationRequest(
                     List.of(buildTextAnswer(1L, "정상답변"),
-                            buildJsonAnswer(2L, objNode))); // TEXT 질문에 객체
+                            buildJsonAnswer(2L, objNode)));
 
             assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-011b TABLE 질문(is_required=false)에 텍스트 답변 → INVALID_ANSWER_TYPE")
+        void tableQuestionWithTextAnswer() {
+            ApplicationQuestion tableQ = createTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, tableQ));
+
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상답변"),
+                            buildTextAnswer(2L, "텍스트 답변"))); // TABLE 질문에 텍스트
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-004b track=ALL → INVALID_TRACK_SELECTION")
+        void submitWithTrackAll() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+
+            ApplicationRequest req = buildApplicationRequest(List.of(buildTextAnswer(1L, "답변")));
+            ReflectionTestUtils.setField(req, "track", Track.ALL);
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_TRACK_SELECTION);
         }
     }
 
