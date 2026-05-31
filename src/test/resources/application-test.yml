@@ -34,8 +34,8 @@ spring:
       region:
         static: ap-northeast-2
       credentials:
-        access-key:
-        secret-key:
+        access-key: test-access-key
+        secret-key: test-secret-key
 
   security:
     oauth2:
