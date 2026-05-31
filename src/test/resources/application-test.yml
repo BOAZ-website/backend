@@ -1,5 +1,7 @@
 spring:
   datasource:
+    # Testcontainers 가 동작하는 테스트(@DataJpaTest / @SpringBootTest + TestcontainersBase)에서는
+    # @DynamicPropertySource 가 아래 값을 컨테이너 JDBC URL 로 덮어쓴다.
     url: ${DB_URL:jdbc:mysql://localhost:3306/boaz?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8}
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
@@ -7,7 +9,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: ${DDL_AUTO:update}
+      # 컨테이너는 빈 스키마로 시작하므로 엔티티 기준으로 테이블을 생성한다.
+      ddl-auto: ${DDL_AUTO:create-drop}
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -16,6 +19,42 @@ spring:
 
   jackson:
     property-naming-strategy: SNAKE_CASE
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 6MB
+
+  # @SpringBootTest 통합 테스트 컨텍스트 기동에 필요한 더미 설정
+  cloud:
+    aws:
+      s3:
+        recruitment-bucket: test-recruitment-bucket
+        archiving-bucket: test-archiving-bucket
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key:
+        secret-key:
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: test-kakao-client-id
+            client-secret: test-kakao-client-secret
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            scope:
+              - profile_nickname
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 server:
   port: 8080
@@ -26,3 +65,24 @@ springdoc:
     tags-sorter: alpha
   api-docs:
     path: /api-docs
+
+swagger:
+  server-url: "http://localhost:8080"
+
+cors:
+  allowed-origins: "http://localhost:3000"
+
+jwt:
+  secret: dGVzdC1zZWNyZXQta2V5LWZvci10ZXN0aW5nLW9ubHktbXVzdC1iZS1sb25nZW5vdWdo
+  access-token-expiration: 900000
+  refresh-token-expiration: 604800000
+
+cookie:
+  same-site: Lax
+  secure: false
+  domain:
+
+oauth2:
+  redirect-uri: http://localhost:3000/auth/callback
+  failure-redirect-uri: http://localhost:3000/login?error=true
+  allowed-redirect-uris: "http://localhost:3000/auth/callback"
