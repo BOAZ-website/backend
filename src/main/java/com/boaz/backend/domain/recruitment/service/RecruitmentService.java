@@ -439,10 +439,10 @@ public class RecruitmentService {
                         }
                         answerText = answer != null ? answer.asText() : null;
                     } else {
+                        if (answer != null && !answer.isObject()) {
+                            throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        }
                         try {
-                            if (answer != null && !answer.isObject()) {
-                                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
-                            }
                             answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
                         } catch (Exception e) {
                             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
