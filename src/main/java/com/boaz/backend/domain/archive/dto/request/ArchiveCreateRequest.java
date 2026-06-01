@@ -37,6 +37,7 @@ public class ArchiveCreateRequest {
 
     @Schema(description = "콘텐츠 날짜", example = "2024-07-01")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+    @NotNull(message = "contentDate를 입력해주세요.")
     @PastOrPresent(message = "미래 날짜는 입력할 수 없습니다.")
     private LocalDate contentDate;
 
