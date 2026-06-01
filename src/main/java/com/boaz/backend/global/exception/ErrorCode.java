@@ -73,10 +73,6 @@ public enum ErrorCode {
     // Archive Admin
     ARCHIVE_NOT_FOUND(HttpStatus.NOT_FOUND, "ARCHIVE_NOT_FOUND", "해당 아카이브를 찾을 수 없습니다."),
     UNSUPPORTED_ARCHIVE_CATEGORY(HttpStatus.BAD_REQUEST, "UNSUPPORTED_ARCHIVE_CATEGORY", "해당 카테고리는 지원하지 않는 작업입니다."),
-    MISSING_TERM(HttpStatus.BAD_REQUEST, "MISSING_TERM", "term이 누락되었습니다."),
-    MISSING_TITLE(HttpStatus.BAD_REQUEST, "MISSING_TITLE", "title이 누락되었습니다."),
-    MISSING_TRACK(HttpStatus.BAD_REQUEST, "MISSING_TRACK", "track이 누락되었습니다."),
-    MISSING_LINKS(HttpStatus.BAD_REQUEST, "MISSING_LINKS", "links가 누락되었습니다."),
     MISSING_HALF(HttpStatus.BAD_REQUEST, "MISSING_HALF", "half가 누락되었습니다."),
     INVALID_URL_FORMAT(HttpStatus.BAD_REQUEST, "INVALID_URL_FORMAT", "링크 URL 형식이 올바르지 않습니다."),
     FUTURE_DATE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "FUTURE_DATE_NOT_ALLOWED", "미래 날짜는 입력할 수 없습니다."),
