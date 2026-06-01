@@ -603,7 +603,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004b track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-011c track=ALL → INVALID_TRACK_SELECTION")
         void submitWithTrackAll() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
