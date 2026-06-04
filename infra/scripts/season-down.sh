@@ -107,14 +107,22 @@ else
 fi
 
 # --------------------------------------------------
-# 4. EC2-B를 Target Group에서 deregister + stop
+# 4. EC2-B를 Target Group에서 deregister + 태그 제거 + stop
+#    중지 전에 CodeDeploy 대상 태그(app=boaz-api)를 제거해야
+#    평시(EC2-A 단독) CodeDeploy 배포가 중지된 EC2-B를 대상으로 잡아
+#    실패하는 것을 막는다.
 # --------------------------------------------------
 echo ""
-echo "[4/5] EC2-B Target Group에서 제거 + 중지 중..."
+echo "[4/5] EC2-B Target Group 제거 + 태그 제거 + 중지 중..."
 
 aws elbv2 deregister-targets --target-group-arn "$TARGET_GROUP_ARN" \
   --targets "Id=$EC2_B_ID" \
   --region "$AWS_REGION" --profile "$AWS_PROFILE" 2>/dev/null || true
+
+echo "  → CodeDeploy 대상 태그 제거 (app=boaz-api)..."
+aws ec2 delete-tags --resources "$EC2_B_ID" \
+  --tags "Key=app,Value=boaz-api" \
+  --region "$AWS_REGION" --profile "$AWS_PROFILE"
 
 aws ec2 stop-instances --instance-ids "$EC2_B_ID" \
   --region "$AWS_REGION" --profile "$AWS_PROFILE" > /dev/null
