@@ -13,6 +13,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -20,6 +21,8 @@ import org.springframework.security.web.SecurityFilterChain;
 @Profile("prod")
 @RequiredArgsConstructor
 public class SwaggerSecurityConfig {
+
+    private final PasswordEncoder passwordEncoder;
 
     @Value("${swagger.user}")
     private String swaggerUser;
@@ -50,7 +53,7 @@ public class SwaggerSecurityConfig {
 
     private UserDetailsService swaggerUserDetailsService() {
         UserDetails user = User.withUsername(swaggerUser)
-                .password("{noop}" + swaggerPassword) // 팀 공용 평문 비밀번호를 그대로 비교
+                .password(passwordEncoder.encode(swaggerPassword)) // 평문 → BCrypt 해시로 저장
                 .roles("SWAGGER")
                 .build();
         return new InMemoryUserDetailsManager(user);
