@@ -42,7 +42,7 @@ VALUES (4, 'kakao', 'dummy_kakao_004', '스웨거테스터', 'OUTSIDER', NOW(), 
 -- recruitment 임시 데이터
 -- id=1: 26기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
+VALUES (1, 26, '2026-03-01 00:00:00', '2026-04-30 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-03-01", "end": "2026-03-29", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-04-04", "end": "2026-04-04", "sequence": 2 },
@@ -52,7 +52,7 @@ VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
 
 -- id=2: 27기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
+VALUES (2, 27, '2026-06-01 00:00:00', '2026-08-31 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-05-01", "end": "2026-08-31", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-09-05", "end": "2026-09-05", "sequence": 2 },
@@ -118,9 +118,9 @@ VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프�
 
 -- 복수선택 TABLE 샘플 (recruitment_id = 2, 면접 가능 시간)
 INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (19, 2, 'COMMON', 'TABLE', 'INTERVIEW1', '면접 가능한 시간을 모두 선택해주세요.',
+VALUES (19, 2, 'COMMON', 'TABLE', 'COMMON5', '면접 가능 시간 (복수 선택).',
         '면접은 대면으로 진행될 예정입니다. 가능한 면접 시간을 모두 체크해주시기 바랍니다.\n응답이 없을 경우, 모든 면접 시간이 불가능한 것으로 간주될 수 있으니 반드시 작성 부탁드립니다.',
-        '{"rows":["9월 7일(일)","9월 8일(월)"],"columns":["12:00~14:00","14:00~16:00","16:00~18:00"],"multiple":true}',
+        '{"rows":["7월 4일(토)","7월 5일(일)"],"columns":["11:00~13:00","13:00~15:00","15:00~17:00"],"multiple":true}',
         null, 98, true, NOW(), NOW());
 
 -- archive 임시 데이터

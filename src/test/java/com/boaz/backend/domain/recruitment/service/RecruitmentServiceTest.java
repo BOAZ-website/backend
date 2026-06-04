@@ -95,7 +95,7 @@ class RecruitmentServiceTest {
         ApplicationQuestion q = ApplicationQuestion.create(
                 r, "label-" + id, category,
                 ApplicationQuestion.Type.TEXT, "질문내용 " + id,
-                500, null, orderNum, required);
+                null, 500, null, orderNum, required);
         ReflectionTestUtils.setField(q, "id", id);
         return q;
     }
@@ -105,7 +105,19 @@ class RecruitmentServiceTest {
         ApplicationQuestion q = ApplicationQuestion.create(
                 r, "label-t-" + id, category,
                 ApplicationQuestion.Type.TABLE, "테이블질문 " + id,
-                null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, required);
+                null, null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, required);
+        ReflectionTestUtils.setField(q, "id", id);
+        return q;
+    }
+
+    private ApplicationQuestion createMultiTableQuestion(Long id, Recruitment r,
+            ApplicationQuestion.Category category, int orderNum, boolean required) {
+        ApplicationQuestion q = ApplicationQuestion.create(
+                r, "label-mt-" + id, category,
+                ApplicationQuestion.Type.TABLE, "복수선택질문 " + id,
+                null, null,
+                "{\"rows\":[\"1월 4일\",\"1월 5일\"],\"columns\":[\"12:00~14:00\",\"14:00~16:00\"],\"multiple\":true}",
+                orderNum, required);
         ReflectionTestUtils.setField(q, "id", id);
         return q;
     }
@@ -603,6 +615,182 @@ class RecruitmentServiceTest {
         }
 
         @Test
+        @DisplayName("TC-011d 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
+        void singleTableWithArrayValue() throws Exception {
+            ApplicationQuestion tableQ = createTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, tableQ));
+
+            JsonNode arrayVal = objectMapper.readTree("{\"A\":[\"B\"]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, arrayVal)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-012 복수선택 TABLE 정상 제출 → 배열로 저장")
+        void multiTableNormalSubmit() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+            when(applicantRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            JsonNode answer = objectMapper.readTree(
+                    "{\"1월 4일\":[\"12:00~14:00\"],\"1월 5일\":[]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            recruitmentService.submitApplication(1L, 1L, req);
+
+            verify(applicantAnswerRepository, org.mockito.Mockito.atLeastOnce()).save(
+                    org.mockito.ArgumentMatchers.argThat(a ->
+                            a.getAnswerJson() != null && a.getAnswerJson().contains("12:00~14:00")));
+        }
+
+        @Test
+        @DisplayName("TC-013 복수선택 TABLE 필수 질문 + 모든 행 빈 배열 → ANSWER_REQUIRED")
+        void multiTableAllEmptyRequired() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+
+            JsonNode answer = objectMapper.readTree("{\"1월 4일\":[],\"1월 5일\":[]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.ANSWER_REQUIRED);
+        }
+
+        @Test
+        @DisplayName("TC-014 복수선택 TABLE 값이 배열 아님(문자열) → INVALID_ANSWER_TYPE")
+        void multiTableValueNotArray() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+
+            JsonNode answer = objectMapper.readTree("{\"1월 4일\":\"12:00~14:00\"}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-015 복수선택 TABLE 배열 원소가 string 아님 → INVALID_ANSWER_TYPE")
+        void multiTableElementNotString() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+
+            JsonNode answer = objectMapper.readTree("{\"1월 4일\":[123]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-016 복수선택 TABLE 중복 원소 → dedupe 후 저장")
+        void multiTableDedupeOnSave() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+            when(applicantRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+            // 같은 시간 중복
+            JsonNode answer = objectMapper.readTree(
+                    "{\"1월 4일\":[\"12:00~14:00\",\"12:00~14:00\",\"14:00~16:00\"]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            recruitmentService.submitApplication(1L, 1L, req);
+
+            org.mockito.ArgumentCaptor<ApplicantAnswer> captor =
+                    org.mockito.ArgumentCaptor.forClass(ApplicantAnswer.class);
+            verify(applicantAnswerRepository, org.mockito.Mockito.atLeastOnce()).save(captor.capture());
+
+            String savedJson = captor.getAllValues().stream()
+                    .filter(a -> a.getAnswerJson() != null)
+                    .map(ApplicantAnswer::getAnswerJson)
+                    .findFirst().orElseThrow();
+            // "12:00~14:00"이 한 번만 등장해야 함
+            assertThat(savedJson.split("12:00~14:00", -1).length - 1).isEqualTo(1);
+            // 중복 제거 후 "14:00~16:00"은 그대로 살아있어야 함
+            assertThat(savedJson).contains("14:00~16:00");
+        }
+
+        @Test
+        @DisplayName("TC-013b 복수선택 필수 질문 + 빈 객체 {} → ANSWER_REQUIRED")
+        void multiTableEmptyObjectRequired() {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, objectMapper.createObjectNode())));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.ANSWER_REQUIRED);
+        }
+
+        @Test
         @DisplayName("TC-011c track=ALL → INVALID_TRACK_SELECTION")
         void submitWithTrackAll() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
@@ -877,6 +1065,76 @@ class RecruitmentServiceTest {
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.RECRUITMENT_CLOSED);
         }
+
+        @Test
+        @DisplayName("TC-009 복수선택 TABLE 배열 답변 → 정상 임시저장")
+        void multiTableArrayDraftSaved() throws Exception {
+            Applicant draft = createDraftApplicant(active, user);
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, active,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(active));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.of(draft));
+            when(applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(1L))
+                    .thenReturn(List.of(multiQ));
+
+            DraftApplicationRequest req = new DraftApplicationRequest();
+            ReflectionTestUtils.setField(req, "answers",
+                    List.of(buildJsonAnswer(2L, objectMapper.readTree(
+                            "{\"1월 4일\":[\"12:00~14:00\"]}"))));
+
+            recruitmentService.saveDraft(1L, 1L, req);
+
+            verify(applicantAnswerRepository).save(org.mockito.ArgumentMatchers.argThat(
+                    a -> a.getAnswerJson() != null && a.getAnswerJson().contains("12:00~14:00")));
+        }
+
+        @Test
+        @DisplayName("TC-010 복수선택 TABLE에 문자열 값 → INVALID_ANSWER_TYPE")
+        void multiTableStringValueInDraft() throws Exception {
+            Applicant draft = createDraftApplicant(active, user);
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, active,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(active));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.of(draft));
+            when(applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(1L))
+                    .thenReturn(List.of(multiQ));
+
+            DraftApplicationRequest req = new DraftApplicationRequest();
+            ReflectionTestUtils.setField(req, "answers",
+                    List.of(buildJsonAnswer(2L, objectMapper.readTree("{\"1월 4일\":\"12:00~14:00\"}"))));
+
+            assertThatThrownBy(() -> recruitmentService.saveDraft(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-011 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
+        void singleTableArrayValueInDraft() throws Exception {
+            Applicant draft = createDraftApplicant(active, user);
+            ApplicationQuestion tableQ = createTableQuestion(2L, active,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(active));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.of(draft));
+            when(applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(1L))
+                    .thenReturn(List.of(tableQ));
+
+            DraftApplicationRequest req = new DraftApplicationRequest();
+            ReflectionTestUtils.setField(req, "answers",
+                    List.of(buildJsonAnswer(2L, objectMapper.readTree("{\"A\":[\"B\"]}"))));
+
+            assertThatThrownBy(() -> recruitmentService.saveDraft(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -959,6 +1217,71 @@ class RecruitmentServiceTest {
                     .isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
 
             verify(applicantRepository, never()).findByRecruitmentIdAndUserId(any(), any());
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    // 질문 생성/수정 — validateQuestionType
+    // ══════════════════════════════════════════════
+    @Nested
+    @DisplayName("질문 생성 — metadata 검증")
+    class QuestionMetadataValidation {
+
+        @Test
+        @DisplayName("TABLE metadata의 multiple이 boolean string이면 INVALID_INPUT_VALUE")
+        void multipleAsStringRejected() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+
+            com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest req =
+                    new com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest();
+            com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest item =
+                    new com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest();
+            ReflectionTestUtils.setField(item, "label", "MULTI1");
+            ReflectionTestUtils.setField(item, "category", ApplicationQuestion.Category.COMMON);
+            ReflectionTestUtils.setField(item, "type", ApplicationQuestion.Type.TABLE);
+            ReflectionTestUtils.setField(item, "content", "질문");
+            ReflectionTestUtils.setField(item, "orderNum", 1);
+            ReflectionTestUtils.setField(item, "isRequired", true);
+            // multiple이 boolean이 아닌 string "true"
+            ReflectionTestUtils.setField(item, "metadata",
+                    objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":\"true\"}"));
+            ReflectionTestUtils.setField(req, "questions", List.of(item));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
+        @Test
+        @DisplayName("TABLE metadata의 multiple이 boolean이면 정상 생성")
+        void multipleAsBooleanAllowed() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            when(applicationQuestionRepository.save(any())).thenAnswer(inv -> {
+                ApplicationQuestion q = inv.getArgument(0);
+                ReflectionTestUtils.setField(q, "id", 1L);
+                return q;
+            });
+
+            com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest req =
+                    new com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest();
+            com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest item =
+                    new com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest();
+            ReflectionTestUtils.setField(item, "label", "MULTI1");
+            ReflectionTestUtils.setField(item, "category", ApplicationQuestion.Category.COMMON);
+            ReflectionTestUtils.setField(item, "type", ApplicationQuestion.Type.TABLE);
+            ReflectionTestUtils.setField(item, "content", "질문");
+            ReflectionTestUtils.setField(item, "orderNum", 1);
+            ReflectionTestUtils.setField(item, "isRequired", true);
+            ReflectionTestUtils.setField(item, "metadata",
+                    objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":true}"));
+            ReflectionTestUtils.setField(req, "questions", List.of(item));
+
+            recruitmentService.createQuestions(1L, req);
+
+            verify(applicationQuestionRepository).save(any(ApplicationQuestion.class));
         }
     }
 
