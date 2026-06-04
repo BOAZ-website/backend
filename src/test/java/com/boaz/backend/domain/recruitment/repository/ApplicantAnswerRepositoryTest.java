@@ -59,7 +59,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
 
     private ApplicationQuestion persistQuestion(Recruitment r, int orderNum) {
         ApplicationQuestion q = ApplicationQuestion.create(
-                r, "label" + orderNum, Category.COMMON, Type.TEXT, "content", 500, null, orderNum, true);
+                r, "label" + orderNum, Category.COMMON, Type.TEXT, "content", null, 500, null, orderNum, true);
         return em.persistFlushFind(q);
     }
 

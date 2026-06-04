@@ -40,6 +40,7 @@ import com.boaz.backend.global.util.S3Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import lombok.RequiredArgsConstructor;
@@ -55,6 +56,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -254,18 +256,36 @@ public class RecruitmentService {
                 );
             }
 
-            if (question.getIsRequired()) {
-                if (answer.isNull()
-                        || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
-                        || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT) {
+                if (!answer.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                if (question.getIsRequired() && answer.asText().trim().isEmpty()) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
                 }
-            }
-            if (question.getType() == ApplicationQuestion.Type.TEXT && !answer.isTextual()) {
-                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
-            }
-            if (question.getType() == ApplicationQuestion.Type.TABLE && !answer.isObject()) {
-                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+            } else {
+                if (!answer.isObject()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                boolean multiple = isMultiple(question);
+                if (multiple) {
+                    answer.fields().forEachRemaining(entry -> {
+                        if (!entry.getValue().isArray()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        entry.getValue().forEach(elem -> {
+                            if (!elem.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        });
+                    });
+                    if (question.getIsRequired()) {
+                        boolean hasSelection = false;
+                        for (JsonNode val : answer) {
+                            if (val.isArray() && val.size() > 0) { hasSelection = true; break; }
+                        }
+                        if (!hasSelection) throw new CustomException(ErrorCode.ANSWER_REQUIRED);
+                    }
+                } else {
+                    answer.fields().forEachRemaining(entry -> {
+                        if (!entry.getValue().isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                    });
+                    if (question.getIsRequired() && answer.size() == 0) {
+                        throw new CustomException(ErrorCode.ANSWER_REQUIRED);
+                    }
+                }
             }
         }
 
@@ -319,7 +339,8 @@ public class RecruitmentService {
                 answerText = answer.asText();
             } else {
                 try {
-                    answerJson = objectMapper.writeValueAsString(answer);
+                    JsonNode toSave = isMultiple(question) ? dedupeMultipleAnswer(answer) : answer;
+                    answerJson = objectMapper.writeValueAsString(toSave);
                 } catch (Exception e) {
                     throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                 }
@@ -442,8 +463,25 @@ public class RecruitmentService {
                         if (answer != null && !answer.isObject()) {
                             throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
                         }
+                        if (answer != null) {
+                            boolean multiple = isMultiple(question);
+                            if (multiple) {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isArray()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    entry.getValue().forEach(elem -> {
+                                        if (!elem.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    });
+                                });
+                            } else {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                });
+                            }
+                        }
                         try {
-                            answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
+                            JsonNode toSave = (answer != null && isMultiple(question))
+                                    ? dedupeMultipleAnswer(answer) : answer;
+                            answerJson = toSave != null ? objectMapper.writeValueAsString(toSave) : null;
                         } catch (Exception e) {
                             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                         }
@@ -756,6 +794,7 @@ public class RecruitmentService {
                     item.getCategory(),
                     item.getType(),
                     item.getContent(),
+                    item.getDescription(),
                     item.getType() == ApplicationQuestion.Type.TEXT ? item.getLimitLength() : null,
                     item.getType() == ApplicationQuestion.Type.TABLE ? metadataJson : null,
                     item.getOrderNum(),
@@ -817,6 +856,7 @@ public class RecruitmentService {
                 request.getCategory(),
                 request.getType(),
                 request.getContent(),
+                request.getDescription(),
                 limitLength,
                 metadataJson,
                 request.getOrderNum(),
@@ -846,6 +886,12 @@ public class RecruitmentService {
         if (type == ApplicationQuestion.Type.TABLE && metadata == null) {
             throw new CustomException(ErrorCode.MISSING_PARAMETER);
         }
+        if (type == ApplicationQuestion.Type.TABLE && metadata != null) {
+            JsonNode multipleNode = metadata.path("multiple");
+            if (!multipleNode.isMissingNode() && !multipleNode.isBoolean()) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
     }
 
     private String serializeMetadata(com.fasterxml.jackson.databind.JsonNode metadata) {
@@ -864,6 +910,32 @@ public class RecruitmentService {
         } catch (Exception e) {
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    private boolean isMultiple(ApplicationQuestion question) {
+        if (question.getMetadata() == null) return false;
+        try {
+            return objectMapper.readTree(question.getMetadata()).path("multiple").asBoolean(false);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private JsonNode dedupeMultipleAnswer(JsonNode answer) {
+        com.fasterxml.jackson.databind.node.ObjectNode result = objectMapper.createObjectNode();
+        answer.fields().forEachRemaining(entry -> {
+            JsonNode val = entry.getValue();
+            if (val.isArray()) {
+                Set<String> seen = new LinkedHashSet<>();
+                val.forEach(elem -> seen.add(elem.asText()));
+                ArrayNode deduped = objectMapper.createArrayNode();
+                seen.forEach(deduped::add);
+                result.set(entry.getKey(), deduped);
+            } else {
+                result.set(entry.getKey(), val);
+            }
+        });
+        return result;
     }
 
     // 모집 사전 알림 신청 목록 조회 (어드민 전용)

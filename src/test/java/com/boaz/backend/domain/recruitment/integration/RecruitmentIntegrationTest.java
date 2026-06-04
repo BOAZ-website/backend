@@ -102,19 +102,27 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     private ApplicationQuestion saveQuestion(Recruitment r, Category category, int orderNum) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("q-", category, orderNum), category, Type.TEXT,
-                "content", 500, null, orderNum, true));
+                "content", null, 500, null, orderNum, true));
     }
 
     private ApplicationQuestion saveQuestion(Recruitment r, Category category, int orderNum, String content) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("q-", category, orderNum), category, Type.TEXT,
-                content, 500, null, orderNum, true));
+                content, null, 500, null, orderNum, true));
     }
 
     private ApplicationQuestion saveTableQuestion(Recruitment r, Category category, int orderNum) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("qt-", category, orderNum), category, Type.TABLE,
-                "테이블 질문", null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, true));
+                "테이블 질문", null, null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, true));
+    }
+
+    private ApplicationQuestion saveMultiTableQuestion(Recruitment r, Category category, int orderNum) {
+        return questionRepository.save(ApplicationQuestion.create(
+                r, shortLabel("qm-", category, orderNum), category, Type.TABLE,
+                "복수선택 질문", null, null,
+                "{\"rows\":[\"1월 4일\",\"1월 5일\"],\"columns\":[\"12:00~14:00\",\"14:00~16:00\"],\"multiple\":true}",
+                orderNum, true));
     }
 
     // 제출 요청의 개인정보 공통 필드 (answers 제외)
@@ -304,6 +312,63 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             ApplicantAnswer tableAnswer = answers.stream()
                     .filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
             assertThat(tableAnswer.getAnswerJson()).contains("키").contains("값");
+        }
+
+        @Test
+        @DisplayName("복수선택 TABLE 답변 → answerJson에 배열로 직렬화 저장")
+        void submitWithMultiTableAnswer() {
+            Recruitment r = saveActiveRecruitment(27);
+            User u = saveUser();
+            Long commonQ = saveQuestion(r, Category.COMMON, 1).getId();
+            Long multiQ = saveMultiTableQuestion(r, Category.COMMON, 2).getId();
+            em.flush();
+            em.clear();
+
+            Map<String, Object> fields = personalFields(Track.ENGINEERING);
+            fields.put("answers", List.of(
+                    Map.of("question_id", commonQ, "answer", "공통 답변"),
+                    Map.of("question_id", multiQ, "answer",
+                            Map.of("1월 4일", List.of("12:00~14:00", "14:00~16:00"),
+                                   "1월 5일", List.of()))));
+            ApplicationRequest req = objectMapper.convertValue(fields, ApplicationRequest.class);
+
+            ApplicationResponse res = recruitmentService.submitApplication(u.getId(), r.getId(), req);
+            em.flush();
+            em.clear();
+
+            List<ApplicantAnswer> answers = answerRepository.findByApplicantIds(List.of(res.getApplicantId()));
+            ApplicantAnswer multiAnswer = answers.stream()
+                    .filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
+            assertThat(multiAnswer.getAnswerJson()).contains("[");
+            assertThat(multiAnswer.getAnswerJson()).contains("12:00~14:00");
+            assertThat(multiAnswer.getAnswerJson()).contains("14:00~16:00");
+        }
+
+        @Test
+        @DisplayName("복수선택 TABLE 중복 원소 → dedupe 후 저장")
+        void submitMultiTableDeduped() {
+            Recruitment r = saveActiveRecruitment(27);
+            User u = saveUser();
+            Long commonQ = saveQuestion(r, Category.COMMON, 1).getId();
+            Long multiQ = saveMultiTableQuestion(r, Category.COMMON, 2).getId();
+            em.flush();
+            em.clear();
+
+            Map<String, Object> fields = personalFields(Track.ENGINEERING);
+            fields.put("answers", List.of(
+                    Map.of("question_id", commonQ, "answer", "공통 답변"),
+                    Map.of("question_id", multiQ, "answer",
+                            Map.of("1월 4일", List.of("12:00~14:00", "12:00~14:00")))));
+            ApplicationRequest req = objectMapper.convertValue(fields, ApplicationRequest.class);
+
+            ApplicationResponse res = recruitmentService.submitApplication(u.getId(), r.getId(), req);
+            em.flush();
+            em.clear();
+
+            ApplicantAnswer multiAnswer = answerRepository.findByApplicantIds(List.of(res.getApplicantId()))
+                    .stream().filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
+            // "12:00~14:00"이 딱 한 번만 나와야 함
+            assertThat(multiAnswer.getAnswerJson().split("12:00~14:00", -1).length - 1).isEqualTo(1);
         }
     }
 

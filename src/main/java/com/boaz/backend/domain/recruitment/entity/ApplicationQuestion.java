@@ -51,6 +51,9 @@ public class ApplicationQuestion extends BaseEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
 
+    @Column(columnDefinition = "TEXT")
+    private String description;
+
     @Column(columnDefinition = "JSON")
     private String metadata;
 
@@ -63,7 +66,7 @@ public class ApplicationQuestion extends BaseEntity {
     private Boolean isRequired;
 
     public static ApplicationQuestion create(Recruitment recruitment, String label,
-            Category category, Type type, String content,
+            Category category, Type type, String content, String description,
             Integer limitLength, String metadata, Integer orderNum, Boolean isRequired) {
         ApplicationQuestion q = new ApplicationQuestion();
         q.recruitment = recruitment;
@@ -71,6 +74,7 @@ public class ApplicationQuestion extends BaseEntity {
         q.category = category;
         q.type = type;
         q.content = content;
+        q.description = description;
         q.limitLength = limitLength;
         q.metadata = metadata;
         q.orderNum = orderNum;
@@ -79,12 +83,13 @@ public class ApplicationQuestion extends BaseEntity {
     }
 
     public void update(String label, Category category, Type type, String content,
-            JsonNullable<Integer> limitLength, JsonNullable<String> metadata,
-            Integer orderNum, Boolean isRequired) {
+            JsonNullable<String> description, JsonNullable<Integer> limitLength,
+            JsonNullable<String> metadata, Integer orderNum, Boolean isRequired) {
         if (label != null) this.label = label;
         if (category != null) this.category = category;
         if (type != null) this.type = type;
         if (content != null) this.content = content;
+        if (description != null && description.isPresent()) this.description = description.get();
         if (limitLength != null && limitLength.isPresent()) this.limitLength = limitLength.get();
         if (metadata != null && metadata.isPresent()) this.metadata = metadata.get();
         if (orderNum != null) this.orderNum = orderNum;

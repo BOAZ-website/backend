@@ -36,7 +36,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
 
     private void persistQuestion(Recruitment r, String label, Category category, int orderNum) {
         ApplicationQuestion q = ApplicationQuestion.create(
-                r, label, category, Type.TEXT, "content", 500, null, orderNum, true);
+                r, label, category, Type.TEXT, "content", null, 500, null, orderNum, true);
         em.persist(q);
     }
 
