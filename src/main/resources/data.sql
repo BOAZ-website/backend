@@ -61,60 +61,67 @@ VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
 ]', 'https://example.com/brochure27.pdf', NOW(), NOW());
 
 -- application_question 임시 데이터 (recruitment_id = 1, 26기 - 현재 활성, Swagger 테스트용)
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (1, 1, 'COMMON', 'TEXT', 'COMMON1', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, 500, 1, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (1, 1, 'COMMON', 'TEXT', 'COMMON1', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, null, 500, 1, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (2, 1, 'COMMON', 'TEXT', 'COMMON2', '본인을 나타낼 수 있는 기존의 ACTIVITY 경험 (500자 이내)', null, 500, 2, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (2, 1, 'COMMON', 'TEXT', 'COMMON2', '본인을 나타낼 수 있는 기존의 ACTIVITY 경험 (500자 이내)', null, null, 500, 2, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (3, 1, 'COMMON', 'TEXT', 'COMMON5', '추가적으로 자신의 ACTIVITY 중에서 특히 어필하고 싶은 PROJECT가 있다면.. (500자 이내)', null, 500, 99, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (3, 1, 'COMMON', 'TEXT', 'COMMON5', '추가적으로 자신의 ACTIVITY 중에서 특히 어필하고 싶은 PROJECT가 있다면.. (500자 이내)', null, null, 500, 99, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (4, 1, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 TOOL 활용 경험', '{"rows":["Tableau", "Python"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (4, 1, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 TOOL 활용 경험', null, '{"rows":["Tableau", "Python"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (5, 1, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', '본인이 진행했던 VISUALIZATION를 통해 인사이트를 도출한 경험.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (5, 1, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', '본인이 진행했던 VISUALIZATION를 통해 인사이트를 도출한 경험.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (6, 1, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 경험', '{"rows":["데이터베이스", "서버 및 클라우드 서비스"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (6, 1, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 경험', null, '{"rows":["데이터베이스", "서버 및 클라우드 서비스"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (7, 1, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 중 관심있는 세부 분야와 해당 분야와 관련된 경험 및 ACTIVITY.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (7, 1, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 중 관심있는 세부 분야와 해당 분야와 관련된 경험 및 ACTIVITY.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (8, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '[빅데이터 / 인공지능 / 머신러닝 / 통계 및 수학] 관련 수강 과목 혹은 세미나 경험.. (300자 이내)', null, 300, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (8, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '[빅데이터 / 인공지능 / 머신러닝 / 통계 및 수학] 관련 수강 과목 혹은 세미나 경험.. (300자 이내)', null, null, 300, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (9, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '본인이 진행했던 [머신러닝 / 딥러닝 / 데이터ANALYSIS] 관련 PROJECT를 소개.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (9, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '본인이 진행했던 [머신러닝 / 딥러닝 / 데이터ANALYSIS] 관련 PROJECT를 소개.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
 -- application_question 임시 데이터 (recruitment_id = 2, 27기)
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (10, 2, 'COMMON', 'TEXT', 'COMMON1', 'BOAZ에 지원하게 된 동기를 작성해주세요. (500자 이내)', null, 500, 1, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (10, 2, 'COMMON', 'TEXT', 'COMMON1', 'BOAZ에 지원하게 된 동기를 작성해주세요. (500자 이내)', null, null, 500, 1, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (11, 2, 'COMMON', 'TEXT', 'COMMON2', '본인의 데이터 관련 경험을 소개해주세요. (500자 이내)', null, 500, 2, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (11, 2, 'COMMON', 'TEXT', 'COMMON2', '본인의 데이터 관련 경험을 소개해주세요. (500자 이내)', null, null, 500, 2, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (12, 2, 'COMMON', 'TEXT', 'COMMON3', '활동 후 이루고 싶은 목표가 있다면 작성해주세요. (500자 이내)', null, 500, 99, false, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (12, 2, 'COMMON', 'TEXT', 'COMMON3', '활동 후 이루고 싶은 목표가 있다면 작성해주세요. (500자 이내)', null, null, 500, 99, false, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (13, 2, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 기술 경험', '{"rows":["데이터베이스", "서버 및 클라우드 서비스", "데이터 파이프라인"], "columns":["경험 없음", "학습 경험 있음", "프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (13, 2, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 기술 경험', null, '{"rows":["데이터베이스", "서버 및 클라우드 서비스", "데이터 파이프라인"], "columns":["경험 없음", "학습 경험 있음", "프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (14, 2, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 관심 세부 분야와 경험을 서술해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (14, 2, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 관심 세부 분야와 경험을 서술해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (15, 2, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 도구 경험', '{"rows":["Tableau", "Python (matplotlib/seaborn)", "D3.js"], "columns":["경험 없음", "관련 프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (15, 2, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 도구 경험', null, '{"rows":["Tableau", "Python (matplotlib/seaborn)", "D3.js"], "columns":["경험 없음", "관련 프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (16, 2, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', 'VISUALIZATION을 통해 인사이트를 도출한 경험을 서술해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (16, 2, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', 'VISUALIZATION을 통해 인사이트를 도출한 경험을 서술해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (17, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '머신러닝 / 딥러닝 관련 수강 과목 혹은 세미나 경험을 작성해주세요. (300자 이내)', null, 300, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (17, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '머신러닝 / 딥러닝 관련 수강 과목 혹은 세미나 경험을 작성해주세요. (300자 이내)', null, null, 300, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프로젝트 경험을 소개해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프로젝트 경험을 소개해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
+
+-- 복수선택 TABLE 샘플 (recruitment_id = 2, 면접 가능 시간)
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (19, 2, 'COMMON', 'TABLE', 'INTERVIEW1', '면접 가능한 시간을 모두 선택해주세요.',
+        '면접은 대면으로 진행될 예정입니다. 가능한 면접 시간을 모두 체크해주시기 바랍니다.\n응답이 없을 경우, 모든 면접 시간이 불가능한 것으로 간주될 수 있으니 반드시 작성 부탁드립니다.',
+        '{"rows":["9월 7일(일)","9월 8일(월)"],"columns":["12:00~14:00","14:00~16:00","16:00~18:00"],"multiple":true}',
+        null, 98, true, NOW(), NOW());
 
 -- archive 임시 데이터
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
