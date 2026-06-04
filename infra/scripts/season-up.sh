@@ -57,10 +57,18 @@ ALB_PORT=$(ssm_get "ALB_PORT")
 echo "  ✅ 설정 로드 완료"
 
 # --------------------------------------------------
-# 1. EC2-B 시작
+# 1. EC2-B 태그 부착 + 시작
+#    부팅 전에 CodeDeploy 대상 태그(app=boaz-api)를 먼저 부착해야
+#    이후 CodeDeploy 재배포(2단계)가 EC2-B까지 대상에 포함한다.
+#    (태그는 중지 상태 인스턴스에도 부착 가능)
 # --------------------------------------------------
 echo ""
-echo "[1/7] EC2-B 시작 중... ($EC2_B_ID)"
+echo "[1/7] EC2-B 태그 부착 + 시작 중... ($EC2_B_ID)"
+echo "  → CodeDeploy 대상 태그 부착 (app=boaz-api)..."
+aws ec2 create-tags --resources "$EC2_B_ID" \
+  --tags "Key=app,Value=boaz-api" \
+  --region "$AWS_REGION" --profile "$AWS_PROFILE"
+
 aws ec2 start-instances --instance-ids "$EC2_B_ID" \
   --region "$AWS_REGION" --profile "$AWS_PROFILE" > /dev/null
 aws ec2 wait instance-running --instance-ids "$EC2_B_ID" \
