@@ -886,6 +886,12 @@ public class RecruitmentService {
         if (type == ApplicationQuestion.Type.TABLE && metadata == null) {
             throw new CustomException(ErrorCode.MISSING_PARAMETER);
         }
+        if (type == ApplicationQuestion.Type.TABLE && metadata != null) {
+            JsonNode multipleNode = metadata.path("multiple");
+            if (!multipleNode.isMissingNode() && !multipleNode.isBoolean()) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
     }
 
     private String serializeMetadata(com.fasterxml.jackson.databind.JsonNode metadata) {
