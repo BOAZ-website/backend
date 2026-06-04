@@ -86,6 +86,8 @@ springdoc:
 
 swagger:
   server-url: "https://api.bigdataboaz.com"
+  user: ${SWAGGER_USER}
+  password: ${SWAGGER_PASSWORD}
 
 cors:
   allowed-origins: "https://www.bigdataboaz.com,https://prod-www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com,http://localhost:5173,http://localhost:5173/,http://localhost:5174,http://localhost:5174/,http://localhost:5174,http://localhost:8080"
