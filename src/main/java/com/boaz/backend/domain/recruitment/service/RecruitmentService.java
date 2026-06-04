@@ -463,8 +463,25 @@ public class RecruitmentService {
                         if (answer != null && !answer.isObject()) {
                             throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
                         }
+                        if (answer != null) {
+                            boolean multiple = isMultiple(question);
+                            if (multiple) {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isArray()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    entry.getValue().forEach(elem -> {
+                                        if (!elem.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    });
+                                });
+                            } else {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                });
+                            }
+                        }
                         try {
-                            answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
+                            JsonNode toSave = (answer != null && isMultiple(question))
+                                    ? dedupeMultipleAnswer(answer) : answer;
+                            answerJson = toSave != null ? objectMapper.writeValueAsString(toSave) : null;
                         } catch (Exception e) {
                             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                         }
