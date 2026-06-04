@@ -1227,14 +1227,8 @@ class RecruitmentServiceTest {
     @DisplayName("질문 생성 — metadata 검증")
     class QuestionMetadataValidation {
 
-        @Test
-        @DisplayName("TABLE metadata의 multiple이 boolean string이면 INVALID_INPUT_VALUE")
-        void multipleAsStringRejected() throws Exception {
-            Recruitment r = createActiveRecruitment();
-            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
-
-            com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest req =
-                    new com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest();
+        private com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest buildTableItem(
+                String metadataJson) throws Exception {
             com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest item =
                     new com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest();
             ReflectionTestUtils.setField(item, "label", "MULTI1");
@@ -1243,12 +1237,27 @@ class RecruitmentServiceTest {
             ReflectionTestUtils.setField(item, "content", "질문");
             ReflectionTestUtils.setField(item, "orderNum", 1);
             ReflectionTestUtils.setField(item, "isRequired", true);
-            // multiple이 boolean이 아닌 string "true"
-            ReflectionTestUtils.setField(item, "metadata",
-                    objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":\"true\"}"));
-            ReflectionTestUtils.setField(req, "questions", List.of(item));
+            ReflectionTestUtils.setField(item, "metadata", objectMapper.readTree(metadataJson));
+            return item;
+        }
 
-            assertThatThrownBy(() -> recruitmentService.createQuestions(1L, req))
+        private com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest buildCreateReq(
+                com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest item) {
+            com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest req =
+                    new com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest();
+            ReflectionTestUtils.setField(req, "recruitmentId", 1L);
+            ReflectionTestUtils.setField(req, "questions", List.of(item));
+            return req;
+        }
+
+        @Test
+        @DisplayName("TABLE metadata의 multiple이 boolean string이면 INVALID_INPUT_VALUE")
+        void multipleAsStringRejected() throws Exception {
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(createActiveRecruitment()));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(
+                    buildCreateReq(buildTableItem(
+                            "{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":\"true\"}"))))
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
@@ -1257,29 +1266,16 @@ class RecruitmentServiceTest {
         @Test
         @DisplayName("TABLE metadata의 multiple이 boolean이면 정상 생성")
         void multipleAsBooleanAllowed() throws Exception {
-            Recruitment r = createActiveRecruitment();
-            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(createActiveRecruitment()));
             when(applicationQuestionRepository.save(any())).thenAnswer(inv -> {
                 ApplicationQuestion q = inv.getArgument(0);
                 ReflectionTestUtils.setField(q, "id", 1L);
                 return q;
             });
 
-            com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest req =
-                    new com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest();
-            com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest item =
-                    new com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest();
-            ReflectionTestUtils.setField(item, "label", "MULTI1");
-            ReflectionTestUtils.setField(item, "category", ApplicationQuestion.Category.COMMON);
-            ReflectionTestUtils.setField(item, "type", ApplicationQuestion.Type.TABLE);
-            ReflectionTestUtils.setField(item, "content", "질문");
-            ReflectionTestUtils.setField(item, "orderNum", 1);
-            ReflectionTestUtils.setField(item, "isRequired", true);
-            ReflectionTestUtils.setField(item, "metadata",
-                    objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":true}"));
-            ReflectionTestUtils.setField(req, "questions", List.of(item));
-
-            recruitmentService.createQuestions(1L, req);
+            recruitmentService.createQuestions(
+                    buildCreateReq(buildTableItem(
+                            "{\"rows\":[\"A\"],\"columns\":[\"B\"],\"multiple\":true}")));
 
             verify(applicationQuestionRepository).save(any(ApplicationQuestion.class));
         }
