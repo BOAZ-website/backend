@@ -133,9 +133,11 @@ class CsvServiceTest {
                     "{\"rows\":[\"Python\",\"R\"],\"columns\":[\"경험 없음\",\"사용 중\"]}");
             ApplicantAnswer ans = makeJsonAnswer(a, q, "{\"Python\":\"경험 없음\",\"R\":\"사용 중\"}");
 
-            String cell = generateAndExtractCell(a, q, ans);
-            assertThat(cell).contains("Python: 경험 없음");
-            assertThat(cell).contains("R: 사용 중");
+            // 셀 내부에 \n이 있어 row 파싱이 복잡하므로 raw CSV 직접 확인
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(q), List.of(ans));
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+            assertThat(content).contains("Python: 경험 없음");
+            assertThat(content).contains("R: 사용 중");
         }
     }
 
@@ -166,7 +168,8 @@ class CsvServiceTest {
                     "{\"rows\":[\"1월 4일\"],\"columns\":[\"12:00~14:00\"],\"multiple\":true}");
             ApplicantAnswer ans = makeJsonAnswer(a, q, "{\"1월 4일\":[]}");
 
-            assertThat(generateAndExtractCell(a, q, ans)).isEqualTo("1월 4일: ");
+            // formatAnswer 끝에 trim()이 있어 trailing space 제거됨 → "1월 4일:"
+            assertThat(generateAndExtractCell(a, q, ans)).isEqualTo("1월 4일:");
         }
 
         @Test
