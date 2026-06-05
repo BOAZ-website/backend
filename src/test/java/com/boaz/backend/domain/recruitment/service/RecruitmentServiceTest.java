@@ -31,6 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -1448,6 +1449,86 @@ class RecruitmentServiceTest {
             doNothing().when(subscriptionRepository).deleteAll();
             recruitmentService.deleteAllSubscriptions();
             verify(subscriptionRepository).deleteAll();
+        }
+    }
+
+    // ══════════════════════════════════════════════
+    // REC-008: 모집 마감 경계 (#163 마지막 초 처리)
+    // ══════════════════════════════════════════════
+    @Nested
+    @DisplayName("REC-008 모집 마감 경계 (마지막 초 처리)")
+    class DeadlineBoundary {
+
+        private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
+        private final LocalDateTime endDate = LocalDateTime.of(2026, 6, 24, 23, 59, 59);
+
+        // 모집 기간 판정에 쓰이는 현재 시각을 고정한다.
+        private void fixClockAt(LocalDateTime at) {
+            Clock fixed = Clock.fixed(at.atZone(ZONE).toInstant(), ZONE);
+            ReflectionTestUtils.setField(recruitmentService, "clock", fixed);
+        }
+
+        private Recruitment recruitmentEndingAt(LocalDateTime end) {
+            Recruitment r = Recruitment.create(27,
+                    end.minusDays(16), end, "[]", "https://example.com/brochure.pdf");
+            ReflectionTestUtils.setField(r, "id", 1L);
+            return r;
+        }
+
+        private void stubHappyPathSubmit(Recruitment r) {
+            User user = createUser(1L);
+            ApplicationQuestion q1 = createTextQuestion(1L, r, ApplicationQuestion.Category.COMMON, 1, true);
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1));
+            when(applicantRepository.save(any())).thenAnswer(inv -> {
+                Applicant a = inv.getArgument(0);
+                ReflectionTestUtils.setField(a, "id", 42L);
+                return a;
+            });
+        }
+
+        @Test
+        @DisplayName("TC-001 마감 초의 끝자락(23:59:59.999) 제출 → 접수 (튕기지 않음)")
+        void submitAtLastSecondMillis() {
+            fixClockAt(endDate.plusNanos(999_000_000)); // 2026-06-24 23:59:59.999
+            stubHappyPathSubmit(recruitmentEndingAt(endDate));
+
+            ApplicationRequest req = buildApplicationRequest(List.of(buildTextAnswer(1L, "답변내용")));
+            ApplicationResponse res = recruitmentService.submitApplication(1L, 1L, req);
+
+            assertThat(res.getApplicantId()).isEqualTo(42L);
+        }
+
+        @Test
+        @DisplayName("TC-002 마감 정각(23:59:59.000) 제출 → 접수")
+        void submitExactlyAtEnd() {
+            fixClockAt(endDate); // 2026-06-24 23:59:59.000
+            stubHappyPathSubmit(recruitmentEndingAt(endDate));
+
+            ApplicationRequest req = buildApplicationRequest(List.of(buildTextAnswer(1L, "답변내용")));
+            ApplicationResponse res = recruitmentService.submitApplication(1L, 1L, req);
+
+            assertThat(res.getApplicantId()).isEqualTo(42L);
+        }
+
+        @Test
+        @DisplayName("TC-003 다음날 자정(06-25 00:00:00) 제출 → RECRUITMENT_CLOSED")
+        void submitAtNextMidnight() {
+            fixClockAt(endDate.toLocalDate().plusDays(1).atStartOfDay()); // 2026-06-25 00:00:00
+            User user = createUser(1L);
+            Recruitment r = recruitmentEndingAt(endDate);
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+
+            ApplicationRequest req = buildApplicationRequest(List.of(buildTextAnswer(1L, "답변내용")));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.RECRUITMENT_CLOSED);
         }
     }
 }
