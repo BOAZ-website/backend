@@ -85,9 +85,7 @@ public class RecruitmentService {
 
     private final S3Service s3Service;
 
-    // 모집 기간 판정용 현재 시각 (초 단위 버림).
-    // end_date가 초 단위(예: 23:59:59)로 저장되는데 now()는 밀리초/나노초까지 가져,
-    // 버리지 않으면 마지막 초(23:59:59.xxx) 제출이 마감으로 처리되어 튕긴다.
+    // 모집 기간 판정용 현재 시각 (초 단위 버림)
     private LocalDateTime now() {
         return LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
     }

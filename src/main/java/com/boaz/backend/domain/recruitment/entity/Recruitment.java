@@ -31,8 +31,6 @@ public class Recruitment extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String brochureUrl;
 
-    // 주어진 시각이 모집 기간(start_date ~ end_date, 양끝 포함) 안인지 판정한다.
-    // 호출부에서 초 단위로 버린 현재 시각을 넘겨야 마지막 초까지 정확히 포함된다.
     public boolean isActive(LocalDateTime now) {
         return !now.isBefore(startDate) && !now.isAfter(endDate);
     }
