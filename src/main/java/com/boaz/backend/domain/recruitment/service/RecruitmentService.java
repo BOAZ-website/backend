@@ -51,10 +51,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,16 +78,22 @@ public class RecruitmentService {
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
+    private final Clock clock;
 
     @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
 
     private final S3Service s3Service;
 
+    // 모집 기간 판정용 현재 시각 (초 단위 버림)
+    private LocalDateTime now() {
+        return LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
+    }
+
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
         Optional<Recruitment> activeRecruitment = recruitmentRepository
-                .findActiveRecruitment(LocalDateTime.now());
+                .findActiveRecruitment(now());
 
         return activeRecruitment
                 .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
@@ -94,7 +102,7 @@ public class RecruitmentService {
 
     // 모집 공고 마감 일시 조회
     public DeadlineResponse getDeadline() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         Recruitment recruitment = recruitmentRepository.findActiveRecruitment(now)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
         return DeadlineResponse.from(recruitment);
@@ -105,9 +113,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
+        boolean isActive = recruitment.isActive(now());
 
         return RecruitmentResponse.from(recruitment, isActive);
     }
@@ -120,10 +126,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 중 여부 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
@@ -164,10 +167,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -370,10 +370,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -646,8 +643,9 @@ public class RecruitmentService {
 
     // 모든 모집 공고 조회 (term 내림차순)
     public List<RecruitmentResponse> getAllRecruitments() {
+        LocalDateTime now = now();
         return recruitmentRepository.findAllByOrderByTermDesc().stream()
-                .map(RecruitmentResponse::from)
+                .map(r -> RecruitmentResponse.from(r, now))
                 .toList();
     }
 
@@ -739,7 +737,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        if (recruitment.isActive()) {
+        if (recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
         }
 

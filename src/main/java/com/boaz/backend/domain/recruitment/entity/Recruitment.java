@@ -31,8 +31,7 @@ public class Recruitment extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String brochureUrl;
 
-    public boolean isActive() {
-        LocalDateTime now = LocalDateTime.now();
+    public boolean isActive(LocalDateTime now) {
         return !now.isBefore(startDate) && !now.isAfter(endDate);
     }
 
