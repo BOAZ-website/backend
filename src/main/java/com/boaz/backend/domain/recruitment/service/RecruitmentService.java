@@ -115,9 +115,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        LocalDateTime now = now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
+        boolean isActive = recruitment.isActive(now());
 
         return RecruitmentResponse.from(recruitment, isActive);
     }
@@ -130,10 +128,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 중 여부 확인
-        LocalDateTime now = now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
@@ -174,10 +169,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -380,10 +372,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -656,8 +645,9 @@ public class RecruitmentService {
 
     // 모든 모집 공고 조회 (term 내림차순)
     public List<RecruitmentResponse> getAllRecruitments() {
+        LocalDateTime now = now();
         return recruitmentRepository.findAllByOrderByTermDesc().stream()
-                .map(RecruitmentResponse::from)
+                .map(r -> RecruitmentResponse.from(r, now))
                 .toList();
     }
 
@@ -749,7 +739,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        if (recruitment.isActive()) {
+        if (recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
         }
 
