@@ -51,10 +51,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -76,16 +78,24 @@ public class RecruitmentService {
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
+    private final Clock clock;
 
     @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
 
     private final S3Service s3Service;
 
+    // 모집 기간 판정용 현재 시각 (초 단위 버림).
+    // end_date가 초 단위(예: 23:59:59)로 저장되는데 now()는 밀리초/나노초까지 가져,
+    // 버리지 않으면 마지막 초(23:59:59.xxx) 제출이 마감으로 처리되어 튕긴다.
+    private LocalDateTime now() {
+        return LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
+    }
+
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
         Optional<Recruitment> activeRecruitment = recruitmentRepository
-                .findActiveRecruitment(LocalDateTime.now());
+                .findActiveRecruitment(now());
 
         return activeRecruitment
                 .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
@@ -94,7 +104,7 @@ public class RecruitmentService {
 
     // 모집 공고 마감 일시 조회
     public DeadlineResponse getDeadline() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         Recruitment recruitment = recruitmentRepository.findActiveRecruitment(now)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
         return DeadlineResponse.from(recruitment);
@@ -105,7 +115,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
 
@@ -120,7 +130,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 중 여부 확인
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {
@@ -164,7 +174,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {
@@ -370,7 +380,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         boolean isActive = !now.isBefore(recruitment.getStartDate())
                         && !now.isAfter(recruitment.getEndDate());
         if (!isActive) {

@@ -29,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +60,7 @@ class RecruitmentServiceTest {
     @BeforeEach
     void setUp() {
         ReflectionTestUtils.setField(recruitmentService, "recruitmentBucket", "test-bucket");
+        ReflectionTestUtils.setField(recruitmentService, "clock", Clock.systemDefaultZone());
     }
 
     // ──────────────────────────────────────────────
