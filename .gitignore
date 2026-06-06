@@ -36,6 +36,9 @@ out/
 ### VS Code ###
 .vscode/
 
+### Local tools ###
+.omc/
+
 ### Spring Boot ###
 *.jar
 *.war
@@ -50,3 +53,9 @@ Thumbs.db
 ### Logs ###
 *.log
 logs/
+
+### OMC ###
+.omc/
+
+
+docs/
