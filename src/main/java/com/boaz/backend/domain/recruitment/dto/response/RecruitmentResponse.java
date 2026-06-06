@@ -56,13 +56,13 @@ public class RecruitmentResponse {
         }
     }
 
-    private RecruitmentResponse(Recruitment recruitment) {
+    private RecruitmentResponse(Recruitment recruitment, LocalDateTime now) {
         this.recruitmentId = recruitment.getId();
         this.term = recruitment.getTerm();
         this.startDate = recruitment.getStartDate();
         this.endDate = recruitment.getEndDate();
         this.brochureUrl = recruitment.getBrochureUrl();
-        this.isActive = recruitment.isActive();
+        this.isActive = recruitment.isActive(now);
         try {
             this.schedule = objectMapper.readTree(recruitment.getSchedule());
         } catch (Exception e) {
@@ -74,7 +74,7 @@ public class RecruitmentResponse {
         return new RecruitmentResponse(recruitment, isActive);
     }
 
-    public static RecruitmentResponse from(Recruitment recruitment) {
-        return new RecruitmentResponse(recruitment);
+    public static RecruitmentResponse from(Recruitment recruitment, LocalDateTime now) {
+        return new RecruitmentResponse(recruitment, now);
     }
 }

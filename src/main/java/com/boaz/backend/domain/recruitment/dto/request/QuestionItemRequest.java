@@ -27,6 +27,9 @@ public class QuestionItemRequest {
     @Schema(description = "질문 내용", example = "자기소개와 BOAZ에 지원한 동기를 서술해주세요.")
     private String content;
 
+    @Schema(description = "질문 보조 설명 (선택)", example = "면접은 대면으로 진행될 예정입니다.", nullable = true)
+    private String description;
+
     @Schema(description = "답변 최대 글자 수 (type=TEXT일 때 필수)", example = "500", nullable = true)
     private Integer limitLength;
 

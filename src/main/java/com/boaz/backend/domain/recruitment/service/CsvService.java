@@ -105,9 +105,21 @@ public class CsvService {
             try {
                 JsonNode node = objectMapper.readTree(answer.getAnswerJson());
                 StringBuilder sb = new StringBuilder();
-                node.fields().forEachRemaining(entry ->
-                        sb.append(entry.getKey()).append(": ").append(entry.getValue().asText()).append("\n")
-                );
+                node.fields().forEachRemaining(entry -> {
+                    sb.append(entry.getKey()).append(": ");
+                    JsonNode val = entry.getValue();
+                    if (val.isArray()) {
+                        StringBuilder elems = new StringBuilder();
+                        val.forEach(elem -> {
+                            if (elems.length() > 0) elems.append(", ");
+                            elems.append(elem.asText());
+                        });
+                        sb.append(elems);
+                    } else {
+                        sb.append(val.asText());
+                    }
+                    sb.append("\n");
+                });
                 return sb.toString().trim();
             } catch (Exception e) {
                 return answer.getAnswerJson();

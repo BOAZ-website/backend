@@ -30,6 +30,9 @@ public class QuestionResponse {
     @Schema(description = "질문 내용", example = "자신을 소개해주세요.")
     private final String content;
 
+    @Schema(description = "질문 보조 설명", nullable = true)
+    private final String description;
+
     @Schema(description = "글자 수 제한 (TEXT 유형인 경우)", example = "500", nullable = true)
     private final Integer limitLength;
 
@@ -60,6 +63,7 @@ public class QuestionResponse {
         this.category = question.getCategory().name();
         this.type = question.getType().name();
         this.content = content;
+        this.description = question.getDescription();
         this.orderNum = question.getOrderNum();
         this.isRequired = question.getIsRequired();
 
