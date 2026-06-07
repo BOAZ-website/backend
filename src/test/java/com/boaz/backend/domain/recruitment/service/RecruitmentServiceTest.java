@@ -84,6 +84,14 @@ class RecruitmentServiceTest {
         return r;
     }
 
+    private Recruitment createUpcomingRecruitment() {
+        Recruitment r = Recruitment.create(28,
+                LocalDateTime.now().plusDays(14), LocalDateTime.now().plusDays(30),
+                "[]", null);
+        ReflectionTestUtils.setField(r, "id", 3L);
+        return r;
+    }
+
     private User createUser(Long id) {
         User u = User.builder()
                 .provider("kakao").providerId("test-" + id)
@@ -197,7 +205,7 @@ class RecruitmentServiceTest {
         @DisplayName("TC-001 모집 기간 중 → isActive:true, term 반환")
         void active() {
             Recruitment r = createActiveRecruitment();
-            when(recruitmentRepository.findActiveRecruitment(any())).thenReturn(Optional.of(r));
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.of(r));
 
             RecruitmentStatusResponse res = recruitmentService.getRecruitmentStatus();
 
@@ -206,9 +214,9 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 모집 기간 외 공고만 있을 때 → isActive:false")
+        @DisplayName("TC-002 마감된 공고만 존재 (endDate 경과) → isActive:false, term:null")
         void expiredRecruitment() {
-            when(recruitmentRepository.findActiveRecruitment(any())).thenReturn(Optional.empty());
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.empty());
 
             RecruitmentStatusResponse res = recruitmentService.getRecruitmentStatus();
 
@@ -219,7 +227,7 @@ class RecruitmentServiceTest {
         @Test
         @DisplayName("TC-003 공고 데이터 없음 → isActive:false (예외 없음)")
         void noData() {
-            when(recruitmentRepository.findActiveRecruitment(any())).thenReturn(Optional.empty());
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.empty());
 
             RecruitmentStatusResponse res = recruitmentService.getRecruitmentStatus();
 
@@ -229,10 +237,13 @@ class RecruitmentServiceTest {
         @Test
         @DisplayName("TC-004 start_date 정각 → isActive:true")
         void startDateBoundary() {
-            LocalDateTime now = LocalDateTime.now();
-            Recruitment r = Recruitment.create(27, now, now.plusDays(7), "[]", null);
+            LocalDateTime fixedNow = LocalDateTime.of(2026, 7, 1, 10, 0, 0);
+            Clock fixed = Clock.fixed(fixedNow.atZone(ZoneId.of("Asia/Seoul")).toInstant(), ZoneId.of("Asia/Seoul"));
+            ReflectionTestUtils.setField(recruitmentService, "clock", fixed);
+
+            Recruitment r = Recruitment.create(27, fixedNow, fixedNow.plusDays(7), "[]", null);
             ReflectionTestUtils.setField(r, "id", 1L);
-            when(recruitmentRepository.findActiveRecruitment(any())).thenReturn(Optional.of(r));
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.of(r));
 
             assertThat(recruitmentService.getRecruitmentStatus().getIsActive()).isTrue();
         }
@@ -240,9 +251,21 @@ class RecruitmentServiceTest {
         @Test
         @DisplayName("TC-005 end_date 1초 초과 → isActive:false")
         void endDatePast() {
-            when(recruitmentRepository.findActiveRecruitment(any())).thenReturn(Optional.empty());
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.empty());
 
             assertThat(recruitmentService.getRecruitmentStatus().getIsActive()).isFalse();
+        }
+
+        @Test
+        @DisplayName("TC-006 예정 공고 존재 (start_date 미래) → isActive:false, term 반환")
+        void upcomingRecruitment() {
+            Recruitment r = createUpcomingRecruitment();
+            when(recruitmentRepository.findCurrentOrUpcoming(any())).thenReturn(Optional.of(r));
+
+            RecruitmentStatusResponse res = recruitmentService.getRecruitmentStatus();
+
+            assertThat(res.getIsActive()).isFalse();
+            assertThat(res.getTerm()).isEqualTo(28);
         }
     }
 
@@ -285,6 +308,21 @@ class RecruitmentServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("TC-004 예정 공고 조회 → isActive:false + 날짜/일정 필드 반환 (null 아님)")
+        void upcomingRecruitment() {
+            Recruitment r = createUpcomingRecruitment();
+            when(recruitmentRepository.findByTerm(28)).thenReturn(Optional.of(r));
+
+            RecruitmentResponse res = recruitmentService.getRecruitment(28);
+
+            assertThat(res.getIsActive()).isFalse();
+            assertThat(res.getTerm()).isEqualTo(28);
+            assertThat(res.getStartDate()).isNotNull();
+            assertThat(res.getEndDate()).isNotNull();
+            assertThat(res.getSchedule()).isNotNull();
         }
     }
 
