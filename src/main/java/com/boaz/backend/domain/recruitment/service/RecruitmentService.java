@@ -143,7 +143,7 @@ public class RecruitmentService {
         return questions.stream()
             .map(question -> {
                 String content = question.getContent() != null
-                        ? question.getContent().replace("{Track}", track.name())
+                        ? question.getContent().replace("{부문}", track.getDisplayName())
                         : null;
                 return QuestionResponse.from(question, content);
             })
