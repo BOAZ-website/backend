@@ -4,8 +4,17 @@ import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 
 public enum Track {
-    // 전부문, 분석, 시각화, 엔지니어링
-    ALL, ANALYSIS, VISUALIZATION, ENGINEERING;
+    ALL("전부문"), ANALYSIS("분석"), VISUALIZATION("시각화"), ENGINEERING("엔지니어링");
+
+    private final String displayName;
+
+    Track(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public String getDisplayName() {
+        return displayName;
+    }
 
     public void validateNotAll() {
         if (this == ALL) {

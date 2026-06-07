@@ -429,7 +429,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             assertThat(result).hasSize(2);
             assertThat(result).extracting(QuestionResponse::getOrderNum).containsExactly(1, 2);
             assertThat(result).noneMatch(q -> q.getCategory().equals("VISUALIZATION"));
-            assertThat(result.get(1).getContent()).contains("ENGINEERING");
+            assertThat(result.get(1).getContent()).contains("엔지니어링");
         }
 
         @Test
