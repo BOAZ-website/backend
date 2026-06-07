@@ -92,11 +92,9 @@ public class RecruitmentService {
 
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
-        Optional<Recruitment> activeRecruitment = recruitmentRepository
-                .findActiveRecruitment(now());
-
-        return activeRecruitment
-                .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
+        LocalDateTime now = now();
+        return recruitmentRepository.findCurrentOrUpcoming(now)
+                .map(r -> RecruitmentStatusResponse.of(r.isActive(now), r.getTerm()))
                 .orElse(RecruitmentStatusResponse.of(false, null));
     }
 
@@ -113,9 +111,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        boolean isActive = recruitment.isActive(now());
-
-        return RecruitmentResponse.from(recruitment, isActive);
+        return RecruitmentResponse.from(recruitment, now());
     }
 
     // 지원서 질문 조회하기
