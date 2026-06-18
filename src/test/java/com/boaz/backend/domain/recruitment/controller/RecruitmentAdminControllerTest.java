@@ -556,7 +556,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 item의 order_num 0 → 400 INVALID_INPUT_VALUE (@Valid cascade @Positive)")
+        @DisplayName("TC-009b item의 order_num 0 → 400 INVALID_INPUT_VALUE (@Valid cascade @Positive)")
         void itemOrderNumNotPositive() throws Exception {
             Map<String, Object> item = new HashMap<>();
             item.put("label", "공통1");

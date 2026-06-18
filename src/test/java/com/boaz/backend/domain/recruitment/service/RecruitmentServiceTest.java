@@ -2065,7 +2065,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 TABLE인데 metadata 누락 → MISSING_PARAMETER")
+        @DisplayName("TC-007b TABLE인데 metadata 누락 → MISSING_PARAMETER")
         void tableMissingMetadata() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
