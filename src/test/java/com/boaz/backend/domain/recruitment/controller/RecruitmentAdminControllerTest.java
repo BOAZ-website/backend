@@ -556,6 +556,29 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
+        @DisplayName("EX-002 item의 order_num 0 → 400 INVALID_INPUT_VALUE (@Valid cascade @Positive)")
+        void itemOrderNumNotPositive() throws Exception {
+            Map<String, Object> item = new HashMap<>();
+            item.put("label", "공통1");
+            item.put("category", "COMMON");
+            item.put("type", "TEXT");
+            item.put("content", "질문");
+            item.put("limit_length", 500);
+            item.put("order_num", 0); // @Positive 위반
+            item.put("is_required", true);
+            Map<String, Object> body = new HashMap<>();
+            body.put("recruitment_id", 1);
+            body.put("questions", List.of(item));
+
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
         @DisplayName("EX-005 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.createQuestions(any()))

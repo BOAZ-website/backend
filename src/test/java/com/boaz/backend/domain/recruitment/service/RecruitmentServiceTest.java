@@ -1737,6 +1737,21 @@ class RecruitmentServiceTest {
                     .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
             verify(recruitmentRepository, never()).save(any());
         }
+
+        @Test
+        @DisplayName("TC-004b end_date < start_date → INVALID_INPUT_VALUE")
+        void endBeforeStart() {
+            LocalDateTime start = LocalDateTime.now().plusDays(15);
+            LocalDateTime end = LocalDateTime.now().plusDays(1); // end < start
+            RecruitmentCreateRequest req = buildCreateRecruitmentReq(28, start, end, null);
+            when(recruitmentRepository.existsByTerm(28)).thenReturn(false);
+
+            assertThatThrownBy(() -> recruitmentService.createRecruitment(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
+            verify(recruitmentRepository, never()).save(any());
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -1788,6 +1803,21 @@ class RecruitmentServiceTest {
             recruitmentService.updateRecruitment(1L, req);
 
             assertThat(r.getBrochureUrl()).isNull();
+        }
+
+        @Test
+        @DisplayName("TC-003b brochure_url 미전송(undefined) → 기존 값 유지")
+        void brochureUndefinedKept() {
+            Recruitment r = createActiveRecruitment(); // brochure 존재
+            String original = r.getBrochureUrl();
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            RecruitmentUpdateRequest req = new RecruitmentUpdateRequest();
+            ReflectionTestUtils.setField(req, "startDate", LocalDateTime.now().minusDays(2));
+            // brochureUrl 은 JsonNullable.undefined() 기본값 → 전송 안 함
+
+            recruitmentService.updateRecruitment(1L, req);
+
+            assertThat(r.getBrochureUrl()).isEqualTo(original);
         }
 
         @Test
@@ -2033,6 +2063,22 @@ class RecruitmentServiceTest {
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.MISSING_PARAMETER);
         }
+
+        @Test
+        @DisplayName("TC-008 TABLE인데 metadata 누락 → MISSING_PARAMETER")
+        void tableMissingMetadata() {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            QuestionsCreateRequest req = buildQuestionsCreateReq(1L,
+                    buildQuestionItem("T1", ApplicationQuestion.Category.ENGINEERING,
+                            ApplicationQuestion.Type.TABLE, null, null, 1));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.MISSING_PARAMETER);
+            verify(applicationQuestionRepository, never()).save(any());
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -2224,6 +2270,22 @@ class RecruitmentServiceTest {
             recruitmentService.updateQuestion(1L, req);
 
             assertThat(q.getMetadata()).isNull();
+        }
+
+        @Test
+        @DisplayName("TC-007b metadata 미전송(undefined) → 기존 값 유지")
+        void metadataUndefinedKept() {
+            Recruitment r = createActiveRecruitment();
+            ApplicationQuestion q = createTableQuestion(1L, r, ApplicationQuestion.Category.ENGINEERING, 1, true);
+            String original = q.getMetadata();
+            when(applicationQuestionRepository.findById(1L)).thenReturn(Optional.of(q));
+            QuestionUpdateRequest req = new QuestionUpdateRequest();
+            ReflectionTestUtils.setField(req, "content", "내용만 수정");
+            // metadata, limitLength, description 모두 JsonNullable.undefined() 기본값 → 미전송
+
+            recruitmentService.updateQuestion(1L, req);
+
+            assertThat(q.getMetadata()).isEqualTo(original);
         }
     }
 

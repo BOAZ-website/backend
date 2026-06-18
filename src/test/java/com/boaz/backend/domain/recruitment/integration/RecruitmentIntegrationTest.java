@@ -860,6 +860,31 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
+        @DisplayName("REC-ADMIN-006 TC-011 두 번째 항목 충돌 시 앞 항목 포함 전체 미저장 (원자성)")
+        void createPartialFailureRollsBackAll() {
+            Recruitment r = saveActiveRecruitment(27);
+            questionRepository.save(ApplicationQuestion.create(
+                    r, "EXIST", Category.COMMON, Type.TEXT, "기존", null, 500, null, 1, true));
+            em.flush();
+            em.clear();
+
+            // item1(NEW1)은 유효하지만, item2(EXIST)가 DB label 과 충돌 → 전체 실패해야 함
+            QuestionsCreateRequest req = buildQuestionsReq(r.getId(),
+                    buildItem("NEW1", Category.COMMON, Type.TEXT, 500, null, 2),
+                    buildItem("EXIST", Category.ENGINEERING, Type.TEXT, 500, null, 1));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.DUPLICATE_QUESTION_LABEL);
+            em.flush();
+            em.clear();
+
+            // 기존 EXIST 1건만 남고 NEW1 은 저장되지 않아야 함
+            List<ApplicationQuestion> saved = questionRepository.findByRecruitmentIdOrderByOrderNumAsc(r.getId());
+            assertThat(saved).extracting(ApplicationQuestion::getLabel).containsExactly("EXIST");
+        }
+
+        @Test
         @DisplayName("REC-ADMIN-007 order_num 오름차순 반환 (is_active 무관)")
         void getAdminQuestionsOrder() {
             Recruitment r = saveClosedRecruitment(26); // 마감 공고
