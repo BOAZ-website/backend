@@ -39,4 +39,20 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
             @Param("userId") Long userId,
             @Param("status") Applicant.ApplicantStatus status
     );
+
+    // 지원자 대시보드용: 공고 내 전체 지원자 (DRAFT 포함, user JOIN FETCH로 N+1 방지)
+    // - MySQL은 DESC 정렬 시 NULL을 뒤로 보내므로 DRAFT(submittedAt null)가 목록 끝에 위치
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.user " +
+           "WHERE a.recruitment.id = :recruitmentId " +
+           "ORDER BY a.submittedAt DESC")
+    List<Applicant> findByRecruitmentIdWithUser(@Param("recruitmentId") Long recruitmentId);
+
+    // 평가 대시보드용: 공고 내 status 지원자 (SUBMITTED, user JOIN FETCH)
+    @Query("SELECT a FROM Applicant a JOIN FETCH a.user " +
+           "WHERE a.recruitment.id = :recruitmentId AND a.status = :status " +
+           "ORDER BY a.submittedAt DESC")
+    List<Applicant> findByRecruitmentIdAndStatusWithUser(
+            @Param("recruitmentId") Long recruitmentId,
+            @Param("status") Applicant.ApplicantStatus status
+    );
 }

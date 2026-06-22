@@ -33,6 +33,19 @@ import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
 import com.boaz.backend.domain.recruitment.repository.SubscriptionRepository;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.domain.user.repository.UserRepository;
+import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.admin.repository.AdminRepository;
+import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
+import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
+import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
+import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantSummaryResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.FinalDecisionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluatorsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.EvaluatorEvaluationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -57,12 +70,14 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,6 +89,8 @@ public class RecruitmentService {
     private final ApplicationQuestionRepository applicationQuestionRepository;
     private final ApplicantRepository applicantRepository;
     private final ApplicantAnswerRepository applicantAnswerRepository;
+    private final ApplicantEvalRepository applicantEvalRepository;
+    private final AdminRepository adminRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
@@ -944,5 +961,145 @@ public class RecruitmentService {
     @Transactional
     public void deleteAllSubscriptions() {
         subscriptionRepository.deleteAll();
+    }
+
+    // ===== 지원서 평가 (어드민 전용) =====
+
+    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함
+    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId) {
+        validateRecruitmentExists(recruitmentId);
+
+        return applicantRepository.findByRecruitmentIdWithUser(recruitmentId).stream()
+                .map(a -> ApplicantSummaryResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor())))
+                .toList();
+    }
+
+    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계
+    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId) {
+        validateRecruitmentExists(recruitmentId);
+
+        List<Applicant> applicants = applicantRepository
+                .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED);
+
+        // applicant_id 단위로 평가 집계 (PENDING 미포함, 총점 = null 아닌 score 합)
+        Map<Long, List<ApplicantEval>> evalsByApplicant = applicantEvalRepository.findByRecruitmentId(recruitmentId)
+                .stream()
+                .collect(Collectors.groupingBy(e -> e.getApplicant().getId()));
+
+        List<ApplicantEvaluationResponse> result = new ArrayList<>();
+        for (Applicant a : applicants) {
+            List<ApplicantEval> evals = evalsByApplicant.getOrDefault(a.getId(), Collections.emptyList());
+            int pass = 0, hold = 0, fail = 0, total = 0;
+            for (ApplicantEval e : evals) {
+                switch (e.getDecision()) {
+                    case PASS -> pass++;
+                    case HOLD -> hold++;
+                    case FAIL -> fail++;
+                    default -> { /* PENDING: 개수 제외 */ }
+                }
+                if (e.getScore() != null) total += e.getScore();
+            }
+            result.add(ApplicantEvaluationResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor()), pass, hold, fail, total));
+        }
+        return result;
+    }
+
+    // 최종 평가 수정 — 대표진(SUPER && 대표진)만
+    @Transactional
+    public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request,
+                                                     Admin currentAdmin) {
+        validateRepresentative(currentAdmin);
+
+        Applicant applicant = findSubmittedApplicantForEval(applicantId);
+        applicant.updateFinalDecision(request.getFinalDecision());
+        return FinalDecisionResponse.from(applicant);
+    }
+
+    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함)
+    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId) {
+        Applicant applicant = findApplicantForEval(applicantId);
+
+        // 해당 부문 평가자 풀 (미평가자도 포함하기 위함)
+        List<Admin> evaluators = adminRepository
+                .findByTrackAndDeletedAtIsNullOrderByNameAsc(applicant.getTrack());
+
+        Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
+                .stream()
+                .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        List<EvaluatorEvaluationResponse> evaluations = evaluators.stream()
+                .map(admin -> EvaluatorEvaluationResponse.of(admin, evalByAdmin.get(admin.getId())))
+                .toList();
+
+        return ApplicantEvaluatorsResponse.of(applicantId, evaluations);
+    }
+
+    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null)
+    public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin) {
+        findApplicantForEval(applicantId);
+
+        return applicantEvalRepository.findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
+                .map(MyEvaluationResponse::from)
+                .orElse(null);
+    }
+
+    // 개인 평가 저장 (upsert) — 본인 부문 지원자만
+    @Transactional
+    public MyEvaluationResponse saveMyEvaluation(Long applicantId, EvaluationSaveRequest request,
+                                                 Admin currentAdmin) {
+        Applicant applicant = findSubmittedApplicantForEval(applicantId);
+
+        // 본인 부문 지원자만 평가 가능
+        if (currentAdmin.getTrack() != applicant.getTrack()) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+
+        // 원자적 upsert (없으면 INSERT, 있으면 UPDATE) — 동시 최초 저장 시에도 멱등
+        applicantEvalRepository.upsert(
+                applicantId, currentAdmin.getId(),
+                request.getDecision().name(), request.getScore(), request.getMemo());
+
+        ApplicantEval eval = applicantEvalRepository
+                .findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+        return MyEvaluationResponse.from(eval);
+    }
+
+    private void validateRecruitmentExists(Long recruitmentId) {
+        if (!recruitmentRepository.existsById(recruitmentId)) {
+            throw new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+    }
+
+    private Applicant findApplicantForEval(Long applicantId) {
+        return applicantRepository.findById(applicantId)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+    }
+
+    private Applicant findSubmittedApplicantForEval(Long applicantId) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        if (applicant.getStatus() != Applicant.ApplicantStatus.SUBMITTED) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        return applicant;
+    }
+
+    // 대표진 = role SUPER && teamName 대표진
+    private void validateRepresentative(Admin admin) {
+        if (admin.getRole() != Admin.Role.SUPER || admin.getTeamName() != Admin.TeamName.대표진) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    // minor_double_major(JSON 문자열) → List<String>
+    private List<String> parseMinorDoubleMajor(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

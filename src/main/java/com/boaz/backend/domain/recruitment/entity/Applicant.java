@@ -86,6 +86,10 @@ public class Applicant extends BaseEntity {
 
     private Boolean gradSchoolPlan;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EvaluationDecision finalDecision = EvaluationDecision.PENDING;
+
     private LocalDateTime submittedAt;
 
     @Builder
@@ -133,6 +137,11 @@ public class Applicant extends BaseEntity {
     public void markSubmitted() {
         this.status = ApplicantStatus.SUBMITTED;
         this.submittedAt = LocalDateTime.now();
+    }
+
+    // 대표진이 최종 평가 변경
+    public void updateFinalDecision(EvaluationDecision finalDecision) {
+        this.finalDecision = finalDecision;
     }
 
     // 제출 시 전체 덮어쓰기 + SUBMITTED 전환
