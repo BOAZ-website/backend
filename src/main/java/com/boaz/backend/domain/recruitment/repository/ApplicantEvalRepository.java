@@ -17,7 +17,7 @@ public interface ApplicantEvalRepository extends JpaRepository<ApplicantEval, Lo
 
     // 개인 평가 저장 — 원자적 upsert. find→insert TOCTOU(최초 저장 동시 호출 시 유니크 위반) 회피.
     // created_at/updated_at은 Auditing 우회이므로 직접 세팅, decision은 ENUM STRING(name) 바인딩.
-    @Modifying(clearAutomatically = true)
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "INSERT INTO applicant_eval " +
             "(applicant_id, admin_id, decision, score, memo, created_at, updated_at) " +
             "VALUES (:applicantId, :adminId, :decision, :score, :memo, NOW(6), NOW(6)) " +
