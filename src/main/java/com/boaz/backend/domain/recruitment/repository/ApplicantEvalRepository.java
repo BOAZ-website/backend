@@ -19,16 +19,18 @@ public interface ApplicantEvalRepository extends JpaRepository<ApplicantEval, Lo
     // created_at/updated_at은 Auditing 우회이므로 직접 세팅, decision은 ENUM STRING(name) 바인딩.
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "INSERT INTO applicant_eval " +
-            "(applicant_id, admin_id, decision, score, memo, created_at, updated_at) " +
-            "VALUES (:applicantId, :adminId, :decision, :score, :memo, NOW(6), NOW(6)) " +
+            "(applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at) " +
+            "VALUES (:applicantId, :adminId, :decision, :score, :memo, :interviewQuestion, NOW(6), NOW(6)) " +
             "ON DUPLICATE KEY UPDATE " +
-            "decision = VALUES(decision), score = VALUES(score), memo = VALUES(memo), updated_at = NOW(6)",
+            "decision = VALUES(decision), score = VALUES(score), memo = VALUES(memo), " +
+            "interview_question = VALUES(interview_question), updated_at = NOW(6)",
             nativeQuery = true)
     void upsert(@Param("applicantId") Long applicantId,
                 @Param("adminId") Long adminId,
                 @Param("decision") String decision,
                 @Param("score") Integer score,
-                @Param("memo") String memo);
+                @Param("memo") String memo,
+                @Param("interviewQuestion") String interviewQuestion);
 
     // 지원서별 평가 조회 — 한 지원자의 모든 평가 (평가자 정보 JOIN FETCH)
     @Query("SELECT e FROM ApplicantEval e JOIN FETCH e.admin " +

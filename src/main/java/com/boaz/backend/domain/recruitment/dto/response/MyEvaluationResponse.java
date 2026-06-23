@@ -18,13 +18,17 @@ public class MyEvaluationResponse {
 
     private final String memo;
 
+    private final String interviewQuestion;
+
     private MyEvaluationResponse(Long evaluationId, Long applicantId,
-                                EvaluationDecision decision, Integer score, String memo) {
+                                EvaluationDecision decision, Integer score, String memo,
+                                String interviewQuestion) {
         this.evaluationId = evaluationId;
         this.applicantId = applicantId;
         this.decision = decision;
         this.score = score;
         this.memo = memo;
+        this.interviewQuestion = interviewQuestion;
     }
 
     public static MyEvaluationResponse from(ApplicantEval eval) {
@@ -33,7 +37,8 @@ public class MyEvaluationResponse {
                 eval.getApplicant().getId(),
                 eval.getDecision(),
                 eval.getScore(),
-                eval.getMemo()
+                eval.getMemo(),
+                eval.getInterviewQuestion()
         );
     }
 }

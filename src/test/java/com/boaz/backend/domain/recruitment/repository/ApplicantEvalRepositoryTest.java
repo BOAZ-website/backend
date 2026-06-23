@@ -69,13 +69,14 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
             Admin admin = persistAdmin("ev1", Track.ENGINEERING);
             em.clear();
 
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 9, "good");
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 9, "good", "면접 질문1?");
 
             Optional<ApplicantEval> found = applicantEvalRepository.findByApplicantIdAndAdminId(a.getId(), admin.getId());
             assertThat(found).isPresent();
             assertThat(found.get().getDecision()).isEqualTo(EvaluationDecision.PASS);
             assertThat(found.get().getScore()).isEqualTo(9);
             assertThat(found.get().getMemo()).isEqualTo("good");
+            assertThat(found.get().getInterviewQuestion()).isEqualTo("면접 질문1?");
         }
 
         @Test
@@ -86,14 +87,15 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
             Admin admin = persistAdmin("ev1", Track.ENGINEERING);
             em.clear();
 
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "HOLD", 5, "maybe");
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 10, "changed");
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "HOLD", 5, "maybe", "질문 v1");
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 10, "changed", "질문 v2");
 
             assertThat(applicantEvalRepository.count()).isEqualTo(1);
             ApplicantEval e = applicantEvalRepository.findByApplicantIdAndAdminId(a.getId(), admin.getId()).orElseThrow();
             assertThat(e.getDecision()).isEqualTo(EvaluationDecision.PASS);
             assertThat(e.getScore()).isEqualTo(10);
             assertThat(e.getMemo()).isEqualTo("changed");
+            assertThat(e.getInterviewQuestion()).isEqualTo("질문 v2");
         }
 
         @Test
@@ -104,8 +106,8 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
             Admin admin = persistAdmin("ev1", Track.ENGINEERING);
             em.clear();
 
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 8, "x");
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 8, "x");
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 8, "x", "q");
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PASS", 8, "x", "q");
 
             assertThat(applicantEvalRepository.count()).isEqualTo(1);
         }
@@ -118,11 +120,12 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
             Admin admin = persistAdmin("ev1", Track.ENGINEERING);
             em.clear();
 
-            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PENDING", null, null);
+            applicantEvalRepository.upsert(a.getId(), admin.getId(), "PENDING", null, null, null);
 
             ApplicantEval e = applicantEvalRepository.findByApplicantIdAndAdminId(a.getId(), admin.getId()).orElseThrow();
             assertThat(e.getScore()).isNull();
             assertThat(e.getMemo()).isNull();
+            assertThat(e.getInterviewQuestion()).isNull();
             assertThat(e.getDecision()).isEqualTo(EvaluationDecision.PENDING);
         }
     }

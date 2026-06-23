@@ -69,6 +69,16 @@ public class ApplicantEvaluationAdminController {
                 recruitmentService.getApplicantEvaluators(applicantId, userDetails.getAdmin())));
     }
 
+    @Operation(summary = "지원서별 면접 질문 조회",
+            description = "한 지원자에 대한 해당 부문 평가자별 면접 질문을 반환합니다. 미작성 평가자는 null로 포함. 대표진 외에는 본인 부문 지원자만 조회.")
+    @GetMapping("/applicants/{applicantId}/interview-questions")
+    public ResponseEntity<ApiResponse<ApplicantInterviewQuestionsResponse>> getApplicantInterviewQuestions(
+            @PathVariable Long applicantId,
+            @AuthenticationPrincipal AdminUserDetails userDetails) {
+        return ResponseEntity.ok(ApiResponse.ok(
+                recruitmentService.getApplicantInterviewQuestions(applicantId, userDetails.getAdmin())));
+    }
+
     @Operation(summary = "지원서 답변 조회",
             description = "한 지원자가 작성한 문항별 답변을 문항 정보(질문 내용·유형)와 함께 문항 순서대로 반환합니다. (평가 사이드바 지원서 본문) 대표진 외에는 본인 부문 지원자만 조회.")
     @GetMapping("/applicants/{applicantId}/answers")

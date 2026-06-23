@@ -21,4 +21,7 @@ public class EvaluationSaveRequest {
     private Integer score;
 
     private String memo;
+
+    // 면접 질문 (null 허용)
+    private String interviewQuestion;
 }

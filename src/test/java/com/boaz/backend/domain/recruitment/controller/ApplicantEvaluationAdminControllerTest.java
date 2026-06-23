@@ -3,6 +3,7 @@ package com.boaz.backend.domain.recruitment.controller;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluatorsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantInterviewQuestionsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
@@ -209,6 +210,37 @@ class ApplicantEvaluationAdminControllerTest {
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/evaluations").with(authentication(adminAuth())))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error_code").value("APPLICATION_NOT_FOUND"));
+        }
+    }
+
+    // ── 지원서별 면접 질문 조회 ──────────────────────────
+    @Nested
+    @DisplayName("GET /applicants/{applicantId}/interview-questions")
+    class GetApplicantInterviewQuestions {
+
+        @Test
+        @DisplayName("[정상] 200 + applicant_id + interview_questions 배열")
+        void success() throws Exception {
+            given(recruitmentService.getApplicantInterviewQuestions(eq(101L), any()))
+                    .willReturn(ApplicantInterviewQuestionsResponse.of(101L, List.of()));
+
+            mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/interview-questions")
+                            .with(authentication(adminAuth())))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.applicant_id").value(101))
+                    .andExpect(jsonPath("$.data.interview_questions").isArray());
+        }
+
+        @Test
+        @DisplayName("[예외] 존재하지 않는 지원자 → 404")
+        void notFound() throws Exception {
+            given(recruitmentService.getApplicantInterviewQuestions(eq(999L), any()))
+                    .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+
+            mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/interview-questions")
+                            .with(authentication(adminAuth())))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error_code").value("APPLICATION_NOT_FOUND"));
         }

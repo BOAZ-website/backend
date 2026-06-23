@@ -45,6 +45,8 @@ import com.boaz.backend.domain.recruitment.dto.response.ApplicantSummaryResponse
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.FinalDecisionResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluatorsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantInterviewQuestionsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.EvaluatorInterviewQuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.response.EvaluatorEvaluationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.global.common.enums.Track;
@@ -1042,6 +1044,26 @@ public class RecruitmentService {
         return ApplicantEvaluatorsResponse.of(applicantId, evaluations);
     }
 
+    // 지원서별 면접 질문 조회 — 한 지원자의 부문 평가자별 면접 질문 (미작성자 null 포함), 비대표진은 본인 track만
+    public ApplicantInterviewQuestionsResponse getApplicantInterviewQuestions(Long applicantId, Admin currentAdmin) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+
+        // 해당 부문 평가자 풀 (미작성자도 포함하기 위함)
+        List<Admin> evaluators = adminRepository
+                .findByTrackAndDeletedAtIsNullOrderByNameAsc(applicant.getTrack());
+
+        Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
+                .stream()
+                .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        List<EvaluatorInterviewQuestionResponse> interviewQuestions = evaluators.stream()
+                .map(admin -> EvaluatorInterviewQuestionResponse.of(admin, evalByAdmin.get(admin.getId())))
+                .toList();
+
+        return ApplicantInterviewQuestionsResponse.of(applicantId, interviewQuestions);
+    }
+
     // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null), 비대표진은 본인 track만
     public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin) {
         Applicant applicant = findApplicantForEval(applicantId);
@@ -1064,7 +1086,8 @@ public class RecruitmentService {
         // 원자적 upsert (없으면 INSERT, 있으면 UPDATE) — 동시 최초 저장 시에도 멱등
         applicantEvalRepository.upsert(
                 applicantId, currentAdmin.getId(),
-                request.getDecision().name(), request.getScore(), request.getMemo());
+                request.getDecision().name(), request.getScore(), request.getMemo(),
+                request.getInterviewQuestion());
 
         ApplicantEval eval = applicantEvalRepository
                 .findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())

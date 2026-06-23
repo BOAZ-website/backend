@@ -430,29 +430,34 @@ class RecruitmentEvaluationServiceTest {
     @DisplayName("saveMyEvaluation")
     class SaveMyEvaluation {
 
-        private EvaluationSaveRequest req(EvaluationDecision d, Integer score, String memo) {
+        private EvaluationSaveRequest req(EvaluationDecision d, Integer score, String memo, String interviewQuestion) {
             EvaluationSaveRequest r = new EvaluationSaveRequest();
             ReflectionTestUtils.setField(r, "decision", d);
             ReflectionTestUtils.setField(r, "score", score);
             ReflectionTestUtils.setField(r, "memo", memo);
+            ReflectionTestUtils.setField(r, "interviewQuestion", interviewQuestion);
             return r;
         }
 
         @Test
-        @DisplayName("[정상] 본인 부문 지원자 → upsert 호출 후 저장값 반환")
+        @DisplayName("[정상] 본인 부문 지원자 → upsert(면접질문 포함) 호출 후 저장값 반환")
         void success() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
+            ApplicantEval saved = ApplicantEval.builder()
+                    .applicant(a).admin(me).decision(EvaluationDecision.PASS).score(10).memo("great")
+                    .interviewQuestion("면접 질문?").build();
+            ReflectionTestUtils.setField(saved, "id", 9L);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
-            given(applicantEvalRepository.findByApplicantIdAndAdminId(101L, 1L))
-                    .willReturn(Optional.of(eval(9L, a, me, EvaluationDecision.PASS, 10, "great")));
+            given(applicantEvalRepository.findByApplicantIdAndAdminId(101L, 1L)).willReturn(Optional.of(saved));
 
             MyEvaluationResponse res = recruitmentService.saveMyEvaluation(
-                    101L, req(EvaluationDecision.PASS, 10, "great"), me);
+                    101L, req(EvaluationDecision.PASS, 10, "great", "면접 질문?"), me);
 
-            verify(applicantEvalRepository).upsert(101L, 1L, "PASS", 10, "great");
+            verify(applicantEvalRepository).upsert(101L, 1L, "PASS", 10, "great", "면접 질문?");
             assertThat(res.getDecision()).isEqualTo(EvaluationDecision.PASS);
             assertThat(res.getScore()).isEqualTo(10);
+            assertThat(res.getInterviewQuestion()).isEqualTo("면접 질문?");
         }
 
         @Test
@@ -465,9 +470,9 @@ class RecruitmentEvaluationServiceTest {
                     .willReturn(Optional.of(eval(9L, a, rep, EvaluationDecision.PASS, 8, "ok")));
 
             MyEvaluationResponse res = recruitmentService.saveMyEvaluation(
-                    101L, req(EvaluationDecision.PASS, 8, "ok"), rep);
+                    101L, req(EvaluationDecision.PASS, 8, "ok", null), rep);
 
-            verify(applicantEvalRepository).upsert(101L, 1L, "PASS", 8, "ok");
+            verify(applicantEvalRepository).upsert(101L, 1L, "PASS", 8, "ok", null);
             assertThat(res.getDecision()).isEqualTo(EvaluationDecision.PASS);
         }
 
@@ -479,10 +484,10 @@ class RecruitmentEvaluationServiceTest {
                     .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING)));
 
             assertThatThrownBy(() -> recruitmentService.saveMyEvaluation(
-                    101L, req(EvaluationDecision.PASS, 10, "x"), me))
+                    101L, req(EvaluationDecision.PASS, 10, "x", "q"), me))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
-            verify(applicantEvalRepository, never()).upsert(any(), any(), any(), any(), any());
+            verify(applicantEvalRepository, never()).upsert(any(), any(), any(), any(), any(), any());
         }
 
         @Test
@@ -493,7 +498,7 @@ class RecruitmentEvaluationServiceTest {
                     .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.DRAFT, null)));
 
             assertThatThrownBy(() -> recruitmentService.saveMyEvaluation(
-                    101L, req(EvaluationDecision.PASS, 10, "x"), me))
+                    101L, req(EvaluationDecision.PASS, 10, "x", "q"), me))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
         }
@@ -505,7 +510,7 @@ class RecruitmentEvaluationServiceTest {
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
 
             assertThatThrownBy(() -> recruitmentService.saveMyEvaluation(
-                    999L, req(EvaluationDecision.PASS, 10, "x"), me))
+                    999L, req(EvaluationDecision.PASS, 10, "x", "q"), me))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
         }
@@ -598,6 +603,85 @@ class RecruitmentEvaluationServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
             verify(applicantAnswerRepository, never()).findByApplicantIdWithQuestion(any());
+        }
+    }
+
+    // ── 8. 지원서별 면접 질문 조회 ────────────────────────
+
+    @Nested
+    @DisplayName("getApplicantInterviewQuestions")
+    class GetApplicantInterviewQuestions {
+
+        private ApplicantEval evalWithQuestion(Applicant a, Admin admin, String interviewQuestion) {
+            return ApplicantEval.builder()
+                    .applicant(a).admin(admin).decision(EvaluationDecision.PASS).score(8).memo("m")
+                    .interviewQuestion(interviewQuestion).build();
+        }
+
+        @Test
+        @DisplayName("[정상] 부문 평가자 전체 반환, 미작성자는 interview_question null")
+        void mergeWithUnwritten() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
+            Admin ev1 = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            Admin ev2 = admin(2L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ENGINEERING))
+                    .willReturn(List.of(ev1, ev2));
+            given(applicantEvalRepository.findByApplicantIdWithAdmin(101L))
+                    .willReturn(List.of(evalWithQuestion(a, ev1, "프로젝트 X에 대해 설명해주세요")));
+
+            ApplicantInterviewQuestionsResponse res = recruitmentService.getApplicantInterviewQuestions(101L, viewer);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getInterviewQuestions()).hasSize(2);
+            EvaluatorInterviewQuestionResponse q1 = res.getInterviewQuestions().get(0);
+            assertThat(q1.getAdminId()).isEqualTo(1L);
+            assertThat(q1.getTrack()).isEqualTo(Track.ENGINEERING);
+            assertThat(q1.getInterviewQuestion()).isEqualTo("프로젝트 X에 대해 설명해주세요");
+            EvaluatorInterviewQuestionResponse q2 = res.getInterviewQuestions().get(1); // 미작성
+            assertThat(q2.getInterviewQuestion()).isNull();
+        }
+
+        @Test
+        @DisplayName("[권한] 비대표진이 타 부문 지원자 조회 → ACCESS_DENIED")
+        void crossTrackDenied() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+
+            assertThatThrownBy(() -> recruitmentService.getApplicantInterviewQuestions(101L, viewer))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+            verify(adminRepository, never()).findByTrackAndDeletedAtIsNullOrderByNameAsc(any());
+        }
+
+        @Test
+        @DisplayName("[정상] 대표진은 타 부문 지원자도 조회 가능")
+        void representativeCrossTrack() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
+                    .willReturn(List.of());
+            given(applicantEvalRepository.findByApplicantIdWithAdmin(101L)).willReturn(List.of());
+
+            ApplicantInterviewQuestionsResponse res = recruitmentService.getApplicantInterviewQuestions(101L, rep);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getInterviewQuestions()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        void notFound() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(applicantRepository.findById(999L)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> recruitmentService.getApplicantInterviewQuestions(999L, viewer))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
         }
     }
 }

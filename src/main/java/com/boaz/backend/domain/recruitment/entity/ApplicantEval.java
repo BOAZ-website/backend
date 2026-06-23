@@ -43,20 +43,26 @@ public class ApplicantEval extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String memo;
 
+    // 면접 질문: 평가자가 면접 때 물어볼 질문 (memo와 동일 성격, nullable)
+    @Column(columnDefinition = "TEXT")
+    private String interviewQuestion;
+
     @Builder
     public ApplicantEval(Applicant applicant, Admin admin, EvaluationDecision decision,
-                         Integer score, String memo) {
+                         Integer score, String memo, String interviewQuestion) {
         this.applicant = applicant;
         this.admin = admin;
         this.decision = decision != null ? decision : EvaluationDecision.PENDING;
         this.score = score;
         this.memo = memo;
+        this.interviewQuestion = interviewQuestion;
     }
 
     // 저장(upsert) 시 보낸 값으로 전체 반영
-    public void update(EvaluationDecision decision, Integer score, String memo) {
+    public void update(EvaluationDecision decision, Integer score, String memo, String interviewQuestion) {
         this.decision = decision != null ? decision : EvaluationDecision.PENDING;
         this.score = score;
         this.memo = memo;
+        this.interviewQuestion = interviewQuestion;
     }
 }

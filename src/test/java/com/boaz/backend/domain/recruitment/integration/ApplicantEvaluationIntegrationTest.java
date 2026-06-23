@@ -6,6 +6,7 @@ import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
 import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantInterviewQuestionsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
@@ -74,10 +75,15 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     private EvaluationSaveRequest saveReq(EvaluationDecision d, Integer score, String memo) {
+        return saveReq(d, score, memo, null);
+    }
+
+    private EvaluationSaveRequest saveReq(EvaluationDecision d, Integer score, String memo, String interviewQuestion) {
         EvaluationSaveRequest r = new EvaluationSaveRequest();
         ReflectionTestUtils.setField(r, "decision", d);
         ReflectionTestUtils.setField(r, "score", score);
         ReflectionTestUtils.setField(r, "memo", memo);
+        ReflectionTestUtils.setField(r, "interviewQuestion", interviewQuestion);
         return r;
     }
 
@@ -165,6 +171,37 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
                 a.getId(), decisionReq(EvaluationDecision.PASS), superOps))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+    }
+
+    @Test
+    @DisplayName("면접 질문 저장(개인 평가) → 지원서별 면접 질문 조회 & 개인 평가 조회에 반영")
+    void interviewQuestionSaveAndQuery() {
+        Recruitment r = saveRecruitment(27);
+        Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+        Admin ev1 = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+        Admin ev2 = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+
+        recruitmentService.saveMyEvaluation(a.getId(),
+                saveReq(EvaluationDecision.PASS, 9, "good", "콜드스타트 문제를 어떻게 해결했나요?"), ev1);
+
+        // 개인 평가 조회에 면접 질문 포함 (라운드트립)
+        MyEvaluationResponse mine = recruitmentService.getMyEvaluation(a.getId(), ev1);
+        assertThat(mine.getInterviewQuestion()).isEqualTo("콜드스타트 문제를 어떻게 해결했나요?");
+
+        // 지원서별 면접 질문 조회 — 평가자 풀 전체, 미작성자(ev2)는 null
+        ApplicantInterviewQuestionsResponse res =
+                recruitmentService.getApplicantInterviewQuestions(a.getId(), ev1);
+        assertThat(res.getApplicantId()).isEqualTo(a.getId());
+        assertThat(res.getInterviewQuestions()).hasSize(2);
+        assertThat(res.getInterviewQuestions())
+                .anySatisfy(q -> {
+                    assertThat(q.getAdminId()).isEqualTo(ev1.getId());
+                    assertThat(q.getInterviewQuestion()).isEqualTo("콜드스타트 문제를 어떻게 해결했나요?");
+                })
+                .anySatisfy(q -> {
+                    assertThat(q.getAdminId()).isEqualTo(ev2.getId());
+                    assertThat(q.getInterviewQuestion()).isNull();
+                });
     }
 
     @Test
