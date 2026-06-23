@@ -237,20 +237,26 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("비대표진이 타 부문 지원서 답변 조회 → ACCESS_DENIED / 대표진은 가능")
+    @DisplayName("타 부문 지원서 답변 조회 — 비대표진/현재 대표진은 차단, 차기 대표진만 가능")
     void getApplicantAnswersTrackAccess() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
         Admin analysisAdmin = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
-        Admin rep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+        Admin currentRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+        Admin nextRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
 
         // 비대표진(분석)이 엔지 지원자 답변 조회 → 차단
         assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), analysisAdmin))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
 
-        // 대표진은 타 부문이어도 조회 가능
-        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(eng.getId(), rep);
+        // 현재 대표진(분석)도 엔지 지원자 답변 조회 → 차단 (본인 track만)
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), currentRep))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+
+        // 차기 대표진은 타 부문이어도 조회 가능
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(eng.getId(), nextRep);
         assertThat(res.getApplicantId()).isEqualTo(eng.getId());
         assertThat(res.getAnswers()).isEmpty();
     }

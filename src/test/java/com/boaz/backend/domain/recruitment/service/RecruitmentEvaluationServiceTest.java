@@ -113,9 +113,9 @@ class RecruitmentEvaluationServiceTest {
     class GetApplicants {
 
         @Test
-        @DisplayName("[정상] 대표진은 전 부문(DRAFT 포함) 반환")
-        void representativeSeesAll() {
-            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+        @DisplayName("[정상] 차기 대표진은 전 부문(DRAFT 포함) 반환")
+        void nextRepresentativeSeesAll() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
             given(applicantRepository.findByRecruitmentIdWithUser(1L)).willReturn(List.of(
                     applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING),
@@ -125,6 +125,23 @@ class RecruitmentEvaluationServiceTest {
             List<ApplicantSummaryResponse> result = recruitmentService.getApplicants(1L, rep);
 
             assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("[권한] 현재 대표진은 본인 track만 반환 (전 부문 아님)")
+        void currentRepresentativeOwnTrackOnly() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            given(recruitmentRepository.existsById(1L)).willReturn(true);
+            given(applicantRepository.findByRecruitmentIdWithUser(1L)).willReturn(List.of(
+                    applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING),
+                    applicant(102L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS),
+                    applicant(103L, Applicant.ApplicantStatus.DRAFT, null)
+            ));
+
+            List<ApplicantSummaryResponse> result = recruitmentService.getApplicants(1L, rep);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getTrack()).isEqualTo(Track.ENGINEERING);
         }
 
         @Test
@@ -187,7 +204,7 @@ class RecruitmentEvaluationServiceTest {
                     eval(4L, a2, ev1, EvaluationDecision.FAIL, 3, "no")
             ));
 
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             List<ApplicantEvaluationResponse> result = recruitmentService.getApplicantEvaluations(1L, rep);
 
             ApplicantEvaluationResponse r1 = result.get(0);
@@ -213,7 +230,7 @@ class RecruitmentEvaluationServiceTest {
                     .willReturn(List.of(a1));
             given(applicantEvalRepository.findByRecruitmentId(1L)).willReturn(List.of());
 
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
             ApplicantEvaluationResponse r = recruitmentService.getApplicantEvaluations(1L, rep).get(0);
             assertThat(r.getPassCount()).isZero();
             assertThat(r.getHoldCount()).isZero();
@@ -235,8 +252,8 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 대표진(SUPER+대표진)이 최종 평가 변경")
-        void success() {
+        @DisplayName("[정상] 현재 대표진이 본인 track 지원자 최종 평가 변경")
+        void currentRepresentativeOwnTrack() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
@@ -245,6 +262,31 @@ class RecruitmentEvaluationServiceTest {
 
             assertThat(res.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
             assertThat(a.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
+        }
+
+        @Test
+        @DisplayName("[정상] 차기 대표진은 타 부문 지원자도 최종 평가 변경")
+        void nextRepresentativeCrossTrack() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+
+            FinalDecisionResponse res = recruitmentService.updateFinalDecision(101L, req(EvaluationDecision.PASS), rep);
+
+            assertThat(res.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
+        }
+
+        @Test
+        @DisplayName("[권한] 현재 대표진이 타 부문 지원자 최종 평가 → ACCESS_DENIED")
+        void currentRepresentativeCrossTrackDenied() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+
+            assertThatThrownBy(() -> recruitmentService.updateFinalDecision(101L, req(EvaluationDecision.PASS), rep))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+            assertThat(a.getFinalDecision()).isEqualTo(EvaluationDecision.PENDING); // 변경 안 됨
         }
 
         @Test
@@ -326,23 +368,23 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[권한] 비대표진이 타 부문 지원자 조회 → ACCESS_DENIED")
-        void crossTrackDenied() {
+        @DisplayName("[권한] 현재 대표진도 타 부문 지원자 조회 → ACCESS_DENIED (본인 track만)")
+        void currentRepresentativeCrossTrackDenied() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
-            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            Admin rep = admin(5L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
 
-            assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(101L, viewer))
+            assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(101L, rep))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findByTrackAndDeletedAtIsNullOrderByNameAsc(any());
         }
 
         @Test
-        @DisplayName("[정상] 대표진은 타 부문 지원자도 조회 가능")
-        void representativeCrossTrack() {
+        @DisplayName("[정상] 차기 대표진은 타 부문 지원자도 조회 가능")
+        void nextRepresentativeCrossTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
             given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
                     .willReturn(List.of());
@@ -461,9 +503,9 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 대표진은 타 부문 지원자도 평가 가능")
-        void representativeCrossTrack() {
-            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+        @DisplayName("[정상] 차기 대표진은 타 부문 지원자도 평가 가능")
+        void nextRepresentativeCrossTrack() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
             given(applicantEvalRepository.findByApplicantIdAndAdminId(101L, 1L))
@@ -580,9 +622,9 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 대표진은 타 부문 지원서 답변도 조회 가능")
-        void representativeCrossTrack() {
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+        @DisplayName("[정상] 차기 대표진은 타 부문 지원서 답변도 조회 가능")
+        void nextRepresentativeCrossTrack() {
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
                     .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
             given(applicantAnswerRepository.findByApplicantIdWithQuestion(101L)).willReturn(List.of());
@@ -658,10 +700,10 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 대표진은 타 부문 지원자도 조회 가능")
-        void representativeCrossTrack() {
+        @DisplayName("[정상] 차기 대표진은 타 부문 지원자도 조회 가능")
+        void nextRepresentativeCrossTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
             given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
                     .willReturn(List.of());

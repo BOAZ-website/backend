@@ -971,10 +971,10 @@ public class RecruitmentService {
     // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함, 비대표진은 본인 track만
     public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId, Admin currentAdmin) {
         validateRecruitmentExists(recruitmentId);
-        boolean rep = isRepresentative(currentAdmin);
+        boolean allTrack = isAllTrackViewer(currentAdmin);
 
         return applicantRepository.findByRecruitmentIdWithUser(recruitmentId).stream()
-                .filter(a -> rep || a.getTrack() == currentAdmin.getTrack())
+                .filter(a -> allTrack || a.getTrack() == currentAdmin.getTrack())
                 .map(a -> ApplicantSummaryResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor())))
                 .toList();
     }
@@ -982,12 +982,12 @@ public class RecruitmentService {
     // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계, 비대표진은 본인 track만
     public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId, Admin currentAdmin) {
         validateRecruitmentExists(recruitmentId);
-        boolean rep = isRepresentative(currentAdmin);
+        boolean allTrack = isAllTrackViewer(currentAdmin);
 
         List<Applicant> applicants = applicantRepository
                 .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED)
                 .stream()
-                .filter(a -> rep || a.getTrack() == currentAdmin.getTrack())
+                .filter(a -> allTrack || a.getTrack() == currentAdmin.getTrack())
                 .toList();
 
         // applicant_id 단위로 평가 집계 (PENDING 미포함, 총점 = null 아닌 score 합)
@@ -1013,13 +1013,14 @@ public class RecruitmentService {
         return result;
     }
 
-    // 최종 평가 수정 — 대표진(SUPER && 대표진)만
+    // 최종 평가 수정 — 현재/차기 대표진만. 단 현재 대표진은 본인 track 지원자만(차기 대표진은 전 부문)
     @Transactional
     public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request,
                                                      Admin currentAdmin) {
-        validateRepresentative(currentAdmin);
+        validateFinalDecisionAuthority(currentAdmin);
 
         Applicant applicant = findSubmittedApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
         applicant.updateFinalDecision(request.getFinalDecision());
         return FinalDecisionResponse.from(applicant);
     }
@@ -1159,20 +1160,24 @@ public class RecruitmentService {
         return applicant;
     }
 
-    // 대표진 = role SUPER && teamName 대표진
-    private boolean isRepresentative(Admin admin) {
-        return admin.getRole() == Admin.Role.SUPER && admin.getTeamName() == Admin.TeamName.대표진;
+    // 전 부문 조회/평가 권한 = 차기 대표진 (role SUPER && teamName 차기대표진)
+    private boolean isAllTrackViewer(Admin admin) {
+        return admin.getRole() == Admin.Role.SUPER && admin.getTeamName() == Admin.TeamName.차기대표진;
     }
 
-    private void validateRepresentative(Admin admin) {
-        if (!isRepresentative(admin)) {
+    // 최종 평가 수정 권한 = 현재 대표진 또는 차기 대표진 (role SUPER 필수)
+    private void validateFinalDecisionAuthority(Admin admin) {
+        boolean authorized = admin.getRole() == Admin.Role.SUPER
+                && (admin.getTeamName() == Admin.TeamName.대표진
+                    || admin.getTeamName() == Admin.TeamName.차기대표진);
+        if (!authorized) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
 
-    // 부문 접근 검증 — 대표진은 전 부문 허용, 그 외는 본인 track 지원자만
+    // 부문 접근 검증 — 차기 대표진은 전 부문 허용, 그 외(현재 대표진 포함)는 본인 track 지원자만
     private void validateTrackAccess(Admin admin, Applicant applicant) {
-        if (!isRepresentative(admin) && admin.getTrack() != applicant.getTrack()) {
+        if (!isAllTrackViewer(admin) && admin.getTrack() != applicant.getTrack()) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
