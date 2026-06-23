@@ -40,6 +40,7 @@ import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
 import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
 import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantSummaryResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.FinalDecisionResponse;
@@ -1063,6 +1064,50 @@ public class RecruitmentService {
                 .findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
                 .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
         return MyEvaluationResponse.from(eval);
+    }
+
+    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로)
+    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        String trackName = applicant.getTrack() != null ? applicant.getTrack().getDisplayName() : null;
+
+        List<ApplicantAnswersResponse.AnswerDetailResponse> answers =
+                applicantAnswerRepository.findByApplicantIdWithQuestion(applicantId).stream()
+                        .map(aa -> {
+                            ApplicationQuestion q = aa.getQuestion();
+                            String content = q.getContent();
+                            // 문항 내용의 {Track} 치환 (지원자가 보던 표기와 일치)
+                            if (content != null && trackName != null) {
+                                content = content.replace("{Track}", trackName);
+                            }
+                            return ApplicantAnswersResponse.AnswerDetailResponse.builder()
+                                    .questionId(q.getId())
+                                    .label(q.getLabel())
+                                    .category(q.getCategory())
+                                    .type(q.getType())
+                                    .content(content)
+                                    .orderNum(q.getOrderNum())
+                                    .answer(toAnswerNode(aa))
+                                    .build();
+                        })
+                        .toList();
+
+        return ApplicantAnswersResponse.of(applicantId, answers);
+    }
+
+    // 저장된 답변(answer_text/answer_json)을 JsonNode로 변환 (TEXT → 문자열, TABLE → 객체)
+    private JsonNode toAnswerNode(ApplicantAnswer aa) {
+        if (aa.getAnswerText() != null) {
+            return TextNode.valueOf(aa.getAnswerText());
+        }
+        if (aa.getAnswerJson() != null) {
+            try {
+                return objectMapper.readTree(aa.getAnswerJson());
+            } catch (Exception e) {
+                return objectMapper.nullNode();
+            }
+        }
+        return objectMapper.nullNode();
     }
 
     private void validateRecruitmentExists(Long recruitmentId) {

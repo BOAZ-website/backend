@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.recruitment.controller;
 
 import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluatorsResponse;
 import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
@@ -210,6 +211,43 @@ class ApplicantEvaluationAdminControllerTest {
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/evaluations").with(authentication(adminAuth())))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error_code").value("APPLICATION_NOT_FOUND"));
+        }
+    }
+
+    // ── 지원서 답변 조회 ──────────────────────────────────
+    @Nested
+    @DisplayName("GET /applicants/{applicantId}/answers")
+    class GetApplicantAnswers {
+
+        @Test
+        @DisplayName("[정상] 200 + applicant_id + answers 배열")
+        void success() throws Exception {
+            given(recruitmentService.getApplicantAnswers(101L))
+                    .willReturn(ApplicantAnswersResponse.of(101L, List.of()));
+
+            mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/answers").with(authentication(adminAuth())))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.data.applicant_id").value(101))
+                    .andExpect(jsonPath("$.data.answers").isArray());
+        }
+
+        @Test
+        @DisplayName("[예외] 존재하지 않는 지원자 → 404")
+        void notFound() throws Exception {
+            given(recruitmentService.getApplicantAnswers(999L))
+                    .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+
+            mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/answers").with(authentication(adminAuth())))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error_code").value("APPLICATION_NOT_FOUND"));
+        }
+
+        @Test
+        @DisplayName("[Security] 미인증 → 401")
+        void unauthorized() throws Exception {
+            mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/answers"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error_code").value("TOKEN_NOT_FOUND"));
         }
     }
 

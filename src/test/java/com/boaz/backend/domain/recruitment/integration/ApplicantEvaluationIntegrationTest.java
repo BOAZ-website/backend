@@ -4,12 +4,17 @@ import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
 import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
+import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
+import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
+import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.domain.user.entity.User;
@@ -42,6 +47,8 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     @Autowired RecruitmentService recruitmentService;
     @Autowired RecruitmentRepository recruitmentRepository;
     @Autowired ApplicantRepository applicantRepository;
+    @Autowired ApplicationQuestionRepository applicationQuestionRepository;
+    @Autowired ApplicantAnswerRepository applicantAnswerRepository;
     @Autowired AdminRepository adminRepository;
     @Autowired UserRepository userRepository;
 
@@ -158,5 +165,44 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
                 a.getId(), decisionReq(EvaluationDecision.PASS), superOps))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+    }
+
+    @Test
+    @DisplayName("지원서 답변 조회 — 문항 순서대로 답변 + 문항 정보 반환 (TEXT/TABLE)")
+    void getApplicantAnswers() {
+        Recruitment r = saveRecruitment(27);
+        Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+        ApplicationQuestion q1 = applicationQuestionRepository.save(ApplicationQuestion.create(
+                r, "공통1", ApplicationQuestion.Category.COMMON, ApplicationQuestion.Type.TEXT,
+                "지원 동기", null, 500, null, 1, true));
+        ApplicationQuestion q2 = applicationQuestionRepository.save(ApplicationQuestion.create(
+                r, "엔지1", ApplicationQuestion.Category.ENGINEERING, ApplicationQuestion.Type.TABLE,
+                "기술 스택", null, null, "{\"multiple\":false}", 2, true));
+        // 일부러 순서를 뒤섞어 저장
+        applicantAnswerRepository.save(ApplicantAnswer.builder()
+                .applicant(a).question(q2).answerJson("{\"Python\":\"능숙\"}").build());
+        applicantAnswerRepository.save(ApplicantAnswer.builder()
+                .applicant(a).question(q1).answerText("저는 ~~").build());
+
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(a.getId());
+
+        assertThat(res.getApplicantId()).isEqualTo(a.getId());
+        assertThat(res.getAnswers()).hasSize(2);
+        // orderNum 1(q1) 먼저
+        ApplicantAnswersResponse.AnswerDetailResponse first = res.getAnswers().get(0);
+        assertThat(first.getQuestionId()).isEqualTo(q1.getId());
+        assertThat(first.getType()).isEqualTo(ApplicationQuestion.Type.TEXT);
+        assertThat(first.getAnswer().asText()).isEqualTo("저는 ~~");
+        ApplicantAnswersResponse.AnswerDetailResponse second = res.getAnswers().get(1);
+        assertThat(second.getType()).isEqualTo(ApplicationQuestion.Type.TABLE);
+        assertThat(second.getAnswer().get("Python").asText()).isEqualTo("능숙");
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 지원자 답변 조회 → APPLICATION_NOT_FOUND")
+    void getApplicantAnswersNotFound() {
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
     }
 }

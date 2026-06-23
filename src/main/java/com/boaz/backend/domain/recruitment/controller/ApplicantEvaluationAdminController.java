@@ -63,6 +63,14 @@ public class ApplicantEvaluationAdminController {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getApplicantEvaluators(applicantId)));
     }
 
+    @Operation(summary = "지원서 답변 조회",
+            description = "한 지원자가 작성한 문항별 답변을 문항 정보(질문 내용·유형)와 함께 문항 순서대로 반환합니다. (평가 사이드바 지원서 본문)")
+    @GetMapping("/applicants/{applicantId}/answers")
+    public ResponseEntity<ApiResponse<ApplicantAnswersResponse>> getApplicantAnswers(
+            @PathVariable Long applicantId) {
+        return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getApplicantAnswers(applicantId)));
+    }
+
     @Operation(summary = "개인 평가 조회",
             description = "로그인한 평가자 본인이 이 지원자에 매긴 평가를 반환합니다. 미평가 시 data=null.")
     @GetMapping("/applicants/{applicantId}/evaluations/me")

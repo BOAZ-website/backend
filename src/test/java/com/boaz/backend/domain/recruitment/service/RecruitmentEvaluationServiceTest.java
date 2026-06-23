@@ -6,9 +6,12 @@ import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
 import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.response.*;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
+import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
+import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
@@ -46,6 +49,7 @@ class RecruitmentEvaluationServiceTest {
 
     @Mock RecruitmentRepository recruitmentRepository;
     @Mock ApplicantRepository applicantRepository;
+    @Mock ApplicantAnswerRepository applicantAnswerRepository;
     @Mock ApplicantEvalRepository applicantEvalRepository;
     @Mock AdminRepository adminRepository;
     @Spy  ObjectMapper objectMapper;
@@ -86,6 +90,20 @@ class RecruitmentEvaluationServiceTest {
                 .build();
         ReflectionTestUtils.setField(e, "id", id);
         return e;
+    }
+
+    private ApplicationQuestion question(Long id, Integer orderNum, ApplicationQuestion.Type type, String content) {
+        ApplicationQuestion q = ApplicationQuestion.create(
+                mock(Recruitment.class), "label" + id, ApplicationQuestion.Category.COMMON,
+                type, content, null, 500, null, orderNum, true);
+        ReflectionTestUtils.setField(q, "id", id);
+        return q;
+    }
+
+    private ApplicantAnswer answer(Applicant applicant, ApplicationQuestion question, String text, String json) {
+        return ApplicantAnswer.builder()
+                .applicant(applicant).question(question).answerText(text).answerJson(json)
+                .build();
     }
 
     // ── 1. 전체 지원서 조회 (지원자 대시보드) ──────────────
@@ -411,6 +429,66 @@ class RecruitmentEvaluationServiceTest {
                     999L, req(EvaluationDecision.PASS, 10, "x"), me))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
+        }
+    }
+
+    // ── 7. 지원서 답변 조회 ───────────────────────────────
+
+    @Nested
+    @DisplayName("getApplicantAnswers")
+    class GetApplicantAnswers {
+
+        @Test
+        @DisplayName("[정상] 문항 정보 + 답변(TEXT/TABLE) 순서대로 반환, {Track} 치환")
+        void success() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
+            ApplicationQuestion q1 = question(1L, 1, ApplicationQuestion.Type.TEXT, "{Track} 지원 동기를 작성해주세요.");
+            ApplicationQuestion q2 = question(2L, 2, ApplicationQuestion.Type.TABLE, "기술 스택 숙련도");
+
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+            given(applicantAnswerRepository.findByApplicantIdWithQuestion(101L)).willReturn(List.of(
+                    answer(a, q1, "저는 ~~", null),
+                    answer(a, q2, null, "{\"Python\":\"능숙\"}")
+            ));
+
+            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getAnswers()).hasSize(2);
+
+            ApplicantAnswersResponse.AnswerDetailResponse first = res.getAnswers().get(0);
+            assertThat(first.getQuestionId()).isEqualTo(1L);
+            assertThat(first.getType()).isEqualTo(ApplicationQuestion.Type.TEXT);
+            assertThat(first.getContent()).isEqualTo("엔지니어링 지원 동기를 작성해주세요."); // {Track} 치환
+            assertThat(first.getAnswer().asText()).isEqualTo("저는 ~~");
+
+            ApplicantAnswersResponse.AnswerDetailResponse second = res.getAnswers().get(1);
+            assertThat(second.getType()).isEqualTo(ApplicationQuestion.Type.TABLE);
+            assertThat(second.getAnswer().get("Python").asText()).isEqualTo("능숙");
+        }
+
+        @Test
+        @DisplayName("[정상] 답변 없음 → 빈 배열")
+        void empty() {
+            given(applicantRepository.findById(101L))
+                    .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
+            given(applicantAnswerRepository.findByApplicantIdWithQuestion(101L)).willReturn(List.of());
+
+            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getAnswers()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        void notFound() {
+            given(applicantRepository.findById(999L)).willReturn(Optional.empty());
+
+            assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999L))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
+            verify(applicantAnswerRepository, never()).findByApplicantIdWithQuestion(any());
         }
     }
 }
