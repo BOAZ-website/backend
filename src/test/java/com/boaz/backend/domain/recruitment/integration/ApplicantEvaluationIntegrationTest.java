@@ -175,6 +175,29 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
+    @DisplayName("평가자 풀 = 해당 부문 + 차기 대표진 — 엔지 지원자 풀에 타 부문 차기대표진 포함")
+    void evaluatorPoolIncludesNextRepresentative() {
+        Recruitment r = saveRecruitment(27);
+        Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+        Admin engEvaluator = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+        Admin analysisNextRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
+        Admin analysisNormal = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ANALYSIS);
+
+        // 지원서별 평가 조회 (자기 부문이라 조회 가능한 엔지 평가자로 호출)
+        var res = recruitmentService.getApplicantEvaluators(eng.getId(), engEvaluator);
+
+        assertThat(res.getEvaluations()).extracting(e -> e.getAdminId())
+                .contains(engEvaluator.getId(), analysisNextRep.getId())   // 엔지 평가자 + 타 부문 차기대표진 포함
+                .doesNotContain(analysisNormal.getId());                   // 타 부문 일반 운영진은 제외
+
+        // 면접 질문 조회도 동일 풀
+        var iq = recruitmentService.getApplicantInterviewQuestions(eng.getId(), engEvaluator);
+        assertThat(iq.getInterviewQuestions()).extracting(q -> q.getAdminId())
+                .contains(engEvaluator.getId(), analysisNextRep.getId())
+                .doesNotContain(analysisNormal.getId());
+    }
+
+    @Test
     @DisplayName("면접 질문 저장(개인 평가) → 지원서별 면접 질문 조회 & 개인 평가 조회에 반영")
     void interviewQuestionSaveAndQuery() {
         Recruitment r = saveRecruitment(27);

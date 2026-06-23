@@ -351,7 +351,7 @@ class RecruitmentEvaluationServiceTest {
             Admin ev2 = admin(2L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
-            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ENGINEERING))
+            given(adminRepository.findEvaluatorPool(Track.ENGINEERING, Admin.Role.SUPER, Admin.TeamName.차기대표진))
                     .willReturn(List.of(ev1, ev2));
             given(applicantEvalRepository.findByApplicantIdWithAdmin(101L))
                     .willReturn(List.of(eval(1L, a, ev1, EvaluationDecision.PASS, 8, "ok")));
@@ -380,7 +380,7 @@ class RecruitmentEvaluationServiceTest {
             assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(101L, rep))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
-            verify(adminRepository, never()).findByTrackAndDeletedAtIsNullOrderByNameAsc(any());
+            verify(adminRepository, never()).findEvaluatorPool(any(), any(), any());
         }
 
         @Test
@@ -389,7 +389,7 @@ class RecruitmentEvaluationServiceTest {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
-            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
+            given(adminRepository.findEvaluatorPool(Track.ANALYSIS, Admin.Role.SUPER, Admin.TeamName.차기대표진))
                     .willReturn(List.of());
             given(applicantEvalRepository.findByApplicantIdWithAdmin(101L)).willReturn(List.of());
 
@@ -672,7 +672,7 @@ class RecruitmentEvaluationServiceTest {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
-            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ENGINEERING))
+            given(adminRepository.findEvaluatorPool(Track.ENGINEERING, Admin.Role.SUPER, Admin.TeamName.차기대표진))
                     .willReturn(List.of(ev1, ev2));
             given(applicantEvalRepository.findByApplicantIdWithAdmin(101L))
                     .willReturn(List.of(evalWithQuestion(a, ev1, "프로젝트 X에 대해 설명해주세요")));
@@ -699,7 +699,7 @@ class RecruitmentEvaluationServiceTest {
             assertThatThrownBy(() -> recruitmentService.getApplicantInterviewQuestions(101L, viewer))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
-            verify(adminRepository, never()).findByTrackAndDeletedAtIsNullOrderByNameAsc(any());
+            verify(adminRepository, never()).findEvaluatorPool(any(), any(), any());
         }
 
         @Test
@@ -708,7 +708,7 @@ class RecruitmentEvaluationServiceTest {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
-            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
+            given(adminRepository.findEvaluatorPool(Track.ANALYSIS, Admin.Role.SUPER, Admin.TeamName.차기대표진))
                     .willReturn(List.of());
             given(applicantEvalRepository.findByApplicantIdWithAdmin(101L)).willReturn(List.of());
 

@@ -1036,9 +1036,9 @@ public class RecruitmentService {
         Applicant applicant = findApplicantForEval(applicantId);
         validateTrackAccess(currentAdmin, applicant);
 
-        // 해당 부문 평가자 풀 (미평가자도 포함하기 위함)
-        List<Admin> evaluators = adminRepository
-                .findByTrackAndDeletedAtIsNullOrderByNameAsc(applicant.getTrack());
+        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미평가자도 포함.
+        List<Admin> evaluators = adminRepository.findEvaluatorPool(
+                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
 
         Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
                 .stream()
@@ -1056,9 +1056,9 @@ public class RecruitmentService {
         Applicant applicant = findApplicantForEval(applicantId);
         validateTrackAccess(currentAdmin, applicant);
 
-        // 해당 부문 평가자 풀 (미작성자도 포함하기 위함)
-        List<Admin> evaluators = adminRepository
-                .findByTrackAndDeletedAtIsNullOrderByNameAsc(applicant.getTrack());
+        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미작성자도 포함.
+        List<Admin> evaluators = adminRepository.findEvaluatorPool(
+                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
 
         Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
                 .stream()
