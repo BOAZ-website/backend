@@ -204,8 +204,8 @@ class RecruitmentEvaluationServiceTest {
                     eval(4L, a2, ev1, EvaluationDecision.FAIL, 3, "no")
             ));
 
-            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
-            List<ApplicantEvaluationResponse> result = recruitmentService.getApplicantEvaluations(1L, rep);
+            // 로그인 본인(ev1)으로 조회 → my_decision은 ev1의 결정
+            List<ApplicantEvaluationResponse> result = recruitmentService.getApplicantEvaluations(1L, ev1);
 
             ApplicantEvaluationResponse r1 = result.get(0);
             assertThat(r1.getPassCount()).isEqualTo(1);
@@ -213,11 +213,13 @@ class RecruitmentEvaluationServiceTest {
             assertThat(r1.getFailCount()).isEqualTo(0);
             assertThat(r1.getTotalScore()).isEqualTo(15);   // 9 + 6, null 제외
             assertThat(r1.getFinalDecision()).isEqualTo(EvaluationDecision.PENDING);
+            assertThat(r1.getMyDecision()).isEqualTo(EvaluationDecision.PASS);   // ev1의 a1 평가
 
             ApplicantEvaluationResponse r2 = result.get(1);
             assertThat(r2.getFailCount()).isEqualTo(1);
             assertThat(r2.getTotalScore()).isEqualTo(3);
             assertThat(r2.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
+            assertThat(r2.getMyDecision()).isEqualTo(EvaluationDecision.FAIL);   // ev1의 a2 평가
         }
 
         @Test
@@ -236,6 +238,7 @@ class RecruitmentEvaluationServiceTest {
             assertThat(r.getHoldCount()).isZero();
             assertThat(r.getFailCount()).isZero();
             assertThat(r.getTotalScore()).isZero();
+            assertThat(r.getMyDecision()).isNull();   // 본인 미평가 → null
         }
     }
 

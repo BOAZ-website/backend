@@ -999,6 +999,7 @@ public class RecruitmentService {
         for (Applicant a : applicants) {
             List<ApplicantEval> evals = evalsByApplicant.getOrDefault(a.getId(), Collections.emptyList());
             int pass = 0, hold = 0, fail = 0, total = 0;
+            EvaluationDecision myDecision = null;
             for (ApplicantEval e : evals) {
                 switch (e.getDecision()) {
                     case PASS -> pass++;
@@ -1007,8 +1008,13 @@ public class RecruitmentService {
                     default -> { /* PENDING: 개수 제외 */ }
                 }
                 if (e.getScore() != null) total += e.getScore();
+                // 로그인 본인의 평가 결정 (admin_id는 FK라 프록시 id 접근만으로 추가 쿼리 없음)
+                if (e.getAdmin().getId().equals(currentAdmin.getId())) {
+                    myDecision = e.getDecision();
+                }
             }
-            result.add(ApplicantEvaluationResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor()), pass, hold, fail, total));
+            result.add(ApplicantEvaluationResponse.of(
+                    a, parseMinorDoubleMajor(a.getMinorDoubleMajor()), pass, hold, fail, total, myDecision));
         }
         return result;
     }

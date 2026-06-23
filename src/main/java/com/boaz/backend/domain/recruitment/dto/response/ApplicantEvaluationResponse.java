@@ -56,8 +56,12 @@ public class ApplicantEvaluationResponse {
 
     private final EvaluationDecision finalDecision;
 
+    // 로그인한 평가자 본인의 개인 평가 결정 (미평가 시 null)
+    private final EvaluationDecision myDecision;
+
     public static ApplicantEvaluationResponse of(Applicant a, List<String> minorDoubleMajor,
-                                                 int passCount, int holdCount, int failCount, int totalScore) {
+                                                 int passCount, int holdCount, int failCount, int totalScore,
+                                                 EvaluationDecision myDecision) {
         return ApplicantEvaluationResponse.builder()
                 .id(a.getId())
                 .userId(a.getUser().getId())
@@ -79,6 +83,7 @@ public class ApplicantEvaluationResponse {
                 .failCount(failCount)
                 .totalScore(totalScore)
                 .finalDecision(a.getFinalDecision())
+                .myDecision(myDecision)
                 .build();
     }
 }

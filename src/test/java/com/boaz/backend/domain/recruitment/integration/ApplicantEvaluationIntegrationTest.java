@@ -111,6 +111,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         assertThat(row.getPassCount()).isEqualTo(1);
         assertThat(row.getHoldCount()).isEqualTo(1);
         assertThat(row.getTotalScore()).isEqualTo(14);
+        assertThat(row.getMyDecision()).isEqualTo(EvaluationDecision.PASS);   // 본인(ev1) 평가 = PASS
     }
 
     @Test
