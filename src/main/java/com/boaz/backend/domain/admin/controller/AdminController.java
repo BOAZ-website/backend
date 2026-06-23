@@ -5,6 +5,7 @@ import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
+import com.boaz.backend.domain.admin.dto.response.AdminMeResponse;
 import com.boaz.backend.domain.admin.service.AdminService;
 import com.boaz.backend.global.common.ApiResponse;
 import com.boaz.backend.global.security.AdminUserDetails;
@@ -53,6 +54,15 @@ public class AdminController {
             @AuthenticationPrincipal AdminUserDetails userDetails
     ) {
         List<AdminAccountResponse> response = adminService.getAccounts(userDetails.getAdmin());
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
+    @Operation(summary = "내 계정 정보 조회", description = "인증된 본인의 id, 소속, 이름을 반환.")
+    @GetMapping("/accounts/me")
+    public ResponseEntity<ApiResponse<AdminMeResponse>> getMe(
+            @AuthenticationPrincipal AdminUserDetails userDetails
+    ) {
+        AdminMeResponse response = adminService.getMe(userDetails.getAdmin());
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
