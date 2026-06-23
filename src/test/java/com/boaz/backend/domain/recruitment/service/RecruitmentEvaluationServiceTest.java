@@ -113,27 +113,44 @@ class RecruitmentEvaluationServiceTest {
     class GetApplicants {
 
         @Test
-        @DisplayName("[정상] 공고 내 전체 지원자(DRAFT 포함) 반환")
-        void success() {
+        @DisplayName("[정상] 대표진은 전 부문(DRAFT 포함) 반환")
+        void representativeSeesAll() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
             given(applicantRepository.findByRecruitmentIdWithUser(1L)).willReturn(List.of(
                     applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING),
-                    applicant(102L, Applicant.ApplicantStatus.DRAFT, null)
+                    applicant(102L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)
             ));
 
-            List<ApplicantSummaryResponse> result = recruitmentService.getApplicants(1L);
+            List<ApplicantSummaryResponse> result = recruitmentService.getApplicants(1L, rep);
 
             assertThat(result).hasSize(2);
-            assertThat(result.get(0).getStatus()).isEqualTo(Applicant.ApplicantStatus.SUBMITTED);
-            assertThat(result.get(1).getStatus()).isEqualTo(Applicant.ApplicantStatus.DRAFT);
+        }
+
+        @Test
+        @DisplayName("[권한] 비대표진은 본인 track만 반환")
+        void nonRepresentativeOwnTrackOnly() {
+            Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(recruitmentRepository.existsById(1L)).willReturn(true);
+            given(applicantRepository.findByRecruitmentIdWithUser(1L)).willReturn(List.of(
+                    applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING),
+                    applicant(102L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS),
+                    applicant(103L, Applicant.ApplicantStatus.DRAFT, null)
+            ));
+
+            List<ApplicantSummaryResponse> result = recruitmentService.getApplicants(1L, me);
+
+            assertThat(result).hasSize(1);
+            assertThat(result.get(0).getTrack()).isEqualTo(Track.ENGINEERING);
         }
 
         @Test
         @DisplayName("[예외] 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
         void recruitmentNotFound() {
+            Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(999L)).willReturn(false);
 
-            assertThatThrownBy(() -> recruitmentService.getApplicants(999L))
+            assertThatThrownBy(() -> recruitmentService.getApplicants(999L, me))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
             verify(applicantRepository, never()).findByRecruitmentIdWithUser(any());
@@ -170,7 +187,8 @@ class RecruitmentEvaluationServiceTest {
                     eval(4L, a2, ev1, EvaluationDecision.FAIL, 3, "no")
             ));
 
-            List<ApplicantEvaluationResponse> result = recruitmentService.getApplicantEvaluations(1L);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            List<ApplicantEvaluationResponse> result = recruitmentService.getApplicantEvaluations(1L, rep);
 
             ApplicantEvaluationResponse r1 = result.get(0);
             assertThat(r1.getPassCount()).isEqualTo(1);
@@ -195,7 +213,8 @@ class RecruitmentEvaluationServiceTest {
                     .willReturn(List.of(a1));
             given(applicantEvalRepository.findByRecruitmentId(1L)).willReturn(List.of());
 
-            ApplicantEvaluationResponse r = recruitmentService.getApplicantEvaluations(1L).get(0);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+            ApplicantEvaluationResponse r = recruitmentService.getApplicantEvaluations(1L, rep).get(0);
             assertThat(r.getPassCount()).isZero();
             assertThat(r.getHoldCount()).isZero();
             assertThat(r.getFailCount()).isZero();
@@ -292,7 +311,8 @@ class RecruitmentEvaluationServiceTest {
             given(applicantEvalRepository.findByApplicantIdWithAdmin(101L))
                     .willReturn(List.of(eval(1L, a, ev1, EvaluationDecision.PASS, 8, "ok")));
 
-            ApplicantEvaluatorsResponse res = recruitmentService.getApplicantEvaluators(101L);
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            ApplicantEvaluatorsResponse res = recruitmentService.getApplicantEvaluators(101L, viewer);
 
             assertThat(res.getApplicantId()).isEqualTo(101L);
             assertThat(res.getEvaluations()).hasSize(2);
@@ -306,11 +326,41 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
+        @DisplayName("[권한] 비대표진이 타 부문 지원자 조회 → ACCESS_DENIED")
+        void crossTrackDenied() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+
+            assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(101L, viewer))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+            verify(adminRepository, never()).findByTrackAndDeletedAtIsNullOrderByNameAsc(any());
+        }
+
+        @Test
+        @DisplayName("[정상] 대표진은 타 부문 지원자도 조회 가능")
+        void representativeCrossTrack() {
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+            given(adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ANALYSIS))
+                    .willReturn(List.of());
+            given(applicantEvalRepository.findByApplicantIdWithAdmin(101L)).willReturn(List.of());
+
+            ApplicantEvaluatorsResponse res = recruitmentService.getApplicantEvaluators(101L, rep);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getEvaluations()).isEmpty();
+        }
+
+        @Test
         @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(999L))
+            assertThatThrownBy(() -> recruitmentService.getApplicantEvaluators(999L, viewer))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
         }
@@ -347,6 +397,19 @@ class RecruitmentEvaluationServiceTest {
             given(applicantEvalRepository.findByApplicantIdAndAdminId(101L, 1L)).willReturn(Optional.empty());
 
             assertThat(recruitmentService.getMyEvaluation(101L, me)).isNull();
+        }
+
+        @Test
+        @DisplayName("[권한] 비대표진이 타 부문 지원자 개인 평가 조회 → ACCESS_DENIED")
+        void crossTrackDenied() {
+            Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(applicantRepository.findById(101L))
+                    .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
+
+            assertThatThrownBy(() -> recruitmentService.getMyEvaluation(101L, me))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+            verify(applicantEvalRepository, never()).findByApplicantIdAndAdminId(any(), any());
         }
 
         @Test
@@ -393,7 +456,23 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[권한] 타 부문 지원자 → ACCESS_DENIED, upsert 미호출")
+        @DisplayName("[정상] 대표진은 타 부문 지원자도 평가 가능")
+        void representativeCrossTrack() {
+            Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
+            given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
+            given(applicantEvalRepository.findByApplicantIdAndAdminId(101L, 1L))
+                    .willReturn(Optional.of(eval(9L, a, rep, EvaluationDecision.PASS, 8, "ok")));
+
+            MyEvaluationResponse res = recruitmentService.saveMyEvaluation(
+                    101L, req(EvaluationDecision.PASS, 8, "ok"), rep);
+
+            verify(applicantEvalRepository).upsert(101L, 1L, "PASS", 8, "ok");
+            assertThat(res.getDecision()).isEqualTo(EvaluationDecision.PASS);
+        }
+
+        @Test
+        @DisplayName("[권한] 비대표진이 타 부문 지원자 → ACCESS_DENIED, upsert 미호출")
         void trackMismatch() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             given(applicantRepository.findById(101L))
@@ -441,6 +520,7 @@ class RecruitmentEvaluationServiceTest {
         @Test
         @DisplayName("[정상] 문항 정보 + 답변(TEXT/TABLE) 순서대로 반환, {Track} 치환")
         void success() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
             ApplicationQuestion q1 = question(1L, 1, ApplicationQuestion.Type.TEXT, "{Track} 지원 동기를 작성해주세요.");
             ApplicationQuestion q2 = question(2L, 2, ApplicationQuestion.Type.TABLE, "기술 스택 숙련도");
@@ -451,7 +531,7 @@ class RecruitmentEvaluationServiceTest {
                     answer(a, q2, null, "{\"Python\":\"능숙\"}")
             ));
 
-            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L);
+            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L, viewer);
 
             assertThat(res.getApplicantId()).isEqualTo(101L);
             assertThat(res.getAnswers()).hasSize(2);
@@ -470,11 +550,39 @@ class RecruitmentEvaluationServiceTest {
         @Test
         @DisplayName("[정상] 답변 없음 → 빈 배열")
         void empty() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             given(applicantRepository.findById(101L))
                     .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
             given(applicantAnswerRepository.findByApplicantIdWithQuestion(101L)).willReturn(List.of());
 
-            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L);
+            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L, viewer);
+
+            assertThat(res.getApplicantId()).isEqualTo(101L);
+            assertThat(res.getAnswers()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("[권한] 비대표진이 타 부문 지원서 답변 조회 → ACCESS_DENIED")
+        void crossTrackDenied() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+            given(applicantRepository.findById(101L))
+                    .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
+
+            assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(101L, viewer))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+            verify(applicantAnswerRepository, never()).findByApplicantIdWithQuestion(any());
+        }
+
+        @Test
+        @DisplayName("[정상] 대표진은 타 부문 지원서 답변도 조회 가능")
+        void representativeCrossTrack() {
+            Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
+            given(applicantRepository.findById(101L))
+                    .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS)));
+            given(applicantAnswerRepository.findByApplicantIdWithQuestion(101L)).willReturn(List.of());
+
+            ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(101L, rep);
 
             assertThat(res.getApplicantId()).isEqualTo(101L);
             assertThat(res.getAnswers()).isEmpty();
@@ -483,9 +591,10 @@ class RecruitmentEvaluationServiceTest {
         @Test
         @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
+            Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
 
-            assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999L))
+            assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999L, viewer))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
             verify(applicantAnswerRepository, never()).findByApplicantIdWithQuestion(any());

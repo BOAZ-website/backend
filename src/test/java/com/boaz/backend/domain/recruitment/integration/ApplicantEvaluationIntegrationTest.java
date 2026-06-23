@@ -98,7 +98,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.PASS, 9, "good"), ev1);
         recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.HOLD, 5, "maybe"), ev2);
 
-        List<ApplicantEvaluationResponse> dashboard = recruitmentService.getApplicantEvaluations(r.getId());
+        List<ApplicantEvaluationResponse> dashboard = recruitmentService.getApplicantEvaluations(r.getId(), ev1);
         ApplicantEvaluationResponse row = dashboard.stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
 
@@ -121,7 +121,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         assertThat(second.getDecision()).isEqualTo(EvaluationDecision.PASS);
         assertThat(second.getScore()).isEqualTo(10);
         // 같은 평가자의 평가는 1건만 (집계 개수로 검증)
-        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId()).stream()
+        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), ev).stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
         assertThat(row.getPassCount()).isEqualTo(1);
         assertThat(row.getHoldCount()).isZero();
@@ -149,7 +149,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
 
         recruitmentService.updateFinalDecision(a.getId(), decisionReq(EvaluationDecision.PASS), rep);
 
-        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId()).stream()
+        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), rep).stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
         assertThat(row.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
     }
@@ -183,8 +183,9 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
                 .applicant(a).question(q2).answerJson("{\"Python\":\"능숙\"}").build());
         applicantAnswerRepository.save(ApplicantAnswer.builder()
                 .applicant(a).question(q1).answerText("저는 ~~").build());
+        Admin viewer = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
-        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(a.getId());
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(a.getId(), viewer);
 
         assertThat(res.getApplicantId()).isEqualTo(a.getId());
         assertThat(res.getAnswers()).hasSize(2);
@@ -199,9 +200,29 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
+    @DisplayName("비대표진이 타 부문 지원서 답변 조회 → ACCESS_DENIED / 대표진은 가능")
+    void getApplicantAnswersTrackAccess() {
+        Recruitment r = saveRecruitment(27);
+        Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+        Admin analysisAdmin = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
+        Admin rep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+
+        // 비대표진(분석)이 엔지 지원자 답변 조회 → 차단
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), analysisAdmin))
+                .isInstanceOf(CustomException.class)
+                .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+
+        // 대표진은 타 부문이어도 조회 가능
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(eng.getId(), rep);
+        assertThat(res.getApplicantId()).isEqualTo(eng.getId());
+        assertThat(res.getAnswers()).isEmpty();
+    }
+
+    @Test
     @DisplayName("존재하지 않는 지원자 답변 조회 → APPLICATION_NOT_FOUND")
     void getApplicantAnswersNotFound() {
-        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L))
+        Admin viewer = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L, viewer))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
     }

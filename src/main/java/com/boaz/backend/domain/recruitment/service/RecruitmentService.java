@@ -966,21 +966,27 @@ public class RecruitmentService {
 
     // ===== 지원서 평가 (어드민 전용) =====
 
-    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함
-    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId) {
+    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함, 비대표진은 본인 track만
+    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId, Admin currentAdmin) {
         validateRecruitmentExists(recruitmentId);
+        boolean rep = isRepresentative(currentAdmin);
 
         return applicantRepository.findByRecruitmentIdWithUser(recruitmentId).stream()
+                .filter(a -> rep || a.getTrack() == currentAdmin.getTrack())
                 .map(a -> ApplicantSummaryResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor())))
                 .toList();
     }
 
-    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계
-    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId) {
+    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계, 비대표진은 본인 track만
+    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId, Admin currentAdmin) {
         validateRecruitmentExists(recruitmentId);
+        boolean rep = isRepresentative(currentAdmin);
 
         List<Applicant> applicants = applicantRepository
-                .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED);
+                .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED)
+                .stream()
+                .filter(a -> rep || a.getTrack() == currentAdmin.getTrack())
+                .toList();
 
         // applicant_id 단위로 평가 집계 (PENDING 미포함, 총점 = null 아닌 score 합)
         Map<Long, List<ApplicantEval>> evalsByApplicant = applicantEvalRepository.findByRecruitmentId(recruitmentId)
@@ -1016,9 +1022,10 @@ public class RecruitmentService {
         return FinalDecisionResponse.from(applicant);
     }
 
-    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함)
-    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId) {
+    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함), 비대표진은 본인 track만
+    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId, Admin currentAdmin) {
         Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
 
         // 해당 부문 평가자 풀 (미평가자도 포함하기 위함)
         List<Admin> evaluators = adminRepository
@@ -1035,9 +1042,10 @@ public class RecruitmentService {
         return ApplicantEvaluatorsResponse.of(applicantId, evaluations);
     }
 
-    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null)
+    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null), 비대표진은 본인 track만
     public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin) {
-        findApplicantForEval(applicantId);
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
 
         return applicantEvalRepository.findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
                 .map(MyEvaluationResponse::from)
@@ -1050,10 +1058,8 @@ public class RecruitmentService {
                                                  Admin currentAdmin) {
         Applicant applicant = findSubmittedApplicantForEval(applicantId);
 
-        // 본인 부문 지원자만 평가 가능
-        if (currentAdmin.getTrack() != applicant.getTrack()) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
+        // 본인 부문 지원자만 평가 가능 (단, 대표진은 모든 부문 평가 가능)
+        validateTrackAccess(currentAdmin, applicant);
 
         // 원자적 upsert (없으면 INSERT, 있으면 UPDATE) — 동시 최초 저장 시에도 멱등
         applicantEvalRepository.upsert(
@@ -1066,9 +1072,10 @@ public class RecruitmentService {
         return MyEvaluationResponse.from(eval);
     }
 
-    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로)
-    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId) {
+    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로), 비대표진은 본인 track만
+    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId, Admin currentAdmin) {
         Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
         String trackName = applicant.getTrack() != null ? applicant.getTrack().getDisplayName() : null;
 
         List<ApplicantAnswersResponse.AnswerDetailResponse> answers =
@@ -1130,8 +1137,19 @@ public class RecruitmentService {
     }
 
     // 대표진 = role SUPER && teamName 대표진
+    private boolean isRepresentative(Admin admin) {
+        return admin.getRole() == Admin.Role.SUPER && admin.getTeamName() == Admin.TeamName.대표진;
+    }
+
     private void validateRepresentative(Admin admin) {
-        if (admin.getRole() != Admin.Role.SUPER || admin.getTeamName() != Admin.TeamName.대표진) {
+        if (!isRepresentative(admin)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    // 부문 접근 검증 — 대표진은 전 부문 허용, 그 외는 본인 track 지원자만
+    private void validateTrackAccess(Admin admin, Applicant applicant) {
+        if (!isRepresentative(admin) && admin.getTrack() != applicant.getTrack()) {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
