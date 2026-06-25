@@ -10,6 +10,7 @@ import com.boaz.backend.domain.recruitment.dto.response.QuestionResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
 import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.ApiResponse;
 
@@ -64,11 +65,13 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "지원서 CSV 파일 생성")
+    @Operation(summary = "지원서 CSV 파일 생성",
+            description = "term 공고의 지원서를 부문별 CSV로 생성합니다. decision으로 합격(PASS)/불합격(FAIL)/전체(ALL) 추출 범위를 지정합니다.")
     @PostMapping("/applications/download")
     public ResponseEntity<ApiResponse<Void>> downloadApplications(
-            @RequestParam Integer term) {
-        recruitmentService.downloadApplications(term);
+            @RequestParam Integer term,
+            @RequestParam(required = false, defaultValue = "ALL") DecisionFilter decision) {
+        recruitmentService.downloadApplications(term, decision);
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 

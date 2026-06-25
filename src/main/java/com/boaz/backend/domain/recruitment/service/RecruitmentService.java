@@ -36,6 +36,7 @@ import com.boaz.backend.domain.user.repository.UserRepository;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
 import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
 import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
@@ -598,12 +599,15 @@ public class RecruitmentService {
     // Admin 전용 메서드
     // ========================
 
-    // 지원서 파일 다운로드
-    public void downloadApplications(Integer term) {
+    // 지원서 파일 다운로드 (decision: 합격/불합격/전체 추출 필터)
+    public void downloadApplications(Integer term, DecisionFilter decision) {
 
         // 공고 존재 여부 확인
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        // 필터에 대응하는 final_decision (ALL이면 null = 필터 미적용)
+        EvaluationDecision decisionFilter = decision.toEvaluationDecisionOrNull();
 
         String timestamp = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
@@ -611,10 +615,10 @@ public class RecruitmentService {
         // 부문별 CSV 생성 및 S3 업로드
         for (Track track : List.of(Track.VISUALIZATION, Track.ANALYSIS, Track.ENGINEERING)) {
 
-            // 해당 부문 제출된 지원자 조회 (submittedAt 오름차순 + user JOIN FETCH)
+            // 해당 부문 + 필터 조건 제출 지원자 조회 (submittedAt 오름차순 + user JOIN FETCH)
             List<Applicant> applicants = applicantRepository
-                    .findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                            recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED);
+                    .findSubmittedByRecruitmentIdAndTrackAndDecision(
+                            recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED, decisionFilter);
 
             // 공통 + 해당 부문 질문 조회
             List<ApplicationQuestion> questions = applicationQuestionRepository
@@ -641,9 +645,9 @@ public class RecruitmentService {
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
 
-            // S3 업로드
-            String key = String.format("%d/applicants_%s_%s.csv",
-                    term, track.name(), timestamp);
+            // S3 업로드 (키에 추출 필터 표기 → 합격/불합격/전체 파일 구분)
+            String key = String.format("%d/applicants_%s_%s_%s.csv",
+                    term, track.name(), decision.name(), timestamp);
             s3Service.uploadCsv(recruitmentBucket, key, csv);
         }
     }

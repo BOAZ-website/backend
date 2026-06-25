@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.global.common.enums.Track;
 
 public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
@@ -21,16 +22,19 @@ public interface ApplicantRepository extends JpaRepository<Applicant, Long> {
     // (recruitment_id, user_id) 조합으로 지원서 조회
     Optional<Applicant> findByRecruitmentIdAndUserId(Long recruitmentId, Long userId);
 
-    // recruitment_id + track + status 기반 조회 (CSV 다운로드용)
+    // recruitment_id + track + status + (선택) final_decision 기반 조회 (CSV 다운로드용)
     // - JOIN FETCH a.user: user_id 접근 시 N+1 방지
     // - ORDER BY a.submittedAt ASC: 제출 순 정렬 (DRAFT 생성 시점과 분리)
+    // - decision == null: 전체(필터 미적용), 값이 있으면 해당 final_decision 만 추출
     @Query("SELECT a FROM Applicant a JOIN FETCH a.user " +
            "WHERE a.recruitment.id = :recruitmentId AND a.track = :track AND a.status = :status " +
+           "AND (:decision IS NULL OR a.finalDecision = :decision) " +
            "ORDER BY a.submittedAt ASC")
-    List<Applicant> findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
+    List<Applicant> findSubmittedByRecruitmentIdAndTrackAndDecision(
             @Param("recruitmentId") Long recruitmentId,
             @Param("track") Track track,
-            @Param("status") Applicant.ApplicantStatus status
+            @Param("status") Applicant.ApplicantStatus status,
+            @Param("decision") EvaluationDecision decision
     );
 
     // userId + status 기반 조회 (합격자 승격용, recruitment JOIN FETCH로 term 접근)
