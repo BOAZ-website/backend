@@ -2050,6 +2050,25 @@ class RecruitmentServiceTest {
         }
 
         @Test
+        @DisplayName("TC-006b DB에 동일 category order_num 존재 → DUPLICATE_QUESTION_ORDER")
+        void dbDuplicateOrder() {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
+            when(applicationQuestionRepository.existsByRecruitmentIdAndLabel(1L, "C1")).thenReturn(false);
+            when(applicationQuestionRepository.existsByRecruitmentIdAndCategoryAndOrderNum(
+                    1L, ApplicationQuestion.Category.COMMON, 1)).thenReturn(true);
+            QuestionsCreateRequest req = buildQuestionsCreateReq(1L,
+                    buildQuestionItem("C1", ApplicationQuestion.Category.COMMON,
+                            ApplicationQuestion.Type.TEXT, 500, null, 1));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.DUPLICATE_QUESTION_ORDER);
+            verify(applicationQuestionRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("TC-007 TEXT인데 limit_length 누락 → MISSING_PARAMETER")
         void textMissingLimitLength() {
             Recruitment r = createActiveRecruitment();
