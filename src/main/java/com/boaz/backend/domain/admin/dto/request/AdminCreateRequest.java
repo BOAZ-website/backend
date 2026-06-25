@@ -44,6 +44,6 @@ public class AdminCreateRequest {
 
     @NotNull
     @Schema(description = "직책/소속", example = "서비스운영팀",
-            allowableValues = {"대표진", "디자인팀", "자료연구팀", "운영지원팀", "기획팀", "대외협력팀", "서비스운영팀"})
+            allowableValues = {"대표진", "차기대표진", "디자인팀", "자료연구팀", "운영지원팀", "기획팀", "대외협력팀", "서비스운영팀"})
     private Admin.TeamName teamName;
 }

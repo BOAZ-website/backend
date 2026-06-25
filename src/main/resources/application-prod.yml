@@ -90,7 +90,7 @@ swagger:
   password: ${SWAGGER_PASSWORD}
 
 cors:
-  allowed-origins: "https://www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com"
+  allowed-origins: "https://www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com,https://admin.bigdataboaz.com"
 
 jwt:
   secret: ${JWT_SECRET}
