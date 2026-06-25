@@ -14,6 +14,10 @@ public interface RecruitmentRepository extends JpaRepository<Recruitment, Long> 
     @Query("SELECT r FROM Recruitment r WHERE r.startDate <= :now AND r.endDate >= :now")
     Optional<Recruitment> findActiveRecruitment(LocalDateTime now);
 
+    // 진행 중이거나 아직 마감되지 않은 공고 중 가장 임박한 것 (예정 포함)
+    @Query("SELECT r FROM Recruitment r WHERE r.endDate >= :now ORDER BY r.startDate ASC LIMIT 1")
+    Optional<Recruitment> findCurrentOrUpcoming(LocalDateTime now);
+
     // 기수로 공고 조회
     Optional<Recruitment> findByTerm(Integer term);
 

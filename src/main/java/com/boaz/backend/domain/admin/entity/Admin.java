@@ -25,6 +25,7 @@ public class Admin extends BaseEntity {
 
     public enum TeamName {
         @Schema(description = "대표진") 대표진,
+        @Schema(description = "차기대표진") 차기대표진,
         @Schema(description = "디자인팀") 디자인팀,
         @Schema(description = "자료연구팀") 자료연구팀,
         @Schema(description = "운영지원팀") 운영지원팀,

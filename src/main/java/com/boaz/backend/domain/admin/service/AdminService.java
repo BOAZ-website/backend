@@ -5,6 +5,7 @@ import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
+import com.boaz.backend.domain.admin.dto.response.AdminMeResponse;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.auth.repository.RefreshTokenRepository;
@@ -64,6 +65,10 @@ public class AdminService {
 
         adminRepository.save(admin);
         return new AdminIdResponse(admin.getId());
+    }
+
+    public AdminMeResponse getMe(Admin currentAdmin) {
+        return AdminMeResponse.from(currentAdmin);
     }
 
     public AdminAccountResponse getAccount(Long id, Admin currentAdmin) {

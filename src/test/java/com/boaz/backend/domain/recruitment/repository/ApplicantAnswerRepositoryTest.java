@@ -68,6 +68,41 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
+    @DisplayName("findByApplicantIdWithQuestion: 문항 순서(orderNum)대로 + question 페치 조인")
+    void findByApplicantIdWithQuestion() {
+        Recruitment r = persistRecruitment(27);
+        ApplicationQuestion q1 = persistQuestion(r, 1);
+        ApplicationQuestion q2 = persistQuestion(r, 2);
+        ApplicationQuestion q3 = persistQuestion(r, 3);
+        Applicant a = persistApplicant(r);
+        // 일부러 순서를 뒤섞어 저장
+        persistAnswer(a, q3, "답3");
+        persistAnswer(a, q1, "답1");
+        persistAnswer(a, q2, "답2");
+        em.flush();
+        em.clear();
+
+        List<ApplicantAnswer> answers = answerRepository.findByApplicantIdWithQuestion(a.getId());
+
+        assertThat(answers).hasSize(3);
+        assertThat(answers).extracting(ans -> ans.getQuestion().getOrderNum())
+                .containsExactly(1, 2, 3);
+        // em.clear() 이후에도 question 접근 가능해야 함 (페치 조인)
+        assertThat(answers.get(0).getQuestion().getContent()).isEqualTo("content");
+    }
+
+    @Test
+    @DisplayName("findByApplicantIdWithQuestion: 답변 없으면 빈 리스트")
+    void findByApplicantIdWithQuestionEmpty() {
+        Recruitment r = persistRecruitment(27);
+        Applicant a = persistApplicant(r);
+        em.flush();
+        em.clear();
+
+        assertThat(answerRepository.findByApplicantIdWithQuestion(a.getId())).isEmpty();
+    }
+
+    @Test
     @DisplayName("existsByQuestionId / findByApplicantIds")
     void existsAndFind() {
         Recruitment r = persistRecruitment(27);
