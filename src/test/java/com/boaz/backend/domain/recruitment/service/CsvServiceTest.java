@@ -93,6 +93,68 @@ class CsvServiceTest {
     }
 
     @Nested
+    @DisplayName("최종 평가(final_decision) 컬럼")
+    class FinalDecisionColumn {
+
+        @Test
+        @DisplayName("헤더에 '최종 평가' 컬럼이 '전화번호' 다음에 포함")
+        void headerContainsFinalDecision() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r);
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String header = new String(csv, java.nio.charset.StandardCharsets.UTF_8)
+                    .replaceAll("\r", "").split("\n")[0];
+            String[] cols = header.split(",", -1);
+
+            assertThat(header).contains("최종 평가");
+            // 전화번호(index 4) 바로 뒤가 최종 평가(index 5)
+            assertThat(unquote(cols[4])).isEqualTo("전화번호");
+            assertThat(unquote(cols[5])).isEqualTo("최종 평가");
+        }
+
+        @Test
+        @DisplayName("final_decision=PASS → '합격', FAIL → '불합격' 한글 출력")
+        void decisionRenderedInKorean() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant pass = makeApplicant(r);
+            pass.updateFinalDecision(com.boaz.backend.domain.recruitment.entity.EvaluationDecision.PASS);
+
+            assertThat(decisionCell(pass)).isEqualTo("합격");
+
+            Applicant fail = makeApplicant(r);
+            fail.updateFinalDecision(com.boaz.backend.domain.recruitment.entity.EvaluationDecision.FAIL);
+            assertThat(decisionCell(fail)).isEqualTo("불합격");
+        }
+
+        @Test
+        @DisplayName("기본값(PENDING) → '미정' 출력")
+        void defaultPendingRendered() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r); // 기본 final_decision = PENDING
+
+            assertThat(decisionCell(a)).isEqualTo("미정");
+        }
+
+        // 데이터 행에서 '최종 평가' 셀(index 5) 추출
+        private String decisionCell(Applicant a) throws IOException {
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String dataRow = new String(csv, java.nio.charset.StandardCharsets.UTF_8)
+                    .replaceAll("\r", "").split("\n")[1];
+            String[] cells = dataRow.split(",", -1);
+            return unquote(cells[5]);
+        }
+
+        private String unquote(String cell) {
+            String c = cell.trim();
+            if (c.startsWith("\"") && c.endsWith("\"")) {
+                c = c.substring(1, c.length() - 1).replace("\"\"", "\"");
+            }
+            return c;
+        }
+    }
+
+    @Nested
     @DisplayName("formatAnswer — TEXT 답변")
     class TextAnswer {
 

@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.recruitment.repository;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.global.common.enums.MemberType;
@@ -76,11 +77,11 @@ class ApplicantRepositoryTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt")
+    @DisplayName("findSubmittedByRecruitmentIdAndTrackAndDecision")
     class FindSubmittedByTrack {
 
         @Test
-        @DisplayName("지정 트랙 SUBMITTED 만 submitted_at 오름차순, user JOIN FETCH")
+        @DisplayName("decision=null → 지정 트랙 SUBMITTED 전체, submitted_at 오름차순, user JOIN FETCH")
         void submittedOrdered() {
             Recruitment r = persistRecruitment(27);
             LocalDateTime base = LocalDateTime.now();
@@ -98,13 +99,43 @@ class ApplicantRepositoryTest extends TestcontainersBase {
             em.clear();
 
             List<Applicant> result = applicantRepository
-                    .findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                            r.getId(), Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+                    .findSubmittedByRecruitmentIdAndTrackAndDecision(
+                            r.getId(), Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED, null);
 
             assertThat(result).hasSize(2);
             assertThat(result.get(0).getSubmittedAt()).isBefore(result.get(1).getSubmittedAt());
             // JOIN FETCH 로 user 가 즉시 로딩되어 접근 가능해야 함
             assertThat(result.get(0).getUser().getId()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("decision=PASS → 해당 트랙의 final_decision=PASS 지원자만 반환")
+        void filterByPassDecision() {
+            Recruitment r = persistRecruitment(27);
+            LocalDateTime base = LocalDateTime.now();
+
+            Applicant pass = persistApplicant(r, persistUser("eng-pass"), Track.ENGINEERING,
+                    Applicant.ApplicantStatus.SUBMITTED, base.plusHours(1));
+            pass.updateFinalDecision(EvaluationDecision.PASS);
+            Applicant fail = persistApplicant(r, persistUser("eng-fail"), Track.ENGINEERING,
+                    Applicant.ApplicantStatus.SUBMITTED, base.plusHours(2));
+            fail.updateFinalDecision(EvaluationDecision.FAIL);
+            em.flush();
+            em.clear();
+
+            List<Applicant> passResult = applicantRepository
+                    .findSubmittedByRecruitmentIdAndTrackAndDecision(
+                            r.getId(), Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED,
+                            EvaluationDecision.PASS);
+            List<Applicant> failResult = applicantRepository
+                    .findSubmittedByRecruitmentIdAndTrackAndDecision(
+                            r.getId(), Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED,
+                            EvaluationDecision.FAIL);
+
+            assertThat(passResult).hasSize(1);
+            assertThat(passResult.get(0).getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
+            assertThat(failResult).hasSize(1);
+            assertThat(failResult.get(0).getFinalDecision()).isEqualTo(EvaluationDecision.FAIL);
         }
     }
 

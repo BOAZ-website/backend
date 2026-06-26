@@ -17,6 +17,10 @@ public interface ApplicantAnswerRepository extends JpaRepository<ApplicantAnswer
     @Query("SELECT aa FROM ApplicantAnswer aa WHERE aa.applicant.id IN :applicantIds")
     List<ApplicantAnswer> findByApplicantIds(@Param("applicantIds") List<Long> applicantIds);
 
+    // 지원자 단건 답변 조회 (문항 페치 조인 + 문항 순서 정렬) — 평가 사이드바 지원서 본문용
+    @Query("SELECT aa FROM ApplicantAnswer aa JOIN FETCH aa.question q WHERE aa.applicant.id = :applicantId ORDER BY q.orderNum ASC")
+    List<ApplicantAnswer> findByApplicantIdWithQuestion(@Param("applicantId") Long applicantId);
+
     // 지원자 단건 답변 전체 삭제 (임시저장 덮어쓰기, 제출 시 DRAFT 답변 교체)
     @org.springframework.data.jpa.repository.Modifying
     @Query("DELETE FROM ApplicantAnswer aa WHERE aa.applicant.id = :applicantId")
