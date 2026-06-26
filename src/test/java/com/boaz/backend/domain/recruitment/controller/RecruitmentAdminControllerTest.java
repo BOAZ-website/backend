@@ -7,6 +7,7 @@ import com.boaz.backend.domain.recruitment.dto.response.RecruitmentIdResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Category;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Type;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
@@ -81,15 +82,41 @@ class RecruitmentAdminControllerTest {
     class DownloadApplications {
 
         @Test
-        @DisplayName("정상 요청 → 200")
+        @DisplayName("정상 요청(decision 미지정) → 200, 기본값 ALL 전달")
         void success() throws Exception {
-            doNothing().when(recruitmentService).downloadApplications(27);
+            doNothing().when(recruitmentService).downloadApplications(eq(27), any());
 
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .with(authentication(adminAuth()))
                             .param("term", "27"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.status").value(200));
+
+            verify(recruitmentService).downloadApplications(27, DecisionFilter.ALL);
+        }
+
+        @Test
+        @DisplayName("decision=PASS 지정 → 200, PASS 필터 전달")
+        void successWithPassFilter() throws Exception {
+            doNothing().when(recruitmentService).downloadApplications(eq(27), any());
+
+            mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
+                            .with(authentication(adminAuth()))
+                            .param("term", "27")
+                            .param("decision", "PASS"))
+                    .andExpect(status().isOk());
+
+            verify(recruitmentService).downloadApplications(27, DecisionFilter.PASS);
+        }
+
+        @Test
+        @DisplayName("decision 값이 ENUM 범위 밖 → 400")
+        void invalidDecision() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
+                            .with(authentication(adminAuth()))
+                            .param("term", "27")
+                            .param("decision", "INVALID"))
+                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -115,7 +142,7 @@ class RecruitmentAdminControllerTest {
         @DisplayName("EX-001 존재하지 않는 term → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             doThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND))
-                    .when(recruitmentService).downloadApplications(999);
+                    .when(recruitmentService).downloadApplications(eq(999), any());
 
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .with(authentication(adminAuth()))
@@ -128,7 +155,7 @@ class RecruitmentAdminControllerTest {
         @DisplayName("EX-002 S3 업로드 실패 → 500 S3_UPLOAD_FAILED")
         void s3Failed() throws Exception {
             doThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED))
-                    .when(recruitmentService).downloadApplications(27);
+                    .when(recruitmentService).downloadApplications(eq(27), any());
 
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .with(authentication(adminAuth()))

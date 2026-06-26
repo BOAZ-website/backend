@@ -59,6 +59,25 @@ VALUES (3, 'kakao', 'dummy_kakao_003', '박시각', 'OUTSIDER', NOW(), NOW());
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
 VALUES (4, 'kakao', 'dummy_kakao_004', '스웨거테스터', 'OUTSIDER', NOW(), NOW());
 
+-- CSV 추출 필터(decision=PASS/FAIL/ALL) 테스트용 user (id=5~10)
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (5, 'kakao', 'dummy_kakao_005', '합격엔지', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (6, 'kakao', 'dummy_kakao_006', '불합격엔지', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (7, 'kakao', 'dummy_kakao_007', '합격분석', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (8, 'kakao', 'dummy_kakao_008', '불합격분석', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (9, 'kakao', 'dummy_kakao_009', '합격시각', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (10, 'kakao', 'dummy_kakao_010', '불합격시각', 'OUTSIDER', NOW(), NOW());
+
 -- recruitment 임시 데이터
 -- id=1: 26기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
@@ -197,6 +216,27 @@ VALUES (3, 1, 2, 'SUBMITTED', 'ANALYSIS', '이분석', 'ana@example.com', '01022
 
 INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
 VALUES (4, 1, 3, 'SUBMITTED', 'VISUALIZATION', '박시각', 'vis@example.com', '01033333333', '한국대학교', '시각디자인', null, 7, 'NOT_COMPLETED', '2002-01-01', '2026-08', false, 'PENDING', '2026-03-14 22:21:58', '2026-03-14 22:21:58', '2026-03-14 22:21:58');
+
+-- CSV 추출 필터 테스트용 지원자 (recruitment_id=1, term 26)
+-- 각 부문별로 final_decision=PASS 1명 + FAIL 1명을 두어, decision=PASS/FAIL/ALL 추출 결과가 명확히 구분되도록 함
+-- (기존 id=1 ENG=PENDING, id=3 ANA=PASS, id=4 VIS=PENDING 는 그대로 유지)
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (5, 1, 5, 'SUBMITTED', 'ENGINEERING', '합격엔지', 'eng_pass@example.com', '01051110001', '한국대학교', '컴퓨터공학', null, 8, 'COMPLETED_OR_EXEMPT', '2001-05-10', '2026-02', false, 'PASS', '2026-03-15 09:00:00', '2026-03-15 09:00:00', '2026-03-15 09:00:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (6, 1, 6, 'SUBMITTED', 'ENGINEERING', '불합격엔지', 'eng_fail@example.com', '01051110002', '한국대학교', '소프트웨어', null, 6, 'NOT_COMPLETED', '2002-07-22', '2026-08', false, 'FAIL', '2026-03-15 09:10:00', '2026-03-15 09:10:00', '2026-03-15 09:10:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (7, 1, 7, 'SUBMITTED', 'ANALYSIS', '합격분석', 'ana_pass@example.com', '01052220001', '한국대학교', '통계학', '["수학"]', 7, 'COMPLETED_OR_EXEMPT', '2001-11-03', '2026-02', true, 'PASS', '2026-03-15 09:20:00', '2026-03-15 09:20:00', '2026-03-15 09:20:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (8, 1, 8, 'SUBMITTED', 'ANALYSIS', '불합격분석', 'ana_fail@example.com', '01052220002', '한국대학교', '경제학', null, 5, 'NOT_COMPLETED', '2003-02-14', '2027-02', false, 'FAIL', '2026-03-15 09:30:00', '2026-03-15 09:30:00', '2026-03-15 09:30:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (9, 1, 9, 'SUBMITTED', 'VISUALIZATION', '합격시각', 'vis_pass@example.com', '01053330001', '한국대학교', '시각디자인', null, 8, 'COMPLETED_OR_EXEMPT', '2001-08-30', '2026-02', false, 'PASS', '2026-03-15 09:40:00', '2026-03-15 09:40:00', '2026-03-15 09:40:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (10, 1, 10, 'SUBMITTED', 'VISUALIZATION', '불합격시각', 'vis_fail@example.com', '01053330002', '한국대학교', '산업디자인', null, 6, 'NOT_COMPLETED', '2002-04-18', '2026-08', false, 'FAIL', '2026-03-15 09:50:00', '2026-03-15 09:50:00', '2026-03-15 09:50:00');
 
 -- applicant_answer 임시 데이터 (id=1, ENGINEERING)
 INSERT INTO applicant_answer (applicant_id, question_id, answer_text, answer_json, created_at, updated_at)

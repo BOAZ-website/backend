@@ -47,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -1344,18 +1345,18 @@ class RecruitmentServiceTest {
             Applicant eng = createSubmittedApplicant(r, u);
 
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
-            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                    eq(1L), eq(Track.ENGINEERING), any())).thenReturn(List.of(eng));
-            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                    eq(1L), eq(Track.ANALYSIS), any())).thenReturn(Collections.emptyList());
-            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                    eq(1L), eq(Track.VISUALIZATION), any())).thenReturn(Collections.emptyList());
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(
+                    eq(1L), eq(Track.ENGINEERING), any(), any())).thenReturn(List.of(eng));
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(
+                    eq(1L), eq(Track.ANALYSIS), any(), any())).thenReturn(Collections.emptyList());
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(
+                    eq(1L), eq(Track.VISUALIZATION), any(), any())).thenReturn(Collections.emptyList());
             when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
                     .thenReturn(Collections.emptyList());
             when(applicantAnswerRepository.findByApplicantIds(any())).thenReturn(Collections.emptyList());
             when(csvService.generateCsv(any(), any(), any())).thenReturn(new byte[0]);
 
-            recruitmentService.downloadApplications(27);
+            recruitmentService.downloadApplications(27, DecisionFilter.ALL);
 
             verify(s3Service, times(3)).uploadCsv(eq("test-bucket"), any(), any());
         }
@@ -1365,13 +1366,13 @@ class RecruitmentServiceTest {
         void emptyApplicants() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
-            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(any(), any(), any()))
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(any(), any(), any(), any()))
                     .thenReturn(Collections.emptyList());
             when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
                     .thenReturn(Collections.emptyList());
             when(csvService.generateCsv(any(), any(), any())).thenReturn(new byte[0]);
 
-            recruitmentService.downloadApplications(27);
+            recruitmentService.downloadApplications(27, DecisionFilter.ALL);
 
             verify(s3Service, times(3)).uploadCsv(any(), any(), any());
         }
@@ -1381,10 +1382,51 @@ class RecruitmentServiceTest {
         void notFound() {
             when(recruitmentRepository.findByTerm(999)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> recruitmentService.downloadApplications(999))
+            assertThatThrownBy(() -> recruitmentService.downloadApplications(999, DecisionFilter.ALL))
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("TC-012 decision=PASS → 합격 필터로 조회하고 S3 키에 PASS 표기")
+        void passFilter() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(any(), any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(csvService.generateCsv(any(), any(), any())).thenReturn(new byte[0]);
+
+            recruitmentService.downloadApplications(27, DecisionFilter.PASS);
+
+            // 조회 시 final_decision=PASS 필터가 전달됨
+            verify(applicantRepository, times(3)).findSubmittedByRecruitmentIdAndTrackAndDecision(
+                    any(), any(), any(), eq(EvaluationDecision.PASS));
+            // S3 키에 PASS 표기 (부문별 3건)
+            org.mockito.ArgumentCaptor<String> keyCaptor =
+                    org.mockito.ArgumentCaptor.forClass(String.class);
+            verify(s3Service, times(3)).uploadCsv(any(), keyCaptor.capture(), any());
+            assertThat(keyCaptor.getAllValues()).allMatch(k -> k.contains("_PASS_"));
+        }
+
+        @Test
+        @DisplayName("TC-013 decision=ALL → final_decision 필터 null(전체) 전달")
+        void allFilterPassesNull() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(any(), any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(csvService.generateCsv(any(), any(), any())).thenReturn(new byte[0]);
+
+            recruitmentService.downloadApplications(27, DecisionFilter.ALL);
+
+            // ALL → null 필터(전체)로 조회
+            verify(applicantRepository, times(3)).findSubmittedByRecruitmentIdAndTrackAndDecision(
+                    any(), any(), any(), isNull());
         }
     }
 

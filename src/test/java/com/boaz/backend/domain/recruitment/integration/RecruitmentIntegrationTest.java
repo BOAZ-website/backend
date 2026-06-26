@@ -21,6 +21,8 @@ import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Category;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Type;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
@@ -606,15 +608,53 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             em.flush();
             em.clear();
 
-            recruitmentService.downloadApplications(27);
+            recruitmentService.downloadApplications(27, DecisionFilter.ALL);
 
             verify(s3Service, times(3)).uploadCsv(any(), any(), any());
         }
 
         @Test
+        @DisplayName("decision=PASS → 합격자만 CSV에 포함, 키에 PASS 표기")
+        void passFilterOnlyIncludesPass() {
+            Recruitment r = saveActiveRecruitment(27);
+            saveQuestion(r, Category.COMMON, 1);
+
+            Applicant pass = applicantRepository.save(Applicant.builder()
+                    .recruitment(r).user(saveUser()).status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(Track.ENGINEERING).name("합격자").email("pass@example.com").phone("01011112222")
+                    .build());
+            pass.markSubmitted();
+            pass.updateFinalDecision(EvaluationDecision.PASS);
+
+            Applicant fail = applicantRepository.save(Applicant.builder()
+                    .recruitment(r).user(saveUser()).status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(Track.ENGINEERING).name("불합격자").email("fail@example.com").phone("01033334444")
+                    .build());
+            fail.markSubmitted();
+            fail.updateFinalDecision(EvaluationDecision.FAIL);
+            em.flush();
+            em.clear();
+
+            recruitmentService.downloadApplications(27, DecisionFilter.PASS);
+
+            org.mockito.ArgumentCaptor<String> keyCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
+            org.mockito.ArgumentCaptor<byte[]> csvCaptor = org.mockito.ArgumentCaptor.forClass(byte[].class);
+            verify(s3Service, times(3)).uploadCsv(any(), keyCaptor.capture(), csvCaptor.capture());
+
+            // ENGINEERING 파일만 추출해 내용 검증
+            int engIdx = keyCaptor.getAllValues().indexOf(
+                    keyCaptor.getAllValues().stream().filter(k -> k.contains("ENGINEERING")).findFirst().orElseThrow());
+            String engCsv = new String(csvCaptor.getAllValues().get(engIdx), java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(keyCaptor.getAllValues()).allMatch(k -> k.contains("_PASS_"));
+            assertThat(engCsv).contains("합격자").contains("합격");
+            assertThat(engCsv).doesNotContain("불합격자");
+        }
+
+        @Test
         @DisplayName("존재하지 않는 term → RECRUITMENT_NOT_FOUND")
         void notFound() {
-            assertThatThrownBy(() -> recruitmentService.downloadApplications(999))
+            assertThatThrownBy(() -> recruitmentService.downloadApplications(999, DecisionFilter.ALL))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
         }
