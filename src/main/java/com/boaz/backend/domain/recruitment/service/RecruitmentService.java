@@ -761,6 +761,9 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
         }
 
+        // FK 자식부터 순서대로 삭제: applicant_eval → applicant_answer → applicant
+        // (applicant_eval.applicant_id는 NOT NULL FK, ON DELETE CASCADE 없음)
+        applicantEvalRepository.deleteByRecruitmentId(recruitmentId);
         applicantAnswerRepository.deleteByRecruitmentId(recruitmentId);
         applicantRepository.deleteByRecruitmentId(recruitmentId);
     }

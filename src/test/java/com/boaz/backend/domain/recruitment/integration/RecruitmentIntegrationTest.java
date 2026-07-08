@@ -17,7 +17,9 @@ import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
+import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Category;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Type;
@@ -25,6 +27,7 @@ import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
 import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
+import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
@@ -74,6 +77,8 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     @Autowired ApplicationQuestionRepository questionRepository;
     @Autowired ApplicantRepository applicantRepository;
     @Autowired ApplicantAnswerRepository answerRepository;
+    @Autowired ApplicantEvalRepository evalRepository;
+    @Autowired AdminRepository adminRepository;
     @Autowired SubscriptionRepository subscriptionRepository;
     @Autowired UserRepository userRepository;
     @Autowired ObjectMapper objectMapper;
@@ -665,7 +670,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     class Admin {
 
         @Test
-        @DisplayName("마감된 공고의 지원서 전체 삭제 → answer/applicant 모두 제거")
+        @DisplayName("마감된 공고의 지원서 전체 삭제 → eval/answer/applicant 모두 제거 (평가 존재 시 FK 위반 없음, #178)")
         void deleteApplicants() {
             Recruitment r = saveClosedRecruitment(26);
             User u = saveUser();
@@ -674,8 +679,18 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
                     .recruitment(r).user(u).status(Applicant.ApplicantStatus.SUBMITTED)
                     .track(Track.ENGINEERING).name("n").email("a@example.com").phone("01012345678")
                     .build());
-            answerRepository.save(com.boaz.backend.domain.recruitment.entity.ApplicantAnswer.builder()
+            answerRepository.save(ApplicantAnswer.builder()
                     .applicant(a).question(q).answerText("답").build());
+            // 평가 데이터: applicant_eval.applicant_id FK → 삭제 순서 누락 시 여기서 FK 위반 발생
+            com.boaz.backend.domain.admin.entity.Admin evaluator = adminRepository.save(
+                    com.boaz.backend.domain.admin.entity.Admin.builder()
+                    .username("evaluator-178").password("p")
+                    .role(com.boaz.backend.domain.admin.entity.Admin.Role.TEAM).name("평가자")
+                    .track(Track.ENGINEERING).term(26)
+                    .teamName(com.boaz.backend.domain.admin.entity.Admin.TeamName.서비스운영팀)
+                    .createdBy(null).build());
+            evalRepository.save(ApplicantEval.builder()
+                    .applicant(a).admin(evaluator).decision(EvaluationDecision.PASS).score(9).build());
             em.flush();
             em.clear();
 
@@ -685,6 +700,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
 
             assertThat(applicantRepository.existsByRecruitmentId(r.getId())).isFalse();
             assertThat(answerRepository.findByApplicantIds(List.of(a.getId()))).isEmpty();
+            assertThat(evalRepository.findByRecruitmentId(r.getId())).isEmpty();
         }
 
         @Test
