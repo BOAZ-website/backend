@@ -40,4 +40,9 @@ public interface ApplicantEvalRepository extends JpaRepository<ApplicantEval, Lo
     // 평가 대시보드 집계용 — 공고 내 모든 평가 (Java에서 applicant 단위 집계)
     @Query("SELECT e FROM ApplicantEval e WHERE e.applicant.recruitment.id = :recruitmentId")
     List<ApplicantEval> findByRecruitmentId(@Param("recruitmentId") Long recruitmentId);
+
+    // recruitment 내 전체 평가 삭제 (지원서 전체 삭제 시 FK 자식부터 정리, 서브쿼리 벌크 삭제)
+    @Modifying
+    @Query("DELETE FROM ApplicantEval e WHERE e.applicant.id IN (SELECT a.id FROM Applicant a WHERE a.recruitment.id = :recruitmentId)")
+    void deleteByRecruitmentId(@Param("recruitmentId") Long recruitmentId);
 }

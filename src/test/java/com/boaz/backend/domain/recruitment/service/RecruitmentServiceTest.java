@@ -60,6 +60,7 @@ class RecruitmentServiceTest {
     @Mock ApplicationQuestionRepository applicationQuestionRepository;
     @Mock ApplicantRepository applicantRepository;
     @Mock ApplicantAnswerRepository applicantAnswerRepository;
+    @Mock ApplicantEvalRepository applicantEvalRepository;
     @Mock UserRepository userRepository;
     @Mock SubscriptionRepository subscriptionRepository;
     @Mock S3Service s3Service;
@@ -1438,14 +1439,16 @@ class RecruitmentServiceTest {
     class DeleteApplicants {
 
         @Test
-        @DisplayName("TC-001 모집 마감 후 삭제 → answer 먼저, applicant 나중 삭제")
+        @DisplayName("TC-001 모집 마감 후 삭제 → eval → answer → applicant 순 삭제")
         void deleteInOrder() {
             Recruitment r = createExpiredRecruitment();
             when(recruitmentRepository.findById(2L)).thenReturn(Optional.of(r));
 
             recruitmentService.deleteApplicants(2L);
 
-            var inOrder = inOrder(applicantAnswerRepository, applicantRepository);
+            // FK 자식부터: applicant_eval → applicant_answer → applicant
+            var inOrder = inOrder(applicantEvalRepository, applicantAnswerRepository, applicantRepository);
+            inOrder.verify(applicantEvalRepository).deleteByRecruitmentId(2L);
             inOrder.verify(applicantAnswerRepository).deleteByRecruitmentId(2L);
             inOrder.verify(applicantRepository).deleteByRecruitmentId(2L);
         }
@@ -1458,6 +1461,7 @@ class RecruitmentServiceTest {
 
             recruitmentService.deleteApplicants(2L);
 
+            verify(applicantEvalRepository).deleteByRecruitmentId(2L);
             verify(applicantAnswerRepository).deleteByRecruitmentId(2L);
         }
 
