@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.recruitment.dto.response;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -49,7 +50,7 @@ public class MyApplicationResponse {
 
     @Schema(description = "병역 상태", example = "COMPLETED_OR_EXEMPT")
     @JsonProperty("military_status")
-    private final Applicant.MilitaryStatus militaryStatus;
+    private final MilitaryStatus militaryStatus;
 
     @Schema(description = "생년월일", example = "2000-01-01")
     @JsonProperty("birth_date")
@@ -77,7 +78,7 @@ public class MyApplicationResponse {
     private MyApplicationResponse(Long applicantId, Applicant.ApplicantStatus status, Track track,
                                    String name, String email, String phone, String university, String major,
                                    List<String> minorDoubleMajor, Integer lastSemester,
-                                   Applicant.MilitaryStatus militaryStatus, LocalDate birthDate,
+                                   MilitaryStatus militaryStatus, LocalDate birthDate,
                                    String graduationDate, Boolean gradSchoolPlan,
                                    List<AnswerItemResponse> answers,
                                    LocalDateTime createdAt, LocalDateTime updatedAt) {
