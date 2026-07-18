@@ -166,5 +166,24 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
 
             assertThat(result).hasSize(2);
         }
+
+        @Test
+        @DisplayName("deleteByRecruitmentId — 공고 내 평가만 벌크 삭제 (다른 공고 평가는 유지)")
+        void deleteByRecruitmentId() {
+            Recruitment target = persistRecruitment(27);
+            Recruitment other = persistRecruitment(28);
+            Applicant a1 = persistApplicant(target, persistUser("p1"), Track.ENGINEERING);
+            Applicant a2 = persistApplicant(other, persistUser("p2"), Track.ENGINEERING);
+            Admin ev1 = persistAdmin("ev1", Track.ENGINEERING);
+            em.persistFlushFind(ApplicantEval.builder().applicant(a1).admin(ev1).decision(EvaluationDecision.PASS).score(9).build());
+            em.persistFlushFind(ApplicantEval.builder().applicant(a2).admin(ev1).decision(EvaluationDecision.HOLD).score(5).build());
+            em.clear();
+
+            applicantEvalRepository.deleteByRecruitmentId(target.getId());
+            em.clear(); // 벌크 삭제 후 영속성 컨텍스트 정리
+
+            assertThat(applicantEvalRepository.findByRecruitmentId(target.getId())).isEmpty();
+            assertThat(applicantEvalRepository.findByRecruitmentId(other.getId())).hasSize(1);
+        }
     }
 }
