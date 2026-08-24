@@ -48,15 +48,18 @@ cd backend
 ```
 
 ### Configuration
-> `local` 프로필이 기본으로 활성화됩니다. 아래 "직접 설정 필요"가 ✅인 항목은 값이 없으면 앱이 뜨지 않습니다.
+> `local` 프로필이 기본으로 활성화됩니다. 아래 "필수"가 ✅인 항목은 값이 없으면 앱이 뜨지 않습니다.
 
-| 환경 변수 | 설명 | 직접 설정 필요 |
+| 환경 변수 | 설명 | 필수 |
 |---|---|:---:|
-| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | DB 접속 정보(MySQL 인스턴스 필요)<br>미설정 시 로컬 기본값(`localhost:3306/boaz`, `root`/`0000`) 사용 | |
 | `JWT_SECRET` | JWT 서명 시크릿 | ✅ |
 | `S3_RECRUITMENT_BUCKET_NAME` / `S3_ARCHIVING_BUCKET_NAME` | S3 버킷명 | ✅ |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth 자격 증명 | ✅ |
-| `KAKAO_*` / `NAVER_*` / `AWS_*` | 소셜 로그인·AWS 자격 증명 <br>미설정 시 기본값(placeholder)으로 부팅 | |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | DB 접속 정보 (미설정 시 로컬 기본값 사용) <br>단, MySQL 인스턴스는 필요 | |
+| `KAKAO_*` / `NAVER_*` | 카카오·네이버 소셜 로그인 (해당 기능 사용 시 설정) | |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` | AWS 자격 증명(S3 파일 업로드 등, 해당 기능 사용 시 설정) | |
+
+> 운영(prod) 환경의 환경 변수 주입 방식은 [Deployment](#-deployment) 섹션을 참고하세요.
 
 ### Run
 ```bash
@@ -129,6 +132,8 @@ Developer ──(Push/Merge)──> GitHub Actions ──(Upload Bundle)──> 
 1. GitHub Actions가 테스트 및 빌드를 수행합니다.
 2. 빌드 결과물과 배포 스크립트를 ZIP으로 묶어 S3에 업로드합니다.
 3. CodeDeploy가 EC2에 배포하고 systemd를 통해 서비스를 실행합니다.
+
+> **환경 변수 주입:** 운영 환경의 환경 변수는 AWS SSM Parameter Store에 저장되며, 배포 시 `scripts/load-ssm-env.sh`가 이를 불러와 주입합니다. <br>단, AWS 자격 증명은 환경 변수가 아니라 **EC2 인스턴스의 IAM 역할**로 제공됩니다. <br>또한 운영 환경에서는 Swagger UI에 Basic 인증(`SWAGGER_USER` / `SWAGGER_PASSWORD`)이 적용됩니다.
 
 <br>
 
