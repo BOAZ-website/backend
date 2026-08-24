@@ -10,6 +10,7 @@ import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import org.openapitools.jackson.nullable.JsonNullable;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import com.boaz.backend.domain.recruitment.dto.response.*;
 import com.boaz.backend.domain.recruitment.entity.*;
@@ -635,6 +636,45 @@ class RecruitmentServiceTest {
             ApplicationRequest req = buildApplicationRequest(
                     List.of(buildTextAnswer(1L, "정상답변"),
                             buildJsonAnswer(2L, objNode)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
+        @DisplayName("TC-011e 필수 질문에 answer=null → ANSWER_REQUIRED (questionId는 존재하나 answer 필드 자체가 null)")
+        void nullAnswerOnRequiredQuestion() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1));
+
+            // q1(필수)의 answer 필드가 questionId는 있지만 answer 자체가 null
+            ApplicationRequest req = buildApplicationRequest(List.of(buildJsonAnswer(1L, null)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.ANSWER_REQUIRED);
+        }
+
+        @Test
+        @DisplayName("TC-011f 선택 질문에 answer=null → INVALID_ANSWER_TYPE")
+        void nullAnswerOnOptionalQuestion() {
+            ApplicationQuestion optional = createTextQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, optional));
+
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상답변"), buildJsonAnswer(2L, null)));
 
             assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
                     .isInstanceOf(CustomException.class)
@@ -1387,6 +1427,25 @@ class RecruitmentServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("TC-003b csvService.generateCsv() IOException 발생 → INTERNAL_SERVER_ERROR, S3 업로드 안 함")
+        void csvGenerationIOException() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(any(), any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(csvService.generateCsv(any(), any(), any())).thenThrow(new IOException("disk full"));
+
+            assertThatThrownBy(() -> recruitmentService.downloadApplications(27, DecisionFilter.ALL))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
+
+            verify(s3Service, never()).uploadCsv(any(), any(), any());
         }
 
         @Test
