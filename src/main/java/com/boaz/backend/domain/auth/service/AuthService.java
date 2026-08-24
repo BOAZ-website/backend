@@ -52,6 +52,10 @@ public class AuthService {
 
     @Transactional(readOnly = true)
     public TokenRefreshResponse adminRefresh(String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            throw new CustomException(ErrorCode.TOKEN_NOT_FOUND);
+        }
+
         jwtProvider.validateToken(refreshToken);
 
         RefreshToken saved = refreshTokenRepository
