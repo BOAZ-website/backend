@@ -51,11 +51,11 @@ cd backend
 
 | 환경 변수 | 설명 | 직접 설정 필요 |
 |---|---|:---:|
-| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | DB 접속 정보 — 미설정 시 로컬 기본값(`localhost:3306/boaz`, `root`/`0000`) 사용. **단, MySQL 인스턴스는 필요** | |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | DB 접속 정보(MySQL 인스턴스 필요)<br>미설정 시 로컬 기본값(`localhost:3306/boaz`, `root`/`0000`) 사용 | |
 | `JWT_SECRET` | JWT 서명 시크릿 | ✅ |
 | `S3_RECRUITMENT_BUCKET_NAME` / `S3_ARCHIVING_BUCKET_NAME` | S3 버킷명 | ✅ |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth 자격 증명 | ✅ |
-| `KAKAO_*` / `NAVER_*` / `AWS_*` | 소셜 로그인·AWS 자격 증명 — 미설정 시 기본값(placeholder)으로 부팅 | |
+| `KAKAO_*` / `NAVER_*` / `AWS_*` | 소셜 로그인·AWS 자격 증명 <br>미설정 시 기본값(placeholder)으로 부팅 | |
 
 ### Run
 ```bash
@@ -98,11 +98,13 @@ com.boaz.backend
 ## 🏗 Architecture
 
 ### 평상시
-평상시 서비스 운영을 위한 인프라 아키텍처입니다.
+> 평상시 서비스 운영을 위한 인프라 아키텍처입니다.
+
 <img width="2204" height="1250" alt="BOAZ 웹사이트TF팀 인프라-평시" src="https://github.com/user-attachments/assets/ae14069b-1662-4c96-93a3-96ed3d405120" />
 
 ### 지원 모집 시 (HA)
-지원 모집 기간에는 2개의 EC2와 ALB를 적용하여 고가용성을 확보합니다.
+> 지원 모집 기간에는 2개의 EC2와 ALB를 적용하여 고가용성을 확보합니다.
+
 <img width="2360" height="1464" alt="BOAZ 웹사이트TF팀 인프라-지원 모집 시" src="https://github.com/user-attachments/assets/e77fabcc-d16a-475b-888c-c0fc7fb4a363" />
 
 <br>
