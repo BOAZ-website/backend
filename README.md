@@ -1,3 +1,4 @@
+<img width="1861" height="1505" alt="BOAZ WEB TF ERD (1)" src="https://github.com/user-attachments/assets/b9ab93a0-7e86-490f-a61c-39f390c0fb1e" />
 <div align="center">
 
 # BOAZ 공식 홈페이지 — Backend
@@ -110,7 +111,7 @@ com.boaz.backend
 <br>
 
 ## 📊 ERD
-<img width="1861" height="1505" alt="BOAZ WEB TF ERD" src="https://github.com/user-attachments/assets/a27f4fa9-47cd-4ba4-9e25-db4f9c8f3184" />
+<img width="1861" height="1505" alt="BOAZ WEB TF ERD" src="https://github.com/user-attachments/assets/58d0793c-e4b9-46db-b15e-d02d7d0c5a33" />
 
 <br>
 
