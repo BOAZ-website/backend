@@ -8,6 +8,7 @@ import com.boaz.backend.domain.faq.repository.FaqRepository;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,7 +32,11 @@ public class FaqService {
                 request.getCategory(),
                 request.getOrderNum()
         );
-        faqRepository.save(faq);
+        try {
+            faqRepository.save(faq);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ErrorCode.DUPLICATE_ORDER_NUM);
+        }
         return FaqResponse.from(faq);
     }
 
@@ -45,6 +50,11 @@ public class FaqService {
             throw new CustomException(ErrorCode.DUPLICATE_ORDER_NUM);
         }
         faq.update(request.getQuestion(), request.getAnswer(), request.getCategory(), request.getOrderNum());
+        try {
+            faqRepository.saveAndFlush(faq);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ErrorCode.DUPLICATE_ORDER_NUM);
+        }
         return FaqResponse.from(faq);
     }
 

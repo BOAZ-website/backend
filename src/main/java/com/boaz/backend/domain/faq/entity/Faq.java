@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "faq")
+@Table(name = "faq", uniqueConstraints = @UniqueConstraint(columnNames = {"category", "order_num"}))
 public class Faq extends BaseEntity {
 
     @Id
