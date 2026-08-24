@@ -112,13 +112,13 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 TEAM 호출 → UNAUTHORIZED (DB 조회 안 함)")
+        @DisplayName("TC-003 TEAM 호출 → ACCESS_DENIED (DB 조회 안 함)")
         void teamForbidden() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
 
             assertThatThrownBy(() -> adminService.getAccounts(currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findAllByDeletedAtIsNullOrderByCreatedAtAsc();
         }
     }
@@ -153,14 +153,14 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 TEAM 호출 → UNAUTHORIZED, save 안 함")
+        @DisplayName("TC-002 TEAM 호출 → ACCESS_DENIED, save 안 함")
         void teamForbidden() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
             AdminCreateRequest req = createRequest("boaz_team2", Track.ANALYSIS);
 
             assertThatThrownBy(() -> adminService.createAccount(req, currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).save(any());
         }
 
@@ -253,13 +253,13 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 TEAM 이 타 계정 조회 → UNAUTHORIZED (DB 조회 안 함)")
+        @DisplayName("TC-003 TEAM 이 타 계정 조회 → ACCESS_DENIED (DB 조회 안 함)")
         void teamOther() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
 
             assertThatThrownBy(() -> adminService.getAccount(2L, currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
         }
 
@@ -314,19 +314,19 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 TEAM 이 타 계정 수정 → UNAUTHORIZED (DB 조회 안 함)")
+        @DisplayName("TC-003 TEAM 이 타 계정 수정 → ACCESS_DENIED (DB 조회 안 함)")
         void teamOther() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
             AdminUpdateRequest req = new AdminUpdateRequest();
 
             assertThatThrownBy(() -> adminService.updateAccount(2L, req, currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
         }
 
         @Test
-        @DisplayName("TC-004 TEAM 이 본인에 role 전송 → UNAUTHORIZED (CANNOT_MODIFY_OWN_ROLE 아님, 순서 2>3)")
+        @DisplayName("TC-004 TEAM 이 본인에 role 전송 → ACCESS_DENIED (CANNOT_MODIFY_OWN_ROLE 아님, 순서 2>3)")
         void teamSelfRole() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -334,7 +334,7 @@ class AdminServiceTest {
 
             assertThatThrownBy(() -> adminService.updateAccount(5L, req, currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
         }
 
         @Test
@@ -439,13 +439,13 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 TEAM 이 타 계정 삭제 → UNAUTHORIZED (DB 조회 안 함)")
+        @DisplayName("TC-004 TEAM 이 타 계정 삭제 → ACCESS_DENIED (DB 조회 안 함)")
         void teamOther() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
 
             assertThatThrownBy(() -> adminService.deleteAccount(2L, currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
         }
 
@@ -523,13 +523,13 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 TEAM 이 타 계정 변경 → UNAUTHORIZED (DB 조회 안 함)")
+        @DisplayName("TC-005 TEAM 이 타 계정 변경 → ACCESS_DENIED (DB 조회 안 함)")
         void teamOther() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
 
             assertThatThrownBy(() -> adminService.resetPassword(2L, pwRequest(null, "NewBoaz1234!"), currentAdmin))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.UNAUTHORIZED);
+                    .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
             verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
         }
 

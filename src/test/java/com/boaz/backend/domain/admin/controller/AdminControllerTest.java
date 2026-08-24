@@ -103,13 +103,13 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 TEAM 호출 → 서비스 UNAUTHORIZED → 401")
+        @DisplayName("EX-002 TEAM 호출 → 서비스 ACCESS_DENIED → 403")
         void teamForbidden() throws Exception {
-            when(adminService.getAccounts(any())).thenThrow(new CustomException(ErrorCode.UNAUTHORIZED));
+            when(adminService.getAccounts(any())).thenThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
             mockMvc.perform(get("/api/v1/admin/accounts").with(authentication(adminAuth(Admin.Role.TEAM))))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error_code").value("UNAUTHORIZED"));
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.error_code").value("ACCESS_DENIED"));
         }
 
         @Test
@@ -268,14 +268,14 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 TEAM 타 계정 → 서비스 UNAUTHORIZED → 401")
+        @DisplayName("EX-002 TEAM 타 계정 → 서비스 ACCESS_DENIED → 403")
         void teamOther() throws Exception {
             when(adminService.getAccount(eq(2L), any()))
-                    .thenThrow(new CustomException(ErrorCode.UNAUTHORIZED));
+                    .thenThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
             mockMvc.perform(get("/api/v1/admin/accounts/2").with(authentication(adminAuth(Admin.Role.TEAM))))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(jsonPath("$.error_code").value("UNAUTHORIZED"));
+                    .andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.error_code").value("ACCESS_DENIED"));
         }
 
         @Test

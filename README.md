@@ -1,81 +1,163 @@
-# backend
+<div align="center">
 
-# 🌿 Git Branch 전략 및 커밋 컨벤션
+# BOAZ 공식 홈페이지 — Backend
 
-## 📌 브랜치 종류 및 규칙
+**국내 최초 빅데이터 동아리 BOAZ 공식 홈페이지의 백엔드 API 서버**
+<br />
 
-| 브랜치 | 용도 | 설명 |
-|--------|------|------|
-| `main` | 배포용 | 항상 **안정적인 상태** 유지. 배포 시 이 브랜치 기준으로 진행. **직접 작업 금지.** |
-| `dev` | 개발 통합 | 각 기능 브랜치를 이 브랜치로 merge. 팀원 PR 후 코드리뷰 → merge 권장. 리뷰 지연 시 **자기 책임 하에 직접 merge 가능.** |
-| `feat/{이슈번호}-{설명}` | 기능 개발 | 새로운 기능 개발 시 사용. 예: `feature/#12-login-api` |
-| `fix/{이슈번호}-{설명}` | 버그 수정 | 발견된 버그 수정용 브랜치. |
-| `hotfix/{이슈번호}-{설명}` | 긴급 수정 | 배포 후 발생한 긴급 이슈 처리 시 사용. |
-| `refactor/{이슈번호}-{설명}` | 리팩토링 | 로직 변경 없이 코드 구조 개선 목적. |
-| `chore/{이슈번호}-{설명}` | 설정/환경 | 빌드 설정, 패키지 설치 등 부수 작업 시 사용. |
+<img width="1200" height="630" alt="boaz-og" src="https://github.com/user-attachments/assets/55b80705-4850-451f-b7f0-bc3e3ae8592b" />
 
-> ✅ 기능 개발이 완료되면 `develop` 브랜치로 **Pull Request → Merge**  
-> ✅ merge 완료된 브랜치는 **즉시 삭제 권장**
+🔗 Service link: https://www.bigdataboaz.com/
 
----
+</div>
 
-## ✅ 브랜치 네이밍 예시
+<br>
 
-- `feat/#12-login-api`
-- `fix/#17-cors-error`
-- `chore/#20-env-setting`
+## 🛠 Tech Stack
 
----
+### Backend
+- **Language:** Java 21
+- **Framework:** Spring Boot 3.4.3
+- **Database:** MySQL
+- **Database Access:** Spring Data JPA, Hibernate
+- **Security:** Spring Security, JWT, OAuth 2.0
+- **API Docs:** SpringDoc (Swagger UI)
+- **Build Tool:** Gradle
 
-## 📝 커밋 메시지 컨벤션
+### Infrastructure
+- **Cloud (AWS):** EC2, RDS (MySQL), S3, CloudFront, Route53, ACM (SSL), VPC, ALB, CloudWatch
+- **CI/CD:** GitHub Actions, AWS CodeDeploy
 
-### 🔧 커밋 메시지 형식
+### Testing
+- JUnit 5
+- Testcontainers (Docker)
 
+<br>
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Java 21
+- MySQL 8.x (로컬 실행 시 `boaz` 데이터베이스 필요)
+
+### Installation
+```bash
+git clone https://github.com/BOAZ-website/backend.git
+cd backend
 ```
-#이슈명 타입: 변경 요약
+
+### Configuration
+> `local` 프로필이 기본으로 활성화됩니다. 아래 "필수"가 ✅인 항목은 값이 없으면 앱이 뜨지 않습니다.
+
+| 환경 변수 | 설명 | 필수 |
+|---|---|:---:|
+| `JWT_SECRET` | JWT 서명 시크릿 | ✅ |
+| `S3_RECRUITMENT_BUCKET_NAME` / `S3_ARCHIVING_BUCKET_NAME` | S3 버킷명 | ✅ |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth 자격 증명 | ✅ |
+| `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` | DB 접속 정보 (미설정 시 로컬 기본값 사용) <br>단, MySQL 인스턴스는 필요 | |
+| `KAKAO_*` / `NAVER_*` | 카카오·네이버 소셜 로그인 (해당 기능 사용 시 설정) | |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` | AWS 자격 증명(S3 파일 업로드 등, 해당 기능 사용 시 설정) | |
+
+> 운영(prod) 환경의 환경 변수 주입 방식은 [Deployment](#-deployment) 섹션을 참고하세요.
+
+### Run
+```bash
+./gradlew bootRun        # 애플리케이션 실행 (default: local)
+./gradlew build          # 빌드
+./gradlew test           # 테스트
 ```
 
-> 예시:  
-> `#1 feat: 로그인 API 구현`
+### API Docs
+> 실행 후 Swagger UI에서 API 명세를 확인할 수 있습니다.
+```
+http://localhost:8080/swagger-ui.html
+```
 
----
+<br>
 
-### 📚 커밋 타입 정의
+## 📂 Project Structure
+> 도메인 중심(Domain-Driven) 패키지 구조를 적용했습니다.
+```
+com.boaz.backend
+├── domain              # 도메인별 모듈 (controller / service / entity / repository / dto)
+│   ├── admin
+│   ├── archive
+│   ├── auth
+│   ├── curriculum
+│   ├── faq
+│   ├── recruitment
+│   ├── review
+│   └── user
+├── global              # 공통 모듈
+│   ├── common          # BaseEntity, ApiResponse 등
+│   ├── config
+│   ├── exception       # CustomException, ErrorCode
+│   └── util
+└── BackendApplication.java
+```
 
-| 태그 | 설명 |
-|------|------|
-| `feat` | 새로운 기능 추가 |
-| `fix` | 버그 수정 |
-| `hotfix` | 급한 버그/이슈 패치 |
-| `refactor` | 코드 리팩토링 (기능 변화 없음) |
-| `add` | 부가적인 코드/라이브러리/파일 추가 |
-| `del` | 불필요한 코드/파일 삭제 |
-| `docs` | 문서 작업 (README, Wiki 등) |
-| `chore` | 환경 설정, 빌드 작업 등 기타 잡일 |
-| `correct` | 오타, 타입 수정 등 |
-| `move` | 코드/파일 위치 이동 |
-| `rename` | 파일/변수/함수 이름 변경 |
-| `improve` | 성능/UX 개선 |
-| `test` | 테스트 코드 작성/수정 |
+<br>
 
----
+## 🏗 Architecture
 
-## 🔁 브랜치 Workflow 요약
+### 평상시
+> 평상시 서비스 운영을 위한 인프라 아키텍처입니다.
 
-1. 이슈 생성  
-2. `develop` 브랜치 기준으로 기능 브랜치 생성  
-   ```bash
-   git checkout -b feature/#12-login-api develop
-   ```
+<img width="2204" height="1250" alt="BOAZ 웹사이트TF팀 인프라-평시" src="https://github.com/user-attachments/assets/ae14069b-1662-4c96-93a3-96ed3d405120" />
 
-3. 기능 개발 후 커밋 & 푸시  
-   ```bash
-   git commit -m "#12 feat: 로그인 API 구현"
-   git push origin feature/#12-login-api
-   ```
+### 지원 모집 시 (HA)
+> 지원 모집 기간에는 2개의 EC2와 ALB를 적용하여 고가용성을 확보합니다.
 
-4. GitHub에서 Pull Request 생성  
-5. 코드리뷰 후 merge (지연 시 셀프 merge 가능)  
-6. merge된 브랜치는 삭제  
+<img width="2360" height="1464" alt="BOAZ 웹사이트TF팀 인프라-지원 모집 시" src="https://github.com/user-attachments/assets/e77fabcc-d16a-475b-888c-c0fc7fb4a363" />
 
----
+<br>
+
+## 📊 ERD
+<img width="1861" height="1505" alt="ERD" src="https://github.com/user-attachments/assets/624f6e9f-f29a-4181-8dd5-372bd66c9d53" />
+
+<br>
+
+## 📦 Deployment
+> GitHub Actions와 AWS CodeDeploy를 활용하여 빌드부터 EC2 배포까지의 전 과정을 자동화했습니다.
+
+### CI/CD Pipeline
+``` text
+Developer ──(Push/Merge)──> GitHub Actions ──(Upload Bundle)──> AWS S3
+                                 │                                │
+                             (Trigger)                         (Fetch)
+                                 ▼                                ▼
+                            AWS CodeDeploy ───(Deploy)────> AWS EC2 (systemd)
+```
+1. GitHub Actions가 테스트 및 빌드를 수행합니다.
+2. 빌드 결과물과 배포 스크립트를 ZIP으로 묶어 S3에 업로드합니다.
+3. CodeDeploy가 EC2에 배포하고 systemd를 통해 서비스를 실행합니다.
+
+> **환경 변수 주입:** 운영 환경의 환경 변수는 AWS SSM Parameter Store에 저장되며, 배포 시 `scripts/load-ssm-env.sh`가 이를 불러와 주입합니다. <br>단, AWS 자격 증명은 환경 변수가 아니라 **EC2 인스턴스의 IAM 역할**로 제공됩니다. <br>또한 운영 환경에서는 Swagger UI에 Basic 인증(`SWAGGER_USER` / `SWAGGER_PASSWORD`)이 적용됩니다.
+
+<br>
+
+## 👥 Contributors
+
+### 웹사이트 개발 TF (2026 상반기)
+> BOAZ 공식 홈페이지 신규 구축
+
+> 프로젝트 총괄(PM): [@likell1](https://github.com/likell1)
+
+| Profile | Name | GitHub | 기수 · 부문 | Role |
+|---------|------|--------|-----------|------|
+| <img src="https://github.com/seoyeon83.png" width="50" height="50" alt="김서연"/> | 김서연 | [@seoyeon83](https://github.com/seoyeon83) | 25기 엔지니어링 | Lead |
+| <img src="https://github.com/jaewonnow.png" width="50" height="50" alt="신재원"/> | 신재원 | [@jaewonnow](https://github.com/jaewonnow) | 25기 엔지니어링 | Member |
+| <img src="https://github.com/minseo0313.png" width="50" height="50" alt="남민서"/> | 남민서 | [@minseo0313](https://github.com/minseo0313) | 26기 엔지니어링 | Member |
+
+### 관리자 페이지 개발 (2026 하반기, 진행 중)
+> 관리자 페이지 개발 · 기존 백엔드 코드 품질 개선 · 서비스 운영 지원
+
+> 프로젝트 총괄(PM): [@Daehyun-Bigbread](https://github.com/Daehyun-Bigbread)
+
+| Profile | Name | GitHub | 기수 · 부문 | Role |
+|---------|------|--------|-----------|------|
+| <img src="https://github.com/seoyeon83.png" width="50" height="50" alt="김서연"/> | 김서연 | [@seoyeon83](https://github.com/seoyeon83) | 25기 엔지니어링 | Lead |
+| <img src="https://github.com/minseo0313.png" width="50" height="50" alt="남민서"/> | 남민서 | [@minseo0313](https://github.com/minseo0313) | 26기 엔지니어링 | Member |
+| <img src="https://github.com/wsxchoi.png" width="50" height="50" alt="최우성"/> | 최우성 | [@wsxchoi](https://github.com/wsxchoi) | 27기 엔지니어링 | Member |
+| <img src="https://github.com/galgalrobot.png" width="50" height="50" alt="권준희"/> | 권준희 | [@galgalrobot](https://github.com/galgalrobot) | 27기 엔지니어링 | Member |
+

@@ -327,6 +327,17 @@ class RecruitmentAdminControllerTest {
         return objectMapper.writeValueAsString(body);
     }
 
+    private String recruitmentCreateJsonMissing(String fieldToOmit) throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("term", 28);
+        body.put("start_date", "2026-08-01T00:00:00");
+        body.put("end_date", "2026-08-15T23:59:59");
+        body.put("schedule", List.of());
+        body.put("brochure_url", "https://e.com/b.pdf");
+        body.remove(fieldToOmit);
+        return objectMapper.writeValueAsString(body);
+    }
+
     private String questionsCreateJson(boolean withQuestions) throws Exception {
         Map<String, Object> body = new HashMap<>();
         body.put("recruitment_id", 1);
@@ -343,6 +354,23 @@ class RecruitmentAdminControllerTest {
         } else {
             body.put("questions", List.of());
         }
+        return objectMapper.writeValueAsString(body);
+    }
+
+    private String questionsCreateJsonMissing(String fieldToOmit) throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("recruitment_id", 1);
+        Map<String, Object> item = new HashMap<>();
+        item.put("label", "공통1");
+        item.put("category", "COMMON");
+        item.put("type", "TEXT");
+        item.put("content", "질문");
+        item.put("limit_length", 500);
+        item.put("order_num", 1);
+        item.put("is_required", true);
+        item.remove(fieldToOmit);
+        body.put("questions", List.of(item));
+        body.remove(fieldToOmit); // recruitment_id 케이스는 최상위에서 제거
         return objectMapper.writeValueAsString(body);
     }
 
@@ -413,6 +441,39 @@ class RecruitmentAdminControllerTest {
                             .with(authentication(adminAuth()))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(recruitmentCreateJson(false)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-005b 필수 필드(start_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        void missingStartDate() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(recruitmentCreateJsonMissing("start_date")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-005c 필수 필드(end_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        void missingEndDate() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(recruitmentCreateJsonMissing("end_date")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-005d 필수 필드(schedule) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        void missingSchedule() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(recruitmentCreateJsonMissing("schedule")))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
         }
@@ -601,6 +662,72 @@ class RecruitmentAdminControllerTest {
                             .with(authentication(adminAuth()))
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(body)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009c item의 label 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
+        void itemLabelMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("label")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009d item의 category 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        void itemCategoryMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("category")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009e item의 type 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        void itemTypeMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("type")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009f item의 content 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
+        void itemContentMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("content")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009g item의 is_required 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        void itemIsRequiredMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("is_required")))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("TC-009h recruitment_id 누락 → 400 INVALID_INPUT_VALUE (@NotNull)")
+        void recruitmentIdMissing() throws Exception {
+            mockMvc.perform(post("/api/v1/admin/recruitment/questions")
+                            .with(authentication(adminAuth()))
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(questionsCreateJsonMissing("recruitment_id")))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
         }

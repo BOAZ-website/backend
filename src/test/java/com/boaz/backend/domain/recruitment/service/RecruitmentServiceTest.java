@@ -10,6 +10,7 @@ import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import org.openapitools.jackson.nullable.JsonNullable;
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 import com.boaz.backend.domain.recruitment.dto.response.*;
 import com.boaz.backend.domain.recruitment.entity.*;
@@ -644,6 +645,45 @@ class RecruitmentServiceTest {
         }
 
         @Test
+        @DisplayName("TC-011e 필수 질문에 answer=null → ANSWER_REQUIRED (questionId는 존재하나 answer 필드 자체가 null)")
+        void nullAnswerOnRequiredQuestion() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1));
+
+            // q1(필수)의 answer 필드가 questionId는 있지만 answer 자체가 null
+            ApplicationRequest req = buildApplicationRequest(List.of(buildJsonAnswer(1L, null)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.ANSWER_REQUIRED);
+        }
+
+        @Test
+        @DisplayName("TC-011f 선택 질문에 answer=null → INVALID_ANSWER_TYPE")
+        void nullAnswerOnOptionalQuestion() {
+            ApplicationQuestion optional = createTextQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, false);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, optional));
+
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상답변"), buildJsonAnswer(2L, null)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INVALID_ANSWER_TYPE);
+        }
+
+        @Test
         @DisplayName("TC-011b TABLE 질문(is_required=false)에 텍스트 답변 → INVALID_ANSWER_TYPE")
         void tableQuestionWithTextAnswer() {
             ApplicationQuestion tableQ = createTableQuestion(2L, activeRecruitment,
@@ -712,6 +752,30 @@ class RecruitmentServiceTest {
             verify(applicantAnswerRepository, org.mockito.Mockito.atLeastOnce()).save(
                     org.mockito.ArgumentMatchers.argThat(a ->
                             a.getAnswerJson() != null && a.getAnswerJson().contains("12:00~14:00")));
+        }
+
+        @Test
+        @DisplayName("TC-012b 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
+        void answerJsonSerializationFailure() throws Exception {
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.empty());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(List.of(q1, multiQ));
+            doThrow(new RuntimeException("직렬화 실패")).when(objectMapper).writeValueAsString(any());
+
+            JsonNode answer = objectMapper.readTree("{\"1월 4일\":[\"12:00~14:00\"]}");
+            ApplicationRequest req = buildApplicationRequest(
+                    List.of(buildTextAnswer(1L, "정상"),
+                            buildJsonAnswer(2L, answer)));
+
+            assertThatThrownBy(() -> recruitmentService.submitApplication(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
         }
 
         @Test
@@ -1142,6 +1206,31 @@ class RecruitmentServiceTest {
         }
 
         @Test
+        @DisplayName("TC-009b 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
+        void answerJsonSerializationFailure() throws Exception {
+            Applicant draft = createDraftApplicant(active, user);
+            ApplicationQuestion multiQ = createMultiTableQuestion(2L, active,
+                    ApplicationQuestion.Category.COMMON, 2, true);
+
+            when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+            when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(active));
+            when(applicantRepository.findByRecruitmentIdAndUserId(1L, 1L)).thenReturn(Optional.of(draft));
+            when(applicationQuestionRepository.findByRecruitmentIdOrderByOrderNumAsc(1L))
+                    .thenReturn(List.of(multiQ));
+            doThrow(new RuntimeException("직렬화 실패")).when(objectMapper).writeValueAsString(any());
+
+            DraftApplicationRequest req = new DraftApplicationRequest();
+            ReflectionTestUtils.setField(req, "answers",
+                    List.of(buildJsonAnswer(2L, objectMapper.readTree(
+                            "{\"1월 4일\":[\"12:00~14:00\"]}"))));
+
+            assertThatThrownBy(() -> recruitmentService.saveDraft(1L, 1L, req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
+        }
+
+        @Test
         @DisplayName("TC-010 복수선택 TABLE에 문자열 값 → INVALID_ANSWER_TYPE")
         void multiTableStringValueInDraft() throws Exception {
             Applicant draft = createDraftApplicant(active, user);
@@ -1388,6 +1477,25 @@ class RecruitmentServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("TC-003b csvService.generateCsv() IOException 발생 → INTERNAL_SERVER_ERROR, S3 업로드 안 함")
+        void csvGenerationIOException() throws Exception {
+            Recruitment r = createActiveRecruitment();
+            when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
+            when(applicantRepository.findSubmittedByRecruitmentIdAndTrackAndDecision(any(), any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(applicationQuestionRepository.findByRecruitmentIdAndCategories(any(), any(), any()))
+                    .thenReturn(Collections.emptyList());
+            when(csvService.generateCsv(any(), any(), any())).thenThrow(new IOException("disk full"));
+
+            assertThatThrownBy(() -> recruitmentService.downloadApplications(27, DecisionFilter.ALL))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
+
+            verify(s3Service, never()).uploadCsv(any(), any(), any());
         }
 
         @Test
@@ -1768,6 +1876,21 @@ class RecruitmentServiceTest {
                     .isInstanceOf(CustomException.class)
                     .extracting(e -> ((CustomException) e).getErrorCode())
                     .isEqualTo(ErrorCode.DUPLICATE_TERM);
+            verify(recruitmentRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("TC-003b schedule JSON 직렬화 실패 → INTERNAL_SERVER_ERROR, 저장 안 함")
+        void scheduleSerializationFailure() throws Exception {
+            RecruitmentCreateRequest req = buildCreateRecruitmentReq(
+                    28, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(15), null);
+            when(recruitmentRepository.existsByTerm(28)).thenReturn(false);
+            doThrow(new RuntimeException("직렬화 실패")).when(objectMapper).writeValueAsString(any());
+
+            assertThatThrownBy(() -> recruitmentService.createRecruitment(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR);
             verify(recruitmentRepository, never()).save(any());
         }
 

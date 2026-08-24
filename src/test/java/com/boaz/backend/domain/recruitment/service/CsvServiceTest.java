@@ -38,6 +38,10 @@ class CsvServiceTest {
     }
 
     private Applicant makeApplicant(Recruitment r) {
+        return makeApplicant(r, "홍길동", "한국대", "컴공");
+    }
+
+    private Applicant makeApplicant(Recruitment r, String name, String university, String major) {
         User user = User.builder()
                 .provider("kakao").providerId("test-1")
                 .nickname("홍길동").memberType(MemberType.OUTSIDER)
@@ -49,9 +53,9 @@ class CsvServiceTest {
                 .user(user)
                 .status(Applicant.ApplicantStatus.SUBMITTED)
                 .track(Track.ENGINEERING)
-                .name("홍길동").email("hong@example.com")
-                .phone("01012345678").university("한국대")
-                .major("컴공").build();
+                .name(name).email("hong@example.com")
+                .phone("01012345678").university(university)
+                .major(major).build();
         a.markSubmitted();
         ReflectionTestUtils.setField(a, "id", 1L);
         return a;
@@ -261,6 +265,142 @@ class CsvServiceTest {
             // sanitize 후 "=날짜:"로 시작하는 셀이 없어야 함 (앞에 ' 추가됨)
             assertThat(content).doesNotContain("\"=날짜:");
             assertThat(content).contains("'=날짜:");
+        }
+    }
+
+    @Nested
+    @DisplayName("기본 컬럼 CSV 인젝션 방어 (name/university/major)")
+    class BaseColumnCsvInjection {
+
+        @Test
+        @DisplayName("name이 '='로 시작 → sanitize 적용되어 앞에 ' 추가")
+        void nameStartingWithEquals() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "=HYPERLINK(\"http://evil.com\")", "한국대", "컴공");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).doesNotContain("\"=HYPERLINK");
+            assertThat(content).contains("'=HYPERLINK");
+        }
+
+        @Test
+        @DisplayName("university가 '+'로 시작 → sanitize 적용")
+        void universityStartingWithPlus() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "홍길동", "+1+1", "컴공");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).doesNotContain("\"+1+1");
+            assertThat(content).contains("'+1+1");
+        }
+
+        @Test
+        @DisplayName("major가 '-'로 시작 → sanitize 적용")
+        void majorStartingWithMinus() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "홍길동", "한국대", "-2+3");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).doesNotContain("\"-2+3");
+            assertThat(content).contains("'-2+3");
+        }
+
+        @Test
+        @DisplayName("major가 '@'로 시작 → sanitize 적용")
+        void majorStartingWithAt() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "홍길동", "한국대", "@SUM(1,1)");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).doesNotContain("\"@SUM");
+            assertThat(content).contains("'@SUM");
+        }
+
+        @Test
+        @DisplayName("정상 값(트리거 문자로 시작하지 않음)은 sanitize 미적용")
+        void normalValueNotSanitized() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "홍길동", "한국대", "컴퓨터공학과");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).contains("\"컴퓨터공학과\"");
+        }
+    }
+
+    @Nested
+    @DisplayName("빈 지원자 리스트")
+    class EmptyApplicantList {
+
+        @Test
+        @DisplayName("지원자 없음 → 헤더만 출력, 데이터 행 없음")
+        void headerOnly() throws IOException {
+            Recruitment r = makeRecruitment();
+            ApplicationQuestion q = makeQuestion(r, ApplicationQuestion.Type.TEXT, "TEXT1", null);
+
+            byte[] csv = csvService.generateCsv(List.of(), List.of(q), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8)
+                    .replaceAll("\r", "");
+            String[] lines = content.split("\n");
+
+            assertThat(lines).hasSize(1);
+            assertThat(lines[0]).contains("TEXT1");
+        }
+    }
+
+    @Nested
+    @DisplayName("값 내 큰따옴표 이스케이프")
+    class QuoteEscaping {
+
+        @Test
+        @DisplayName("name에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
+        void quoteInNameIsDoubled() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r, "홍\"길동\"", "한국대", "컴공");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(), List.of());
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).contains("\"홍\"\"길동\"\"\"");
+        }
+
+        @Test
+        @DisplayName("TEXT 답변에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
+        void quoteInAnswerIsDoubled() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r);
+            ApplicationQuestion q = makeQuestion(r, ApplicationQuestion.Type.TEXT, "TEXT1", null);
+            ApplicantAnswer ans = makeTextAnswer(a, q, "그는 \"최고\"라고 말했다");
+
+            assertThat(generateAndExtractCell(a, q, ans)).isEqualTo("그는 \"최고\"라고 말했다");
+        }
+    }
+
+    @Nested
+    @DisplayName("TEXT 답변 내 개행")
+    class TextAnswerWithNewline {
+
+        @Test
+        @DisplayName("TEXT 답변에 개행 포함 → 따옴표로 감싸져 하나의 셀로 유지됨")
+        void newlineKeptWithinQuotedCell() throws IOException {
+            Recruitment r = makeRecruitment();
+            Applicant a = makeApplicant(r);
+            ApplicationQuestion q = makeQuestion(r, ApplicationQuestion.Type.TEXT, "TEXT1", null);
+            ApplicantAnswer ans = makeTextAnswer(a, q, "첫째 줄\n둘째 줄");
+
+            byte[] csv = csvService.generateCsv(List.of(a), List.of(q), List.of(ans));
+            String content = new String(csv, java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(content).contains("\"첫째 줄\n둘째 줄\"");
         }
     }
 }

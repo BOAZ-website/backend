@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -176,6 +177,20 @@ class CurriculumServiceTest {
                     .isEqualTo(ErrorCode.DUPLICATE_TRACK);
 
             verify(curriculumRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("TC-012 동시 요청으로 existsByTrack 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_TRACK")
+        void raceConditionCaughtByDbConstraint() {
+            when(curriculumRepository.existsByTrack(Track.ANALYSIS)).thenReturn(false);
+            when(curriculumRepository.save(any()))
+                    .thenThrow(new DataIntegrityViolationException("duplicate entry for key 'track'"));
+
+            assertThatThrownBy(() -> curriculumService.createCurriculum(
+                    makeCreateRequest(Track.ANALYSIS, List.of(makeStep(1, "제목", "설명")))))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.DUPLICATE_TRACK);
         }
     }
 

@@ -12,6 +12,7 @@ import com.boaz.backend.global.exception.ErrorCode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +39,11 @@ public class CurriculumService {
                 .map(s -> toStepMap(s.getStep(), s.getTitle(), s.getDesc()))
                 .toList());
         Curriculum curriculum = Curriculum.create(request.getTrack(), stepsJson);
-        curriculumRepository.save(curriculum);
+        try {
+            curriculumRepository.save(curriculum);
+        } catch (DataIntegrityViolationException e) {
+            throw new CustomException(ErrorCode.DUPLICATE_TRACK);
+        }
         return CurriculumResponse.from(curriculum, parseSteps(stepsJson));
     }
 
