@@ -8,7 +8,7 @@ import lombok.Getter;
 
 @Getter
 @Entity
-@Table(name = "curriculum")
+@Table(name = "curriculum", uniqueConstraints = @UniqueConstraint(columnNames = "track"))
 public class Curriculum extends BaseEntity {
 
     @Id

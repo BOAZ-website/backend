@@ -19,6 +19,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -130,6 +135,53 @@ class FaqIntegrationTest extends TestcontainersBase {
 
             assertThat(res).isNotNull();
             assertThat(faqRepository.count()).isEqualTo(2);
+        }
+
+        @Test
+        @DisplayName("TC-011 동시에 같은 category+orderNum으로 등록 요청 → 단 하나만 성공, 나머지는 DUPLICATE_ORDER_NUM, DB에는 1건만 남음")
+        void concurrentCreateSameCategoryOrderNum() throws Exception {
+            int threadCount = 5;
+            ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+            CountDownLatch readyLatch = new CountDownLatch(threadCount);
+            CountDownLatch startLatch = new CountDownLatch(1);
+            CountDownLatch doneLatch = new CountDownLatch(threadCount);
+            AtomicInteger successCount = new AtomicInteger();
+            AtomicInteger duplicateCount = new AtomicInteger();
+
+            for (int i = 0; i < threadCount; i++) {
+                executor.submit(() -> {
+                    try {
+                        readyLatch.countDown();
+                        startLatch.await();
+                        faqService.createFaq(
+                                makeCreateRequest("질문", "답변", Faq.Category.RECRUITMENT, 1));
+                        successCount.incrementAndGet();
+                    } catch (CustomException e) {
+                        if (e.getErrorCode() == ErrorCode.DUPLICATE_ORDER_NUM) {
+                            duplicateCount.incrementAndGet();
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    } finally {
+                        doneLatch.countDown();
+                    }
+                });
+            }
+
+            readyLatch.await();
+            startLatch.countDown();
+            doneLatch.await(10, TimeUnit.SECONDS);
+
+            try {
+                assertThat(successCount.get()).isEqualTo(1);
+                assertThat(duplicateCount.get()).isEqualTo(threadCount - 1);
+                assertThat(faqRepository.count()).isEqualTo(1);
+            } finally {
+                // 워커 스레드의 성공한 저장은 메인 테스트 트랜잭션(롤백 대상) 밖에서 독립적으로 커밋되므로,
+                // 이 클래스가 공유하는 Spring 컨텍스트/DB에 영구히 남지 않도록 별도 커밋으로 명시적으로 정리한다.
+                executor.submit(() -> faqRepository.deleteAll()).get(5, TimeUnit.SECONDS);
+                executor.shutdown();
+            }
         }
     }
 
