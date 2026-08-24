@@ -154,6 +154,6 @@ Developer ──(Push/Merge)──> GitHub Actions ──(Upload Bundle)──> 
 |---------|------|--------|-----------|------|
 | <img src="https://github.com/seoyeon83.png" width="50" height="50" /> | 김서연 | [@seoyeon83](https://github.com/seoyeon83) | 25기 엔지니어링 | Lead |
 | <img src="https://github.com/minseo0313.png" width="50" height="50" /> | 남민서 | [@minseo0313](https://github.com/minseo0313) | 26기 엔지니어링 | Member |
-| <img src="https://github.com/wsxchoi.png" width="50" height="50" /> | 최우성 | [@wsxchoi](https://github.com/wsxchoi.png) | 27기 엔지니어링 | Member |
+| <img src="https://github.com/wsxchoi.png" width="50" height="50" /> | 최우성 | [@wsxchoi](https://github.com/wsxchoi) | 27기 엔지니어링 | Member |
 | <img src="https://github.com/galgalrobot.png" width="50" height="50" /> | 권준희 | [@galgalrobot](https://github.com/galgalrobot) | 27기 엔지니어링 | Member |
 
