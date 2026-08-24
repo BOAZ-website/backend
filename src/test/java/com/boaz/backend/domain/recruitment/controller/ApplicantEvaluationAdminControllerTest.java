@@ -353,6 +353,28 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
+        @DisplayName("[검증] score 범위 미달(0) → 400 (@Min(1), @Max(10)과 비대칭으로 미검증이었던 갭)")
+        void scoreBelowMinimum() throws Exception {
+            mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
+                            .with(authentication(adminAuth()))
+                            .contentType("application/json")
+                            .content("{\"decision\":\"PASS\",\"score\":0}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
+        @DisplayName("[검증] score 음수(-1) → 400 (@Min(1))")
+        void scoreNegative() throws Exception {
+            mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
+                            .with(authentication(adminAuth()))
+                            .contentType("application/json")
+                            .content("{\"decision\":\"PASS\",\"score\":-1}"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
+
+        @Test
         @DisplayName("[권한] 타 부문(서비스 throw) → 403")
         void trackMismatch() throws Exception {
             given(recruitmentService.saveMyEvaluation(eq(101L), any(), any()))
