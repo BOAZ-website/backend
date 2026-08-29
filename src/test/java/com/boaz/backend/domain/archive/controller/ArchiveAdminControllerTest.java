@@ -246,31 +246,44 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) 파트 누락 / Bean Validation / malformed JSON / 잘못된 enum → 400")
-        void create_input_errors() throws Exception {
-            Map<String, Object> withHalf = validCreateBody();
-            withHalf.put("half", "26-1");
-
+        @DisplayName("TC-009(공통) data 파트 누락 → 400 MISSING_PARAMETER")
+        void create_missing_data_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("MISSING_PARAMETER"));
+        }
 
-            Map<String, Object> noTitle = new HashMap<>(withHalf);
-            noTitle.put("title", "  ");
-            mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(dataPart(noTitle)).file(imagePart())
+        @Test
+        @DisplayName("TC-009(공통) Bean Validation 위반(title 공백) → 400 INVALID_INPUT_VALUE")
+        void create_bean_validation() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.put("half", "26-1");
+            body.put("title", "  ");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(dataPart(body)).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
 
+        @Test
+        @DisplayName("TC-009(공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
+        void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(rawDataPart("{ not json")).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
 
-            Map<String, Object> badEnum = new HashMap<>(withHalf);
-            badEnum.put("track", "DEEP_LEARNING");
-            mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(dataPart(badEnum)).file(imagePart())
+        @Test
+        @DisplayName("TC-009(공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
+        void create_invalid_enum_value() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.put("half", "26-1");
+            body.put("track", "DEEP_LEARNING");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(dataPart(body)).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
@@ -317,28 +330,42 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) 파트 누락 / Bean Validation / malformed JSON / 잘못된 enum → 400")
-        void create_input_errors() throws Exception {
+        @DisplayName("TC-009(공통) data 파트 누락 → 400 MISSING_PARAMETER")
+        void create_missing_data_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("MISSING_PARAMETER"));
+        }
 
-            Map<String, Object> noContentDate = validCreateBody();
-            noContentDate.remove("content_date");
-            mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(dataPart(noContentDate)).file(imagePart())
+        @Test
+        @DisplayName("TC-009(공통) Bean Validation 위반(content_date 누락) → 400 INVALID_INPUT_VALUE")
+        void create_bean_validation() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.remove("content_date");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(dataPart(body)).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
 
+        @Test
+        @DisplayName("TC-009(공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
+        void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(rawDataPart("{ not json")).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
+        }
 
-            Map<String, Object> badEnum = validCreateBody();
-            badEnum.put("track", "DEEP_LEARNING");
-            mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(dataPart(badEnum)).file(imagePart())
+        @Test
+        @DisplayName("TC-009(공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
+        void create_invalid_enum_value() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.put("track", "DEEP_LEARNING");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(dataPart(body)).file(imagePart())
                             .with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"));
