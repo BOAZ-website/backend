@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
@@ -50,9 +51,10 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
 
     @MockitoBean S3Service s3Service;
 
-    private TransactionTemplate tx;
+    @Value("${spring.cloud.aws.s3.archiving-bucket}")
+    String bucket;
 
-    private static final String BUCKET = "test-archiving-bucket";
+    private TransactionTemplate tx;
 
     @BeforeEach
     void setUp() {
@@ -126,7 +128,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
                     .isInstanceOf(CustomException.class);
 
             assertThat(archiveRepository.count()).isZero();
-            verify(s3Service).deleteImage(BUCKET, uploaded);
+            verify(s3Service).deleteImage(bucket, uploaded);
         }
     }
 
@@ -180,7 +182,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
                     .isInstanceOf(CustomException.class);
 
             assertThat(archiveRepository.count()).isZero();
-            verify(s3Service).deleteImage(BUCKET, uploaded);
+            verify(s3Service).deleteImage(bucket, uploaded);
         }
     }
 
@@ -217,7 +219,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
 
             assertThat(archiveRepository.findById(a.getId()).orElseThrow().getImageUrl())
                     .isEqualTo("https://bucket/new.png");
-            verify(s3Service).deleteImage(BUCKET, "https://bucket/old.png");
+            verify(s3Service).deleteImage(bucket, "https://bucket/old.png");
         }
 
         @Test
@@ -233,8 +235,8 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
                     .isInstanceOf(CustomException.class);
 
             assertThat(archiveRepository.findById(a.getId()).orElseThrow().getTitle()).isEqualTo("제목");
-            verify(s3Service).deleteImage(BUCKET, "https://bucket/new.png");
-            verify(s3Service, never()).deleteImage(BUCKET, "https://bucket/old.png");
+            verify(s3Service).deleteImage(bucket, "https://bucket/new.png");
+            verify(s3Service, never()).deleteImage(bucket, "https://bucket/old.png");
         }
     }
 
@@ -253,7 +255,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
             tx.executeWithoutResult(s -> archiveAdminService.deleteArchive(Category.PROJECT, a.getId()));
 
             assertThat(archiveRepository.findById(a.getId())).isEmpty();
-            verify(s3Service).deleteImage(BUCKET, "https://bucket/p.png");
+            verify(s3Service).deleteImage(bucket, "https://bucket/p.png");
         }
 
         @Test
@@ -275,12 +277,12 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
         void delete_afterCommit_s3_failure_does_not_propagate() {
             Archive a = save(Category.PROJECT, "제목", "https://bucket/p.png");
             doThrow(new CustomException(ErrorCode.S3_DELETE_FAILED))
-                    .when(s3Service).deleteImage(BUCKET, "https://bucket/p.png");
+                    .when(s3Service).deleteImage(bucket, "https://bucket/p.png");
 
             tx.executeWithoutResult(s -> archiveAdminService.deleteArchive(Category.PROJECT, a.getId()));
 
             assertThat(archiveRepository.findById(a.getId())).isEmpty();
-            verify(s3Service).deleteImage(BUCKET, "https://bucket/p.png");
+            verify(s3Service).deleteImage(bucket, "https://bucket/p.png");
         }
 
         @Test
