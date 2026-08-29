@@ -552,8 +552,8 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 category 불일치 → 400 UNSUPPORTED_ARCHIVE_CATEGORY")
-        void delete_category_mismatch() throws Exception {
+        @DisplayName("TC-004 서비스가 UNSUPPORTED_ARCHIVE_CATEGORY 예외 → 400 + error_code 응답 매핑")
+        void delete_unsupported_category_exception_mapped_to_400() throws Exception {
             doThrow(new CustomException(ErrorCode.UNSUPPORTED_ARCHIVE_CATEGORY))
                     .when(archiveAdminService).deleteArchive(any(), any());
 
