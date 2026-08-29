@@ -126,8 +126,7 @@ class ArchiveAdminServiceTest {
         @Test
         @DisplayName("TC-001 유효한 요청/이미지 → save 호출 + 필드 매핑 + S3 key 규칙")
         void create_success() {
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(eq(BUCKET), keyCaptor.capture(), any())).thenReturn(NEW_IMAGE_URL);
+            when(s3Service.uploadImage(eq(BUCKET), anyString(), any())).thenReturn(NEW_IMAGE_URL);
 
             archiveAdminService.createArchive(Category.PROJECT, validProjectRequest(), validImage());
 
@@ -142,6 +141,9 @@ class ArchiveAdminServiceTest {
             assertThat(a.getTrack()).isEqualTo(Track.ANALYSIS);
             assertThat(a.getImageUrl()).isEqualTo(NEW_IMAGE_URL);
             assertThat(a.getContentDate()).isEqualTo(LocalDate.of(2024, 7, 1));
+
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(eq(BUCKET), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^projects/8기/분석/AI-수요-예측-\\d{12}\\.png$");
         }
 
@@ -309,12 +311,13 @@ class ArchiveAdminServiceTest {
         void create_success_key_contains_half() {
             ArchiveCreateRequest request = createRequest(26, "가을 MT", "팀보아즈", Track.ENGINEERING,
                     "{}", LocalDate.of(2026, 7, 1), "26-2");
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn(NEW_IMAGE_URL);
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn(NEW_IMAGE_URL);
 
             archiveAdminService.createArchive(Category.ACTIVITY, request, image("a.jpeg"));
 
             verify(archiveRepository).save(any());
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^activities/26기/26-2/엔지니어링/가을-MT-\\d{12}\\.jpeg$");
         }
 
@@ -409,12 +412,13 @@ class ArchiveAdminServiceTest {
         void create_success_key_without_half() {
             ArchiveCreateRequest request = createRequest(8, "Transformer 구현기", "개인", Track.ENGINEERING,
                     "{\"velog\":\"https://velog.io/x\"}", LocalDate.of(2024, 7, 1), null);
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn(NEW_IMAGE_URL);
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn(NEW_IMAGE_URL);
 
             archiveAdminService.createArchive(Category.BLOG, request, image("cover.webp"));
 
             verify(archiveRepository).save(any());
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^blogs/8기/엔지니어링/Transformer-구현기-\\d{12}\\.webp$");
         }
 
@@ -773,11 +777,12 @@ class ArchiveAdminServiceTest {
         void update_image_only_reuses_half_from_url() {
             Archive a = activityArchive("https://bucket/activities/26기/26-1/분석/여름-세미나-250701120000.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn("https://bucket/new.png");
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn("https://bucket/new.png");
 
             archiveAdminService.updateArchive(Category.ACTIVITY, 1L, null, validImage());
 
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^activities/26기/26-1/분석/여름-세미나-\\d{12}\\.png$");
         }
 
@@ -789,11 +794,12 @@ class ArchiveAdminServiceTest {
             ArchiveUpdateRequest request = updateRequest();
             ReflectionTestUtils.setField(request, "half", "26-2");
             ReflectionTestUtils.setField(request, "title", "가을 세미나");
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn("https://bucket/new.png");
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn("https://bucket/new.png");
 
             archiveAdminService.updateArchive(Category.ACTIVITY, 1L, request, validImage());
 
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^activities/26기/26-2/분석/가을-세미나-\\d{12}\\.png$");
         }
 
@@ -802,11 +808,12 @@ class ArchiveAdminServiceTest {
         void update_image_only_no_half_segment() {
             Archive a = activityArchive("https://bucket/activities/26기/분석/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn("https://bucket/new.png");
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn("https://bucket/new.png");
 
             archiveAdminService.updateArchive(Category.ACTIVITY, 1L, null, validImage());
 
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).startsWith("activities/26기/null/분석/");
         }
     }
@@ -837,11 +844,12 @@ class ArchiveAdminServiceTest {
         void update_new_image_key_without_half() {
             Archive a = archive(Category.BLOG, "https://bucket/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
-            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
-            when(s3Service.uploadImage(any(), keyCaptor.capture(), any())).thenReturn("https://bucket/new.png");
+            when(s3Service.uploadImage(any(), anyString(), any())).thenReturn("https://bucket/new.png");
 
             archiveAdminService.updateArchive(Category.BLOG, 1L, updateRequest(), validImage());
 
+            ArgumentCaptor<String> keyCaptor = ArgumentCaptor.forClass(String.class);
+            verify(s3Service).uploadImage(any(), keyCaptor.capture(), any());
             assertThat(keyCaptor.getValue()).matches("^blogs/\\d+기/(분석|시각화|엔지니어링|전체)/.+-\\d{12}\\.\\w+$");
             triggerAfterCommit();
             verify(s3Service).deleteImage(BUCKET, "https://bucket/old.png");
