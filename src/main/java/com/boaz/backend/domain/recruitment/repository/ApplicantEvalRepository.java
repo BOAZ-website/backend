@@ -20,10 +20,10 @@ public interface ApplicantEvalRepository extends JpaRepository<ApplicantEval, Lo
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query(value = "INSERT INTO applicant_eval " +
             "(applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at) " +
-            "VALUES (:applicantId, :adminId, :decision, :score, :memo, :interviewQuestion, NOW(6), NOW(6)) " +
+            "VALUES (:applicantId, :adminId, :decision, :score, :memo, :interviewQuestion, NOW(6), NOW(6)) AS new_row " +
             "ON DUPLICATE KEY UPDATE " +
-            "decision = VALUES(decision), score = VALUES(score), memo = VALUES(memo), " +
-            "interview_question = VALUES(interview_question), updated_at = NOW(6)",
+            "decision = new_row.decision, score = new_row.score, memo = new_row.memo, " +
+            "interview_question = new_row.interview_question, updated_at = NOW(6)",
             nativeQuery = true)
     void upsert(@Param("applicantId") Long applicantId,
                 @Param("adminId") Long adminId,
