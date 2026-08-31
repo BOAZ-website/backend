@@ -7,7 +7,7 @@ import org.testcontainers.containers.MySQLContainer;
 public abstract class TestcontainersBase {
 
     @SuppressWarnings("resource")
-    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.0")
+    static final MySQLContainer<?> MYSQL = new MySQLContainer<>("mysql:8.4")
             .withDatabaseName("boaz_test")
             .withUsername("test")
             .withPassword("test");
