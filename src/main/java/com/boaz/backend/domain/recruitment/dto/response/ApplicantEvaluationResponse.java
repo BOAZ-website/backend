@@ -2,6 +2,7 @@ package com.boaz.backend.domain.recruitment.dto.response;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
 import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import lombok.Builder;
 import lombok.Getter;
@@ -35,7 +36,7 @@ public class ApplicantEvaluationResponse {
 
     private final Integer lastSemester;
 
-    private final Applicant.MilitaryStatus militaryStatus;
+    private final MilitaryStatus militaryStatus;
 
     private final LocalDate birthDate;
 

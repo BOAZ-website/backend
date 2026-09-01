@@ -18,6 +18,7 @@ import com.boaz.backend.domain.recruitment.repository.*;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.domain.user.repository.UserRepository;
 import com.boaz.backend.global.common.enums.MemberType;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -176,7 +177,7 @@ class RecruitmentServiceTest {
         ReflectionTestUtils.setField(req, "university", "한국대학교");
         ReflectionTestUtils.setField(req, "major", "컴퓨터공학");
         ReflectionTestUtils.setField(req, "lastSemester", 6);
-        ReflectionTestUtils.setField(req, "militaryStatus", Applicant.MilitaryStatus.COMPLETED_OR_EXEMPT);
+        ReflectionTestUtils.setField(req, "militaryStatus", MilitaryStatus.COMPLETED_OR_EXEMPT);
         ReflectionTestUtils.setField(req, "birthDate", "2000-01-01");
         ReflectionTestUtils.setField(req, "graduationDate", "2026-02");
         ReflectionTestUtils.setField(req, "gradSchoolPlan", false);
