@@ -140,6 +140,36 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
+        @DisplayName("TC-009 links 공백 → 400 INVALID_INPUT_VALUE (@NotBlank)")
+        void create_blank_links() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.put("links", "   ");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
+                            .file(dataPart(body))
+                            .file(imagePart())
+                            .with(authentication(adminAuth())))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"))
+                    .andExpect(jsonPath("$.message").value("links를 입력해주세요."));
+        }
+
+        @Test
+        @DisplayName("TC-009 content_date 미래 날짜 → 400 INVALID_INPUT_VALUE (@PastOrPresent)")
+        void create_future_content_date() throws Exception {
+            Map<String, Object> body = validCreateBody();
+            body.put("content_date", "2999-12-31");
+
+            mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
+                            .file(dataPart(body))
+                            .file(imagePart())
+                            .with(authentication(adminAuth())))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_INPUT_VALUE"))
+                    .andExpect(jsonPath("$.message").value("미래 날짜는 입력할 수 없습니다."));
+        }
+
+        @Test
         @DisplayName("TC-009 data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
         void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
