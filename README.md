@@ -73,6 +73,14 @@ cd backend
 http://localhost:8080/swagger-ui.html
 ```
 
+### Git Hooks (커밋 메시지 검증)
+> 커밋 메시지를 컨벤션(`type: 설명 (#이슈번호)`)에 맞게 검증하는 로컬 훅입니다. **클론 후 각자 1회만** 실행하세요. (mac / linux / windows 공통)
+```bash
+git config core.hooksPath .githooks
+```
+> - 예: `feat: 로그인 API 구현 (#12)` — 허용 type: `feat` `fix` `docs` `style` `refactor` `test` `chore`
+> - 부득이한 경우에만 `git commit --no-verify` 로 건너뛸 수 있습니다.
+
 <br>
 
 ## 📂 Project Structure
