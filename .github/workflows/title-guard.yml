@@ -33,11 +33,12 @@ jobs:
             const pattern = /^\[(feat|fix|docs|style|refactor|test|chore|hotfix)\]\s+.+/i;
             const ok = pattern.test(title);
 
-            // 봇이 이전에 남긴 안내 코멘트 찾기
-            const { data: comments } = await github.rest.issues.listComments({
+            // 봇이 이전에 남긴 안내 코멘트 찾기 (전체 페이지 조회)
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number,
+              per_page: 100,
             });
             const prev = comments.find(
               (c) => c.user.type === 'Bot' && c.body.includes(MARKER)

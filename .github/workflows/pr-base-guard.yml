@@ -29,13 +29,15 @@ jobs:
             const headRef = pr.head.ref;
 
             const isHotfixLike = /^(hotfix|release)\//i.test(headRef);
-            const needsWarning = baseRef === 'main' && !isHotfixLike;
+            const isRelease = headRef === 'dev'; // dev → main 릴리즈 PR 은 정당한 main 타깃
+            const needsWarning = baseRef === 'main' && !isHotfixLike && !isRelease;
 
-            // 봇이 이전에 남긴 안내 코멘트 찾기
-            const { data: comments } = await github.rest.issues.listComments({
+            // 봇이 이전에 남긴 안내 코멘트 찾기 (전체 페이지 조회)
+            const comments = await github.paginate(github.rest.issues.listComments, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number,
+              per_page: 100,
             });
             const prev = comments.find(
               (c) => c.user.type === 'Bot' && c.body.includes(MARKER)
