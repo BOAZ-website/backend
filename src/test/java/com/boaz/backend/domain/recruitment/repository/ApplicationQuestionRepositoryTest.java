@@ -36,7 +36,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
 
     private void persistQuestion(Recruitment r, String label, Category category, int orderNum) {
         ApplicationQuestion q = ApplicationQuestion.create(
-                r, label, category, Type.TEXT, "content", 500, null, orderNum, true);
+                r, label, category, Type.TEXT, "content", null, 500, null, orderNum, true);
         em.persist(q);
     }
 
@@ -86,6 +86,12 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "공통1")).isTrue();
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "없는라벨")).isFalse();
 
+        // label 자기 자신 제외 (REC-ADMIN-008 질문 수정 중복 검증)
+        assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(
+                r.getId(), "공통1", savedId)).isFalse();
+        assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(
+                r.getId(), "공통1", savedId + 1)).isTrue();
+
         assertThat(questionRepository.existsByRecruitmentIdAndCategoryAndOrderNum(
                 r.getId(), Category.COMMON, 1)).isTrue();
         // 자기 자신(savedId) 제외 시 중복 아님
@@ -93,5 +99,18 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
                 r.getId(), Category.COMMON, 1, savedId)).isFalse();
         assertThat(questionRepository.existsByRecruitmentIdAndCategoryAndOrderNumAndIdNot(
                 r.getId(), Category.COMMON, 1, savedId + 1)).isTrue();
+    }
+
+    @Test
+    @DisplayName("existsByRecruitmentId: 공고 연관 질문 존재 여부 (REC-ADMIN-005 삭제 가드)")
+    void existsByRecruitmentId() {
+        Recruitment r = persistRecruitment(27);
+        Recruitment empty = persistRecruitment(26);
+        persistQuestion(r, "공통1", Category.COMMON, 1);
+        em.flush();
+        em.clear();
+
+        assertThat(questionRepository.existsByRecruitmentId(r.getId())).isTrue();
+        assertThat(questionRepository.existsByRecruitmentId(empty.getId())).isFalse();
     }
 }

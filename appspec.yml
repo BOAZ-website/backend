@@ -17,6 +17,9 @@ files:
   - source: /systemd/boaz-tmpfiles.conf
     destination: /etc/tmpfiles.d
     overwrite: true
+  - source: /systemd/journald-boaz.conf
+    destination: /etc/systemd/journald.conf.d
+    overwrite: true
 
 hooks:
   BeforeInstall:

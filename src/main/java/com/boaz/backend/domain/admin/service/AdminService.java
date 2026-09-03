@@ -5,6 +5,7 @@ import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.dto.response.AdminAccountResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
+import com.boaz.backend.domain.admin.dto.response.AdminMeResponse;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.auth.repository.RefreshTokenRepository;
@@ -30,7 +31,7 @@ public class AdminService {
 
     public List<AdminAccountResponse> getAccounts(Admin currentAdmin) {
         if (currentAdmin.getRole() != Admin.Role.SUPER) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         return adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc()
@@ -42,7 +43,7 @@ public class AdminService {
     @Transactional
     public AdminIdResponse createAccount(AdminCreateRequest request, Admin currentAdmin) {
         if (currentAdmin.getRole() != Admin.Role.SUPER) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         request.getTrack().validateNotAll();
@@ -66,11 +67,15 @@ public class AdminService {
         return new AdminIdResponse(admin.getId());
     }
 
+    public AdminMeResponse getMe(Admin currentAdmin) {
+        return AdminMeResponse.from(currentAdmin);
+    }
+
     public AdminAccountResponse getAccount(Long id, Admin currentAdmin) {
         boolean isSelf = currentAdmin.getId().equals(id);
         boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
         if (isTeam && !isSelf) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
@@ -85,10 +90,10 @@ public class AdminService {
         boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
 
         if (isTeam && !isSelf) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         if (isTeam && request.getRole().isPresent()) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
         if (isSelf && request.getRole().isPresent()) {
             throw new CustomException(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
@@ -122,7 +127,7 @@ public class AdminService {
         boolean isSelf = currentAdmin.getId().equals(id);
         boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
         if (isTeam && !isSelf) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
@@ -142,7 +147,7 @@ public class AdminService {
         boolean isSelf = currentAdmin.getId().equals(id);
         boolean isTeam = currentAdmin.getRole() == Admin.Role.TEAM;
         if (isTeam && !isSelf) {
-            throw new CustomException(ErrorCode.UNAUTHORIZED);
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
 
         Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)

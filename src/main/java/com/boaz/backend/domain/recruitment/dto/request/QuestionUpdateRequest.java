@@ -22,6 +22,9 @@ public class QuestionUpdateRequest {
     @Schema(description = "질문 내용", example = "자기소개와 BOAZ에 지원한 동기를 서술해주세요.", nullable = true)
     private String content;
 
+    @Schema(description = "질문 보조 설명 (null 전송 시 삭제)", nullable = true)
+    private JsonNullable<String> description = JsonNullable.undefined();
+
     @Schema(description = "답변 최대 글자 수 (null 전송 시 삭제)", example = "500", nullable = true)
     private JsonNullable<Integer> limitLength = JsonNullable.undefined();
 

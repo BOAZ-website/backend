@@ -7,6 +7,7 @@ import com.boaz.backend.domain.user.dto.response.PromoteUsersResponse;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.domain.user.repository.UserRepository;
 import com.boaz.backend.global.common.enums.MemberType;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -22,6 +23,7 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -83,6 +85,10 @@ class UserAdminServiceTest {
                 .track(Track.ENGINEERING)
                 .name("홍길동").email("hong@example.com").phone("01012345678")
                 .university("한국대").major("컴공")
+                .minorDoubleMajor("[\"경영학\"]").lastSemester(6)
+                .militaryStatus(MilitaryStatus.COMPLETED_OR_EXEMPT)
+                .birthDate(LocalDate.of(2000, 3, 15))
+                .graduationDate("2026-02").gradSchoolPlan(false)
                 .build();
     }
 
@@ -156,9 +162,16 @@ class UserAdminServiceTest {
 
         assertThat(user.getMemberType()).isEqualTo(MemberType.MEMBER);
         assertThat(user.getName()).isEqualTo("홍길동");
+        assertThat(user.getEmail()).isEqualTo("hong@example.com");
         assertThat(user.getPhone()).isEqualTo("01012345678");
         assertThat(user.getUniversity()).isEqualTo("한국대");
         assertThat(user.getMajor()).isEqualTo("컴공");
+        assertThat(user.getMinorDoubleMajor()).isEqualTo("[\"경영학\"]");
+        assertThat(user.getLastSemester()).isEqualTo(6);
+        assertThat(user.getMilitaryStatus()).isEqualTo(MilitaryStatus.COMPLETED_OR_EXEMPT);
+        assertThat(user.getBirthDate()).isEqualTo(LocalDate.of(2000, 3, 15));
+        assertThat(user.getGraduationDate()).isEqualTo("2026-02");
+        assertThat(user.getGradSchoolPlan()).isFalse();
         assertThat(user.getTrack()).isEqualTo(Track.ENGINEERING);
         assertThat(user.getTerm()).isEqualTo(27);
     }

@@ -2,6 +2,11 @@ package com.boaz.backend.domain.recruitment.integration;
 
 import com.boaz.backend.domain.recruitment.dto.request.ApplicationRequest;
 import com.boaz.backend.domain.recruitment.dto.request.DraftApplicationRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.QuestionsCreateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentCreateRequest;
+import com.boaz.backend.domain.recruitment.dto.request.RecruitmentUpdateRequest;
 import com.boaz.backend.domain.recruitment.dto.request.SubscriptionRequest;
 import com.boaz.backend.domain.recruitment.dto.response.ApplicationResponse;
 import com.boaz.backend.domain.recruitment.dto.response.DeadlineResponse;
@@ -12,12 +17,17 @@ import com.boaz.backend.domain.recruitment.dto.response.RecruitmentResponse;
 import com.boaz.backend.domain.recruitment.dto.response.RecruitmentStatusResponse;
 import com.boaz.backend.domain.recruitment.dto.response.SubscriptionResponse;
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.recruitment.entity.ApplicantAnswer;
+import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Category;
 import com.boaz.backend.domain.recruitment.entity.ApplicationQuestion.Type;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicantAnswerRepository;
+import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.ApplicationQuestionRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
@@ -31,7 +41,10 @@ import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.boaz.backend.global.util.S3Service;
 import com.boaz.backend.support.TestcontainersBase;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.openapitools.jackson.nullable.JsonNullable;
+import org.springframework.test.util.ReflectionTestUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.junit.jupiter.api.DisplayName;
@@ -64,6 +77,8 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     @Autowired ApplicationQuestionRepository questionRepository;
     @Autowired ApplicantRepository applicantRepository;
     @Autowired ApplicantAnswerRepository answerRepository;
+    @Autowired ApplicantEvalRepository evalRepository;
+    @Autowired AdminRepository adminRepository;
     @Autowired SubscriptionRepository subscriptionRepository;
     @Autowired UserRepository userRepository;
     @Autowired ObjectMapper objectMapper;
@@ -102,19 +117,27 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     private ApplicationQuestion saveQuestion(Recruitment r, Category category, int orderNum) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("q-", category, orderNum), category, Type.TEXT,
-                "content", 500, null, orderNum, true));
+                "content", null, 500, null, orderNum, true));
     }
 
     private ApplicationQuestion saveQuestion(Recruitment r, Category category, int orderNum, String content) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("q-", category, orderNum), category, Type.TEXT,
-                content, 500, null, orderNum, true));
+                content, null, 500, null, orderNum, true));
     }
 
     private ApplicationQuestion saveTableQuestion(Recruitment r, Category category, int orderNum) {
         return questionRepository.save(ApplicationQuestion.create(
                 r, shortLabel("qt-", category, orderNum), category, Type.TABLE,
-                "테이블 질문", null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, true));
+                "테이블 질문", null, null, "{\"rows\":[\"A\"],\"columns\":[\"B\"]}", orderNum, true));
+    }
+
+    private ApplicationQuestion saveMultiTableQuestion(Recruitment r, Category category, int orderNum) {
+        return questionRepository.save(ApplicationQuestion.create(
+                r, shortLabel("qm-", category, orderNum), category, Type.TABLE,
+                "복수선택 질문", null, null,
+                "{\"rows\":[\"1월 4일\",\"1월 5일\"],\"columns\":[\"12:00~14:00\",\"14:00~16:00\"],\"multiple\":true}",
+                orderNum, true));
     }
 
     // 제출 요청의 개인정보 공통 필드 (answers 제외)
@@ -305,6 +328,63 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
                     .filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
             assertThat(tableAnswer.getAnswerJson()).contains("키").contains("값");
         }
+
+        @Test
+        @DisplayName("복수선택 TABLE 답변 → answerJson에 배열로 직렬화 저장")
+        void submitWithMultiTableAnswer() {
+            Recruitment r = saveActiveRecruitment(27);
+            User u = saveUser();
+            Long commonQ = saveQuestion(r, Category.COMMON, 1).getId();
+            Long multiQ = saveMultiTableQuestion(r, Category.COMMON, 2).getId();
+            em.flush();
+            em.clear();
+
+            Map<String, Object> fields = personalFields(Track.ENGINEERING);
+            fields.put("answers", List.of(
+                    Map.of("question_id", commonQ, "answer", "공통 답변"),
+                    Map.of("question_id", multiQ, "answer",
+                            Map.of("1월 4일", List.of("12:00~14:00", "14:00~16:00"),
+                                   "1월 5일", List.of()))));
+            ApplicationRequest req = objectMapper.convertValue(fields, ApplicationRequest.class);
+
+            ApplicationResponse res = recruitmentService.submitApplication(u.getId(), r.getId(), req);
+            em.flush();
+            em.clear();
+
+            List<ApplicantAnswer> answers = answerRepository.findByApplicantIds(List.of(res.getApplicantId()));
+            ApplicantAnswer multiAnswer = answers.stream()
+                    .filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
+            assertThat(multiAnswer.getAnswerJson()).contains("[");
+            assertThat(multiAnswer.getAnswerJson()).contains("12:00~14:00");
+            assertThat(multiAnswer.getAnswerJson()).contains("14:00~16:00");
+        }
+
+        @Test
+        @DisplayName("복수선택 TABLE 중복 원소 → dedupe 후 저장")
+        void submitMultiTableDeduped() {
+            Recruitment r = saveActiveRecruitment(27);
+            User u = saveUser();
+            Long commonQ = saveQuestion(r, Category.COMMON, 1).getId();
+            Long multiQ = saveMultiTableQuestion(r, Category.COMMON, 2).getId();
+            em.flush();
+            em.clear();
+
+            Map<String, Object> fields = personalFields(Track.ENGINEERING);
+            fields.put("answers", List.of(
+                    Map.of("question_id", commonQ, "answer", "공통 답변"),
+                    Map.of("question_id", multiQ, "answer",
+                            Map.of("1월 4일", List.of("12:00~14:00", "12:00~14:00")))));
+            ApplicationRequest req = objectMapper.convertValue(fields, ApplicationRequest.class);
+
+            ApplicationResponse res = recruitmentService.submitApplication(u.getId(), r.getId(), req);
+            em.flush();
+            em.clear();
+
+            ApplicantAnswer multiAnswer = answerRepository.findByApplicantIds(List.of(res.getApplicantId()))
+                    .stream().filter(a -> a.getAnswerJson() != null).findFirst().orElseThrow();
+            // "12:00~14:00"이 딱 한 번만 나와야 함
+            assertThat(multiAnswer.getAnswerJson().split("12:00~14:00", -1).length - 1).isEqualTo(1);
+        }
     }
 
     @Nested
@@ -364,7 +444,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             assertThat(result).hasSize(2);
             assertThat(result).extracting(QuestionResponse::getOrderNum).containsExactly(1, 2);
             assertThat(result).noneMatch(q -> q.getCategory().equals("VISUALIZATION"));
-            assertThat(result.get(1).getContent()).contains("ENGINEERING");
+            assertThat(result.get(1).getContent()).contains("엔지니어링");
         }
 
         @Test
@@ -533,15 +613,53 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             em.flush();
             em.clear();
 
-            recruitmentService.downloadApplications(27);
+            recruitmentService.downloadApplications(27, DecisionFilter.ALL);
 
             verify(s3Service, times(3)).uploadCsv(any(), any(), any());
         }
 
         @Test
+        @DisplayName("decision=PASS → 합격자만 CSV에 포함, 키에 PASS 표기")
+        void passFilterOnlyIncludesPass() {
+            Recruitment r = saveActiveRecruitment(27);
+            saveQuestion(r, Category.COMMON, 1);
+
+            Applicant pass = applicantRepository.save(Applicant.builder()
+                    .recruitment(r).user(saveUser()).status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(Track.ENGINEERING).name("합격자").email("pass@example.com").phone("01011112222")
+                    .build());
+            pass.markSubmitted();
+            pass.updateFinalDecision(EvaluationDecision.PASS);
+
+            Applicant fail = applicantRepository.save(Applicant.builder()
+                    .recruitment(r).user(saveUser()).status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(Track.ENGINEERING).name("불합격자").email("fail@example.com").phone("01033334444")
+                    .build());
+            fail.markSubmitted();
+            fail.updateFinalDecision(EvaluationDecision.FAIL);
+            em.flush();
+            em.clear();
+
+            recruitmentService.downloadApplications(27, DecisionFilter.PASS);
+
+            org.mockito.ArgumentCaptor<String> keyCaptor = org.mockito.ArgumentCaptor.forClass(String.class);
+            org.mockito.ArgumentCaptor<byte[]> csvCaptor = org.mockito.ArgumentCaptor.forClass(byte[].class);
+            verify(s3Service, times(3)).uploadCsv(any(), keyCaptor.capture(), csvCaptor.capture());
+
+            // ENGINEERING 파일만 추출해 내용 검증
+            int engIdx = keyCaptor.getAllValues().indexOf(
+                    keyCaptor.getAllValues().stream().filter(k -> k.contains("ENGINEERING")).findFirst().orElseThrow());
+            String engCsv = new String(csvCaptor.getAllValues().get(engIdx), java.nio.charset.StandardCharsets.UTF_8);
+
+            assertThat(keyCaptor.getAllValues()).allMatch(k -> k.contains("_PASS_"));
+            assertThat(engCsv).contains("합격자").contains("합격");
+            assertThat(engCsv).doesNotContain("불합격자");
+        }
+
+        @Test
         @DisplayName("존재하지 않는 term → RECRUITMENT_NOT_FOUND")
         void notFound() {
-            assertThatThrownBy(() -> recruitmentService.downloadApplications(999))
+            assertThatThrownBy(() -> recruitmentService.downloadApplications(999, DecisionFilter.ALL))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.RECRUITMENT_NOT_FOUND);
         }
@@ -552,7 +670,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     class Admin {
 
         @Test
-        @DisplayName("마감된 공고의 지원서 전체 삭제 → answer/applicant 모두 제거")
+        @DisplayName("마감된 공고의 지원서 전체 삭제 → eval/answer/applicant 모두 제거 (평가 존재 시 FK 위반 없음, #178)")
         void deleteApplicants() {
             Recruitment r = saveClosedRecruitment(26);
             User u = saveUser();
@@ -561,8 +679,18 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
                     .recruitment(r).user(u).status(Applicant.ApplicantStatus.SUBMITTED)
                     .track(Track.ENGINEERING).name("n").email("a@example.com").phone("01012345678")
                     .build());
-            answerRepository.save(com.boaz.backend.domain.recruitment.entity.ApplicantAnswer.builder()
+            answerRepository.save(ApplicantAnswer.builder()
                     .applicant(a).question(q).answerText("답").build());
+            // 평가 데이터: applicant_eval.applicant_id FK → 삭제 순서 누락 시 여기서 FK 위반 발생
+            com.boaz.backend.domain.admin.entity.Admin evaluator = adminRepository.save(
+                    com.boaz.backend.domain.admin.entity.Admin.builder()
+                    .username("evaluator-178").password("p")
+                    .role(com.boaz.backend.domain.admin.entity.Admin.Role.TEAM).name("평가자")
+                    .track(Track.ENGINEERING).term(26)
+                    .teamName(com.boaz.backend.domain.admin.entity.Admin.TeamName.서비스운영팀)
+                    .createdBy(null).build());
+            evalRepository.save(ApplicantEval.builder()
+                    .applicant(a).admin(evaluator).decision(EvaluationDecision.PASS).score(9).build());
             em.flush();
             em.clear();
 
@@ -572,6 +700,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
 
             assertThat(applicantRepository.existsByRecruitmentId(r.getId())).isFalse();
             assertThat(answerRepository.findByApplicantIds(List.of(a.getId()))).isEmpty();
+            assertThat(evalRepository.findByRecruitmentId(r.getId())).isEmpty();
         }
 
         @Test
@@ -601,6 +730,298 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
             em.flush();
 
             assertThat(subscriptionRepository.count()).isZero();
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // Admin CRUD 통합 테스트 헬퍼
+    // ──────────────────────────────────────────────
+
+    private RecruitmentCreateRequest buildCreateReq(int term, LocalDateTime start, LocalDateTime end, String brochure) {
+        RecruitmentCreateRequest req = new RecruitmentCreateRequest();
+        ReflectionTestUtils.setField(req, "term", term);
+        ReflectionTestUtils.setField(req, "startDate", start);
+        ReflectionTestUtils.setField(req, "endDate", end);
+        ReflectionTestUtils.setField(req, "schedule", objectMapper.createArrayNode());
+        ReflectionTestUtils.setField(req, "brochureUrl", brochure);
+        return req;
+    }
+
+    private QuestionItemRequest buildItem(String label, Category category, Type type,
+            Integer limitLength, JsonNode metadata, int orderNum) {
+        QuestionItemRequest item = new QuestionItemRequest();
+        ReflectionTestUtils.setField(item, "label", label);
+        ReflectionTestUtils.setField(item, "category", category);
+        ReflectionTestUtils.setField(item, "type", type);
+        ReflectionTestUtils.setField(item, "content", "내용 " + label);
+        ReflectionTestUtils.setField(item, "limitLength", limitLength);
+        ReflectionTestUtils.setField(item, "metadata", metadata);
+        ReflectionTestUtils.setField(item, "orderNum", orderNum);
+        ReflectionTestUtils.setField(item, "isRequired", true);
+        return item;
+    }
+
+    private QuestionsCreateRequest buildQuestionsReq(Long recruitmentId, QuestionItemRequest... items) {
+        QuestionsCreateRequest req = new QuestionsCreateRequest();
+        ReflectionTestUtils.setField(req, "recruitmentId", recruitmentId);
+        ReflectionTestUtils.setField(req, "questions", List.of(items));
+        return req;
+    }
+
+    @Nested
+    @DisplayName("모집 공고 CRUD end-to-end (REC-ADMIN-002~005)")
+    class AdminRecruitmentCrud {
+
+        @Test
+        @DisplayName("REC-ADMIN-003 공고 등록 → 실제 DB 영속")
+        void createPersists() {
+            LocalDateTime now = LocalDateTime.now();
+            RecruitmentCreateRequest req = buildCreateReq(28, now.plusDays(1), now.plusDays(15), "https://e.com/b.pdf");
+
+            recruitmentService.createRecruitment(req);
+            em.flush();
+            em.clear();
+
+            assertThat(recruitmentRepository.findByTerm(28)).isPresent();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-003 동일 기수 재등록 → DUPLICATE_TERM")
+        void createDuplicateTerm() {
+            saveActiveRecruitment(27);
+            em.flush();
+            LocalDateTime now = LocalDateTime.now();
+            RecruitmentCreateRequest req = buildCreateReq(27, now.plusDays(1), now.plusDays(15), null);
+
+            assertThatThrownBy(() -> recruitmentService.createRecruitment(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.DUPLICATE_TERM);
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-004 start_date만 수정 → 해당 필드만 변경, 나머지 유지")
+        void updatePartial() {
+            Recruitment r = saveActiveRecruitment(27);
+            Long id = r.getId();
+            em.flush();
+            em.clear();
+
+            LocalDateTime newStart = LocalDateTime.now().minusDays(3).withNano(0);
+            RecruitmentUpdateRequest req = new RecruitmentUpdateRequest();
+            ReflectionTestUtils.setField(req, "startDate", newStart);
+
+            recruitmentService.updateRecruitment(id, req);
+            em.flush();
+            em.clear();
+
+            Recruitment reloaded = recruitmentRepository.findById(id).orElseThrow();
+            assertThat(reloaded.getStartDate()).isEqualToIgnoringNanos(newStart);
+            assertThat(reloaded.getTerm()).isEqualTo(27);
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-004 brochure_url null 명시 전송 → 삭제")
+        void updateDeleteBrochure() {
+            LocalDateTime now = LocalDateTime.now();
+            Recruitment r = recruitmentRepository.save(
+                    Recruitment.create(27, now.minusDays(1), now.plusDays(1), "{}", "https://e.com/b.pdf"));
+            Long id = r.getId();
+            em.flush();
+            em.clear();
+
+            RecruitmentUpdateRequest req = new RecruitmentUpdateRequest();
+            ReflectionTestUtils.setField(req, "brochureUrl", JsonNullable.of(null));
+
+            recruitmentService.updateRecruitment(id, req);
+            em.flush();
+            em.clear();
+
+            assertThat(recruitmentRepository.findById(id).orElseThrow().getBrochureUrl()).isNull();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-005 연관 데이터 없는 공고 → 삭제됨")
+        void deleteNoRefs() {
+            Recruitment r = saveActiveRecruitment(27);
+            Long id = r.getId();
+            em.flush();
+            em.clear();
+
+            recruitmentService.deleteRecruitment(id);
+            em.flush();
+            em.clear();
+
+            assertThat(recruitmentRepository.findById(id)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-005 연관 질문 존재 → RECRUITMENT_HAS_REFERENCES")
+        void deleteWithRefs() {
+            Recruitment r = saveActiveRecruitment(27);
+            saveQuestion(r, Category.COMMON, 1);
+            em.flush();
+            em.clear();
+
+            assertThatThrownBy(() -> recruitmentService.deleteRecruitment(r.getId()))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.RECRUITMENT_HAS_REFERENCES);
+        }
+    }
+
+    @Nested
+    @DisplayName("지원서 질문 CRUD end-to-end (REC-ADMIN-006~009)")
+    class AdminQuestionCrud {
+
+        @Test
+        @DisplayName("REC-ADMIN-006 TEXT+TABLE 다건 등록 → limit_length/metadata 분기 영속")
+        void createQuestionsPersist() throws Exception {
+            Recruitment r = saveActiveRecruitment(27);
+            em.flush();
+            em.clear();
+
+            JsonNode metadata = objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"]}");
+            QuestionsCreateRequest req = buildQuestionsReq(r.getId(),
+                    buildItem("C1", Category.COMMON, Type.TEXT, 500, null, 1),
+                    buildItem("E1", Category.ENGINEERING, Type.TABLE, null, metadata, 1));
+
+            recruitmentService.createQuestions(req);
+            em.flush();
+            em.clear();
+
+            List<ApplicationQuestion> saved = questionRepository.findByRecruitmentIdOrderByOrderNumAsc(r.getId());
+            assertThat(saved).hasSize(2);
+            ApplicationQuestion text = saved.stream().filter(q -> q.getType() == Type.TEXT).findFirst().orElseThrow();
+            ApplicationQuestion table = saved.stream().filter(q -> q.getType() == Type.TABLE).findFirst().orElseThrow();
+            assertThat(text.getLimitLength()).isEqualTo(500);
+            assertThat(text.getMetadata()).isNull();
+            assertThat(table.getLimitLength()).isNull();
+            assertThat(table.getMetadata()).isNotNull();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-006 DB에 동일 label 존재 → DUPLICATE_QUESTION_LABEL")
+        void createDuplicateLabel() {
+            Recruitment r = saveActiveRecruitment(27);
+            questionRepository.save(ApplicationQuestion.create(
+                    r, "C1", Category.COMMON, Type.TEXT, "기존", null, 500, null, 1, true));
+            em.flush();
+            em.clear();
+
+            QuestionsCreateRequest req = buildQuestionsReq(r.getId(),
+                    buildItem("C1", Category.COMMON, Type.TEXT, 500, null, 2));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.DUPLICATE_QUESTION_LABEL);
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-006 TC-011 두 번째 항목 충돌 시 앞 항목 포함 전체 미저장 (원자성)")
+        void createPartialFailureRollsBackAll() {
+            Recruitment r = saveActiveRecruitment(27);
+            questionRepository.save(ApplicationQuestion.create(
+                    r, "EXIST", Category.COMMON, Type.TEXT, "기존", null, 500, null, 1, true));
+            em.flush();
+            em.clear();
+
+            // item1(NEW1)은 유효하지만, item2(EXIST)가 DB label 과 충돌 → 전체 실패해야 함
+            QuestionsCreateRequest req = buildQuestionsReq(r.getId(),
+                    buildItem("NEW1", Category.COMMON, Type.TEXT, 500, null, 2),
+                    buildItem("EXIST", Category.ENGINEERING, Type.TEXT, 500, null, 1));
+
+            assertThatThrownBy(() -> recruitmentService.createQuestions(req))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.DUPLICATE_QUESTION_LABEL);
+            em.flush();
+            em.clear();
+
+            // 기존 EXIST 1건만 남고 NEW1 은 저장되지 않아야 함
+            List<ApplicationQuestion> saved = questionRepository.findByRecruitmentIdOrderByOrderNumAsc(r.getId());
+            assertThat(saved).extracting(ApplicationQuestion::getLabel).containsExactly("EXIST");
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-007 order_num 오름차순 반환 (is_active 무관)")
+        void getAdminQuestionsOrder() {
+            Recruitment r = saveClosedRecruitment(26); // 마감 공고
+            saveQuestion(r, Category.COMMON, 10);
+            saveQuestion(r, Category.COMMON, 1);
+            em.flush();
+            em.clear();
+
+            List<QuestionResponse> result = recruitmentService.getAdminQuestions(r.getId());
+
+            assertThat(result).extracting(QuestionResponse::getOrderNum).containsExactly(1, 10);
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-007 질문 없음 → 빈 배열 (QUESTIONS_NOT_FOUND 아님)")
+        void getAdminQuestionsEmpty() {
+            Recruitment r = saveActiveRecruitment(27);
+            em.flush();
+            em.clear();
+
+            assertThat(recruitmentService.getAdminQuestions(r.getId())).isEmpty();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-008 TEXT→TABLE 타입 변경 → metadata 저장, limit_length 정리")
+        void updateTypeChange() throws Exception {
+            Recruitment r = saveActiveRecruitment(27);
+            ApplicationQuestion q = saveQuestion(r, Category.COMMON, 1); // TEXT, limit 500
+            Long qid = q.getId();
+            em.flush();
+            em.clear();
+
+            QuestionUpdateRequest req = new QuestionUpdateRequest();
+            ReflectionTestUtils.setField(req, "type", Type.TABLE);
+            ReflectionTestUtils.setField(req, "metadata",
+                    JsonNullable.of(objectMapper.readTree("{\"rows\":[\"A\"],\"columns\":[\"B\"]}")));
+
+            recruitmentService.updateQuestion(qid, req);
+            em.flush();
+            em.clear();
+
+            ApplicationQuestion reloaded = questionRepository.findById(qid).orElseThrow();
+            assertThat(reloaded.getType()).isEqualTo(Type.TABLE);
+            assertThat(reloaded.getMetadata()).isNotNull();
+            assertThat(reloaded.getLimitLength()).isNull();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-009 답변 없는 질문 → 삭제됨")
+        void deleteQuestionNoAnswers() {
+            Recruitment r = saveActiveRecruitment(27);
+            ApplicationQuestion q = saveQuestion(r, Category.COMMON, 1);
+            Long qid = q.getId();
+            em.flush();
+            em.clear();
+
+            recruitmentService.deleteQuestion(qid);
+            em.flush();
+            em.clear();
+
+            assertThat(questionRepository.findById(qid)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("REC-ADMIN-009 참조 답변 존재 → QUESTION_HAS_ANSWERS")
+        void deleteQuestionWithAnswers() {
+            Recruitment r = saveActiveRecruitment(27);
+            User u = saveUser();
+            ApplicationQuestion q = saveQuestion(r, Category.COMMON, 1);
+            Applicant a = applicantRepository.save(Applicant.builder()
+                    .recruitment(r).user(u).status(Applicant.ApplicantStatus.SUBMITTED)
+                    .track(Track.ENGINEERING).name("n").email("a@example.com").phone("01012345678")
+                    .build());
+            answerRepository.save(ApplicantAnswer.builder()
+                    .applicant(a).question(q).answerText("답").build());
+            em.flush();
+            em.clear();
+
+            assertThatThrownBy(() -> recruitmentService.deleteQuestion(q.getId()))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.QUESTION_HAS_ANSWERS);
         }
     }
 }

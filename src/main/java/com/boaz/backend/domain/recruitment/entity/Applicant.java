@@ -1,6 +1,5 @@
 package com.boaz.backend.domain.recruitment.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -11,6 +10,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.global.common.BaseEntity;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 
 import java.time.LocalDate;
@@ -22,13 +22,6 @@ import java.time.LocalDateTime;
 @Table(name = "applicants")
 @EntityListeners(AuditingEntityListener.class)
 public class Applicant extends BaseEntity {
-
-    public enum MilitaryStatus {
-        @Schema(description = "필 또는 면제")
-        COMPLETED_OR_EXEMPT,
-        @Schema(description = "미필")
-        NOT_COMPLETED
-    }
 
     public enum ApplicantStatus {
         DRAFT,
@@ -86,6 +79,10 @@ public class Applicant extends BaseEntity {
 
     private Boolean gradSchoolPlan;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private EvaluationDecision finalDecision = EvaluationDecision.PENDING;
+
     private LocalDateTime submittedAt;
 
     @Builder
@@ -133,6 +130,11 @@ public class Applicant extends BaseEntity {
     public void markSubmitted() {
         this.status = ApplicantStatus.SUBMITTED;
         this.submittedAt = LocalDateTime.now();
+    }
+
+    // 대표진이 최종 평가 변경
+    public void updateFinalDecision(EvaluationDecision finalDecision) {
+        this.finalDecision = finalDecision;
     }
 
     // 제출 시 전체 덮어쓰기 + SUBMITTED 전환

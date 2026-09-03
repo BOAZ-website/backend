@@ -20,7 +20,7 @@ public class CsvService {
     private final ObjectMapper objectMapper;
 
     private static final List<String> BASE_HEADERS = List.of(
-            "user_id", "지원 부문", "성명", "이메일 주소", "전화번호", "대학교", "본전공",
+            "user_id", "지원 부문", "성명", "이메일 주소", "전화번호", "최종 평가", "대학교", "본전공",
             "복수/부전공", "마지막 재학 학기", "병역 이수 여부", "생년월일",
             "졸업 예정 시점", "대학원 진학 여부", "지원서 제출 일시"
     );
@@ -64,6 +64,7 @@ public class CsvService {
                 row.add(applicant.getName());
                 row.add(applicant.getEmail());
                 row.add(applicant.getPhone() != null ? applicant.getPhone() : "");
+                row.add(toKoreanDecision(applicant.getFinalDecision()));
                 row.add(applicant.getUniversity() != null ? applicant.getUniversity() : "");
                 row.add(applicant.getMajor() != null ? applicant.getMajor() : "");
                 row.add(formatMinorDoubleMajor(applicant.getMinorDoubleMajor()));
@@ -83,6 +84,17 @@ public class CsvService {
             }
         }
         return baos.toByteArray();
+    }
+
+    // 최종 평가(final_decision) ENUM → 결과 전달용 한글 표기
+    private String toKoreanDecision(EvaluationDecision decision) {
+        if (decision == null) return "";
+        return switch (decision) {
+            case PASS -> "합격";
+            case FAIL -> "불합격";
+            case HOLD -> "보류";
+            case PENDING -> "미정";
+        };
     }
 
     private String formatMinorDoubleMajor(String minorDoubleMajorJson) {
@@ -105,9 +117,21 @@ public class CsvService {
             try {
                 JsonNode node = objectMapper.readTree(answer.getAnswerJson());
                 StringBuilder sb = new StringBuilder();
-                node.fields().forEachRemaining(entry ->
-                        sb.append(entry.getKey()).append(": ").append(entry.getValue().asText()).append("\n")
-                );
+                node.fields().forEachRemaining(entry -> {
+                    sb.append(entry.getKey()).append(": ");
+                    JsonNode val = entry.getValue();
+                    if (val.isArray()) {
+                        StringBuilder elems = new StringBuilder();
+                        val.forEach(elem -> {
+                            if (elems.length() > 0) elems.append(", ");
+                            elems.append(elem.asText());
+                        });
+                        sb.append(elems);
+                    } else {
+                        sb.append(val.asText());
+                    }
+                    sb.append("\n");
+                });
                 return sb.toString().trim();
             } catch (Exception e) {
                 return answer.getAnswerJson();

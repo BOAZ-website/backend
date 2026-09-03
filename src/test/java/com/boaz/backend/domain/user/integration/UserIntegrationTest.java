@@ -11,6 +11,7 @@ import com.boaz.backend.domain.user.repository.UserRepository;
 import com.boaz.backend.domain.user.service.UserAdminService;
 import com.boaz.backend.domain.user.service.UserService;
 import com.boaz.backend.global.common.enums.MemberType;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -25,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -57,6 +59,10 @@ class UserIntegrationTest extends TestcontainersBase {
                 .recruitment(r).user(u).status(Applicant.ApplicantStatus.SUBMITTED)
                 .track(Track.ENGINEERING).name("홍길동").email("hong@example.com")
                 .phone("01012345678").university("한국대").major("컴공")
+                .minorDoubleMajor("[\"경영학\"]").lastSemester(6)
+                .militaryStatus(MilitaryStatus.COMPLETED_OR_EXEMPT)
+                .birthDate(LocalDate.of(2000, 3, 15))
+                .graduationDate("2026-02").gradSchoolPlan(false)
                 .build());
     }
 
@@ -107,9 +113,16 @@ class UserIntegrationTest extends TestcontainersBase {
             User promoted = userRepository.findById(u.getId()).orElseThrow();
             assertThat(promoted.getMemberType()).isEqualTo(MemberType.MEMBER);
             assertThat(promoted.getName()).isEqualTo("홍길동");
+            assertThat(promoted.getEmail()).isEqualTo("hong@example.com");
             assertThat(promoted.getPhone()).isEqualTo("01012345678");
             assertThat(promoted.getUniversity()).isEqualTo("한국대");
             assertThat(promoted.getMajor()).isEqualTo("컴공");
+            assertThat(promoted.getMinorDoubleMajor()).isEqualTo("[\"경영학\"]");
+            assertThat(promoted.getLastSemester()).isEqualTo(6);
+            assertThat(promoted.getMilitaryStatus()).isEqualTo(MilitaryStatus.COMPLETED_OR_EXEMPT);
+            assertThat(promoted.getBirthDate()).isEqualTo(LocalDate.of(2000, 3, 15));
+            assertThat(promoted.getGraduationDate()).isEqualTo("2026-02");
+            assertThat(promoted.getGradSchoolPlan()).isFalse();
             assertThat(promoted.getTrack()).isEqualTo(Track.ENGINEERING);
             assertThat(promoted.getTerm()).isEqualTo(27);
         }

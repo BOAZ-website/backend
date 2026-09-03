@@ -33,6 +33,23 @@ import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
 import com.boaz.backend.domain.recruitment.repository.SubscriptionRepository;
 import com.boaz.backend.domain.user.entity.User;
 import com.boaz.backend.domain.user.repository.UserRepository;
+import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.admin.repository.AdminRepository;
+import com.boaz.backend.domain.recruitment.entity.ApplicantEval;
+import com.boaz.backend.domain.recruitment.entity.DecisionFilter;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
+import com.boaz.backend.domain.recruitment.repository.ApplicantEvalRepository;
+import com.boaz.backend.domain.recruitment.dto.request.EvaluationSaveRequest;
+import com.boaz.backend.domain.recruitment.dto.request.FinalDecisionUpdateRequest;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantAnswersResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantSummaryResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.FinalDecisionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantEvaluatorsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.ApplicantInterviewQuestionsResponse;
+import com.boaz.backend.domain.recruitment.dto.response.EvaluatorInterviewQuestionResponse;
+import com.boaz.backend.domain.recruitment.dto.response.EvaluatorEvaluationResponse;
+import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
@@ -40,6 +57,7 @@ import com.boaz.backend.global.util.S3Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 
 import lombok.RequiredArgsConstructor;
@@ -50,15 +68,20 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -70,29 +93,35 @@ public class RecruitmentService {
     private final ApplicationQuestionRepository applicationQuestionRepository;
     private final ApplicantRepository applicantRepository;
     private final ApplicantAnswerRepository applicantAnswerRepository;
+    private final ApplicantEvalRepository applicantEvalRepository;
+    private final AdminRepository adminRepository;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
+    private final Clock clock;
 
     @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
 
     private final S3Service s3Service;
 
+    // 모집 기간 판정용 현재 시각 (초 단위 버림)
+    private LocalDateTime now() {
+        return LocalDateTime.now(clock).truncatedTo(ChronoUnit.SECONDS);
+    }
+
     // 모집 중 여부 조회
     public RecruitmentStatusResponse getRecruitmentStatus() {
-        Optional<Recruitment> activeRecruitment = recruitmentRepository
-                .findActiveRecruitment(LocalDateTime.now());
-
-        return activeRecruitment
-                .map(r -> RecruitmentStatusResponse.of(true, r.getTerm()))
+        LocalDateTime now = now();
+        return recruitmentRepository.findCurrentOrUpcoming(now)
+                .map(r -> RecruitmentStatusResponse.of(r.isActive(now), r.getTerm()))
                 .orElse(RecruitmentStatusResponse.of(false, null));
     }
 
     // 모집 공고 마감 일시 조회
     public DeadlineResponse getDeadline() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = now();
         Recruitment recruitment = recruitmentRepository.findActiveRecruitment(now)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
         return DeadlineResponse.from(recruitment);
@@ -103,11 +132,7 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-
-        return RecruitmentResponse.from(recruitment, isActive);
+        return RecruitmentResponse.from(recruitment, now());
     }
 
     // 지원서 질문 조회하기
@@ -118,10 +143,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 중 여부 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE);
         }
 
@@ -142,7 +164,7 @@ public class RecruitmentService {
         return questions.stream()
             .map(question -> {
                 String content = question.getContent() != null
-                        ? question.getContent().replace("{Track}", track.name())
+                        ? question.getContent().replace("{Track}", track.getDisplayName())
                         : null;
                 return QuestionResponse.from(question, content);
             })
@@ -162,10 +184,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -254,18 +273,36 @@ public class RecruitmentService {
                 );
             }
 
-            if (question.getIsRequired()) {
-                if (answer.isNull()
-                        || (question.getType() == ApplicationQuestion.Type.TEXT && answer.asText().trim().isEmpty())
-                        || (question.getType() == ApplicationQuestion.Type.TABLE && (!answer.isObject() || answer.size() == 0))) {
+            if (question.getType() == ApplicationQuestion.Type.TEXT) {
+                if (!answer.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                if (question.getIsRequired() && answer.asText().trim().isEmpty()) {
                     throw new CustomException(ErrorCode.ANSWER_REQUIRED);
                 }
-            }
-            if (question.getType() == ApplicationQuestion.Type.TEXT && !answer.isTextual()) {
-                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
-            }
-            if (question.getType() == ApplicationQuestion.Type.TABLE && !answer.isObject()) {
-                throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+            } else {
+                if (!answer.isObject()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                boolean multiple = isMultiple(question);
+                if (multiple) {
+                    answer.fields().forEachRemaining(entry -> {
+                        if (!entry.getValue().isArray()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        entry.getValue().forEach(elem -> {
+                            if (!elem.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                        });
+                    });
+                    if (question.getIsRequired()) {
+                        boolean hasSelection = false;
+                        for (JsonNode val : answer) {
+                            if (val.isArray() && val.size() > 0) { hasSelection = true; break; }
+                        }
+                        if (!hasSelection) throw new CustomException(ErrorCode.ANSWER_REQUIRED);
+                    }
+                } else {
+                    answer.fields().forEachRemaining(entry -> {
+                        if (!entry.getValue().isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                    });
+                    if (question.getIsRequired() && answer.size() == 0) {
+                        throw new CustomException(ErrorCode.ANSWER_REQUIRED);
+                    }
+                }
             }
         }
 
@@ -319,7 +356,8 @@ public class RecruitmentService {
                 answerText = answer.asText();
             } else {
                 try {
-                    answerJson = objectMapper.writeValueAsString(answer);
+                    JsonNode toSave = isMultiple(question) ? dedupeMultipleAnswer(answer) : answer;
+                    answerJson = objectMapper.writeValueAsString(toSave);
                 } catch (Exception e) {
                     throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                 }
@@ -349,10 +387,7 @@ public class RecruitmentService {
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
         // 모집 기간 확인
-        LocalDateTime now = LocalDateTime.now();
-        boolean isActive = !now.isBefore(recruitment.getStartDate())
-                        && !now.isAfter(recruitment.getEndDate());
-        if (!isActive) {
+        if (!recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_CLOSED);
         }
 
@@ -442,8 +477,25 @@ public class RecruitmentService {
                         if (answer != null && !answer.isObject()) {
                             throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
                         }
+                        if (answer != null) {
+                            boolean multiple = isMultiple(question);
+                            if (multiple) {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isArray()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    entry.getValue().forEach(elem -> {
+                                        if (!elem.isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                    });
+                                });
+                            } else {
+                                answer.fields().forEachRemaining(entry -> {
+                                    if (!entry.getValue().isTextual()) throw new CustomException(ErrorCode.INVALID_ANSWER_TYPE);
+                                });
+                            }
+                        }
                         try {
-                            answerJson = answer != null ? objectMapper.writeValueAsString(answer) : null;
+                            JsonNode toSave = (answer != null && isMultiple(question))
+                                    ? dedupeMultipleAnswer(answer) : answer;
+                            answerJson = toSave != null ? objectMapper.writeValueAsString(toSave) : null;
                         } catch (Exception e) {
                             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                         }
@@ -547,12 +599,15 @@ public class RecruitmentService {
     // Admin 전용 메서드
     // ========================
 
-    // 지원서 파일 다운로드
-    public void downloadApplications(Integer term) {
+    // 지원서 파일 다운로드 (decision: 합격/불합격/전체 추출 필터)
+    public void downloadApplications(Integer term, DecisionFilter decision) {
 
         // 공고 존재 여부 확인
         Recruitment recruitment = recruitmentRepository.findByTerm(term)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
+
+        // 필터에 대응하는 final_decision (ALL이면 null = 필터 미적용)
+        EvaluationDecision decisionFilter = decision.toEvaluationDecisionOrNull();
 
         String timestamp = LocalDateTime.now()
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
@@ -560,10 +615,10 @@ public class RecruitmentService {
         // 부문별 CSV 생성 및 S3 업로드
         for (Track track : List.of(Track.VISUALIZATION, Track.ANALYSIS, Track.ENGINEERING)) {
 
-            // 해당 부문 제출된 지원자 조회 (submittedAt 오름차순 + user JOIN FETCH)
+            // 해당 부문 + 필터 조건 제출 지원자 조회 (submittedAt 오름차순 + user JOIN FETCH)
             List<Applicant> applicants = applicantRepository
-                    .findSubmittedByRecruitmentIdAndTrackOrderBySubmittedAt(
-                            recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED);
+                    .findSubmittedByRecruitmentIdAndTrackAndDecision(
+                            recruitment.getId(), track, Applicant.ApplicantStatus.SUBMITTED, decisionFilter);
 
             // 공통 + 해당 부문 질문 조회
             List<ApplicationQuestion> questions = applicationQuestionRepository
@@ -590,9 +645,9 @@ public class RecruitmentService {
                 throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
             }
 
-            // S3 업로드
-            String key = String.format("%d/applicants_%s_%s.csv",
-                    term, track.name(), timestamp);
+            // S3 업로드 (키에 추출 필터 표기 → 합격/불합격/전체 파일 구분)
+            String key = String.format("%d/applicants_%s_%s_%s.csv",
+                    term, track.name(), decision.name(), timestamp);
             s3Service.uploadCsv(recruitmentBucket, key, csv);
         }
     }
@@ -608,8 +663,9 @@ public class RecruitmentService {
 
     // 모든 모집 공고 조회 (term 내림차순)
     public List<RecruitmentResponse> getAllRecruitments() {
+        LocalDateTime now = now();
         return recruitmentRepository.findAllByOrderByTermDesc().stream()
-                .map(RecruitmentResponse::from)
+                .map(r -> RecruitmentResponse.from(r, now))
                 .toList();
     }
 
@@ -701,10 +757,13 @@ public class RecruitmentService {
         Recruitment recruitment = recruitmentRepository.findById(recruitmentId)
                 .orElseThrow(() -> new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
-        if (recruitment.isActive()) {
+        if (recruitment.isActive(now())) {
             throw new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED);
         }
 
+        // FK 자식부터 순서대로 삭제: applicant_eval → applicant_answer → applicant
+        // (applicant_eval.applicant_id는 NOT NULL FK, ON DELETE CASCADE 없음)
+        applicantEvalRepository.deleteByRecruitmentId(recruitmentId);
         applicantAnswerRepository.deleteByRecruitmentId(recruitmentId);
         applicantRepository.deleteByRecruitmentId(recruitmentId);
     }
@@ -756,6 +815,7 @@ public class RecruitmentService {
                     item.getCategory(),
                     item.getType(),
                     item.getContent(),
+                    item.getDescription(),
                     item.getType() == ApplicationQuestion.Type.TEXT ? item.getLimitLength() : null,
                     item.getType() == ApplicationQuestion.Type.TABLE ? metadataJson : null,
                     item.getOrderNum(),
@@ -817,6 +877,7 @@ public class RecruitmentService {
                 request.getCategory(),
                 request.getType(),
                 request.getContent(),
+                request.getDescription(),
                 limitLength,
                 metadataJson,
                 request.getOrderNum(),
@@ -846,6 +907,12 @@ public class RecruitmentService {
         if (type == ApplicationQuestion.Type.TABLE && metadata == null) {
             throw new CustomException(ErrorCode.MISSING_PARAMETER);
         }
+        if (type == ApplicationQuestion.Type.TABLE && metadata != null) {
+            JsonNode multipleNode = metadata.path("multiple");
+            if (!multipleNode.isMissingNode() && !multipleNode.isBoolean()) {
+                throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            }
+        }
     }
 
     private String serializeMetadata(com.fasterxml.jackson.databind.JsonNode metadata) {
@@ -866,6 +933,32 @@ public class RecruitmentService {
         }
     }
 
+    private boolean isMultiple(ApplicationQuestion question) {
+        if (question.getMetadata() == null) return false;
+        try {
+            return objectMapper.readTree(question.getMetadata()).path("multiple").asBoolean(false);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private JsonNode dedupeMultipleAnswer(JsonNode answer) {
+        com.fasterxml.jackson.databind.node.ObjectNode result = objectMapper.createObjectNode();
+        answer.fields().forEachRemaining(entry -> {
+            JsonNode val = entry.getValue();
+            if (val.isArray()) {
+                Set<String> seen = new LinkedHashSet<>();
+                val.forEach(elem -> seen.add(elem.asText()));
+                ArrayNode deduped = objectMapper.createArrayNode();
+                seen.forEach(deduped::add);
+                result.set(entry.getKey(), deduped);
+            } else {
+                result.set(entry.getKey(), val);
+            }
+        });
+        return result;
+    }
+
     // 모집 사전 알림 신청 목록 조회 (어드민 전용)
     public List<SubscriptionResponse> getAllSubscriptions() {
         return subscriptionRepository.findAllByOrderByCreatedAtDesc()
@@ -878,5 +971,239 @@ public class RecruitmentService {
     @Transactional
     public void deleteAllSubscriptions() {
         subscriptionRepository.deleteAll();
+    }
+
+    // ===== 지원서 평가 (어드민 전용) =====
+
+    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함, 비대표진은 본인 track만
+    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId, Admin currentAdmin) {
+        validateRecruitmentExists(recruitmentId);
+        boolean allTrack = isAllTrackViewer(currentAdmin);
+
+        return applicantRepository.findByRecruitmentIdWithUser(recruitmentId).stream()
+                .filter(a -> allTrack || a.getTrack() == currentAdmin.getTrack())
+                .map(a -> ApplicantSummaryResponse.of(a, parseMinorDoubleMajor(a.getMinorDoubleMajor())))
+                .toList();
+    }
+
+    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계, 비대표진은 본인 track만
+    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId, Admin currentAdmin) {
+        validateRecruitmentExists(recruitmentId);
+        boolean allTrack = isAllTrackViewer(currentAdmin);
+
+        List<Applicant> applicants = applicantRepository
+                .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED)
+                .stream()
+                .filter(a -> allTrack || a.getTrack() == currentAdmin.getTrack())
+                .toList();
+
+        // applicant_id 단위로 평가 집계 (PENDING 미포함, 총점 = null 아닌 score 합)
+        Map<Long, List<ApplicantEval>> evalsByApplicant = applicantEvalRepository.findByRecruitmentId(recruitmentId)
+                .stream()
+                .collect(Collectors.groupingBy(e -> e.getApplicant().getId()));
+
+        List<ApplicantEvaluationResponse> result = new ArrayList<>();
+        for (Applicant a : applicants) {
+            List<ApplicantEval> evals = evalsByApplicant.getOrDefault(a.getId(), Collections.emptyList());
+            int pass = 0, hold = 0, fail = 0, total = 0;
+            EvaluationDecision myDecision = null;
+            for (ApplicantEval e : evals) {
+                switch (e.getDecision()) {
+                    case PASS -> pass++;
+                    case HOLD -> hold++;
+                    case FAIL -> fail++;
+                    default -> { /* PENDING: 개수 제외 */ }
+                }
+                if (e.getScore() != null) total += e.getScore();
+                // 로그인 본인의 평가 결정 (admin_id는 FK라 프록시 id 접근만으로 추가 쿼리 없음)
+                if (e.getAdmin().getId().equals(currentAdmin.getId())) {
+                    myDecision = e.getDecision();
+                }
+            }
+            result.add(ApplicantEvaluationResponse.of(
+                    a, parseMinorDoubleMajor(a.getMinorDoubleMajor()), pass, hold, fail, total, myDecision));
+        }
+        return result;
+    }
+
+    // 최종 평가 수정 — 현재/차기 대표진만. 단 현재 대표진은 본인 track 지원자만(차기 대표진은 전 부문)
+    @Transactional
+    public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request,
+                                                     Admin currentAdmin) {
+        validateFinalDecisionAuthority(currentAdmin);
+
+        Applicant applicant = findSubmittedApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+        applicant.updateFinalDecision(request.getFinalDecision());
+        return FinalDecisionResponse.from(applicant);
+    }
+
+    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함), 비대표진은 본인 track만
+    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId, Admin currentAdmin) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+
+        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미평가자도 포함.
+        List<Admin> evaluators = adminRepository.findEvaluatorPool(
+                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
+
+        Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
+                .stream()
+                .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        List<EvaluatorEvaluationResponse> evaluations = evaluators.stream()
+                .map(admin -> EvaluatorEvaluationResponse.of(admin, evalByAdmin.get(admin.getId())))
+                .toList();
+
+        return ApplicantEvaluatorsResponse.of(applicantId, evaluations);
+    }
+
+    // 지원서별 면접 질문 조회 — 한 지원자의 부문 평가자별 면접 질문 (미작성자 null 포함), 비대표진은 본인 track만
+    public ApplicantInterviewQuestionsResponse getApplicantInterviewQuestions(Long applicantId, Admin currentAdmin) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+
+        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미작성자도 포함.
+        List<Admin> evaluators = adminRepository.findEvaluatorPool(
+                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
+
+        Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
+                .stream()
+                .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        List<EvaluatorInterviewQuestionResponse> interviewQuestions = evaluators.stream()
+                .map(admin -> EvaluatorInterviewQuestionResponse.of(admin, evalByAdmin.get(admin.getId())))
+                .toList();
+
+        return ApplicantInterviewQuestionsResponse.of(applicantId, interviewQuestions);
+    }
+
+    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null), 비대표진은 본인 track만
+    public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+
+        return applicantEvalRepository.findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
+                .map(MyEvaluationResponse::from)
+                .orElse(null);
+    }
+
+    // 개인 평가 저장 (upsert) — 본인 부문 지원자만
+    @Transactional
+    public MyEvaluationResponse saveMyEvaluation(Long applicantId, EvaluationSaveRequest request,
+                                                 Admin currentAdmin) {
+        Applicant applicant = findSubmittedApplicantForEval(applicantId);
+
+        // 본인 부문 지원자만 평가 가능 (단, 대표진은 모든 부문 평가 가능)
+        validateTrackAccess(currentAdmin, applicant);
+
+        // 원자적 upsert (없으면 INSERT, 있으면 UPDATE) — 동시 최초 저장 시에도 멱등
+        applicantEvalRepository.upsert(
+                applicantId, currentAdmin.getId(),
+                request.getDecision().name(), request.getScore(), request.getMemo(),
+                request.getInterviewQuestion());
+
+        ApplicantEval eval = applicantEvalRepository
+                .findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
+                .orElseThrow(() -> new CustomException(ErrorCode.INTERNAL_SERVER_ERROR));
+        return MyEvaluationResponse.from(eval);
+    }
+
+    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로), 비대표진은 본인 track만
+    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId, Admin currentAdmin) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        validateTrackAccess(currentAdmin, applicant);
+        String trackName = applicant.getTrack() != null ? applicant.getTrack().getDisplayName() : null;
+
+        List<ApplicantAnswersResponse.AnswerDetailResponse> answers =
+                applicantAnswerRepository.findByApplicantIdWithQuestion(applicantId).stream()
+                        .map(aa -> {
+                            ApplicationQuestion q = aa.getQuestion();
+                            String content = q.getContent();
+                            // 문항 내용의 {Track} 치환 (지원자가 보던 표기와 일치)
+                            if (content != null && trackName != null) {
+                                content = content.replace("{Track}", trackName);
+                            }
+                            return ApplicantAnswersResponse.AnswerDetailResponse.builder()
+                                    .questionId(q.getId())
+                                    .label(q.getLabel())
+                                    .category(q.getCategory())
+                                    .type(q.getType())
+                                    .content(content)
+                                    .orderNum(q.getOrderNum())
+                                    .answer(toAnswerNode(aa))
+                                    .build();
+                        })
+                        .toList();
+
+        return ApplicantAnswersResponse.of(applicantId, answers);
+    }
+
+    // 저장된 답변(answer_text/answer_json)을 JsonNode로 변환 (TEXT → 문자열, TABLE → 객체)
+    private JsonNode toAnswerNode(ApplicantAnswer aa) {
+        if (aa.getAnswerText() != null) {
+            return TextNode.valueOf(aa.getAnswerText());
+        }
+        if (aa.getAnswerJson() != null) {
+            try {
+                return objectMapper.readTree(aa.getAnswerJson());
+            } catch (Exception e) {
+                return objectMapper.nullNode();
+            }
+        }
+        return objectMapper.nullNode();
+    }
+
+    private void validateRecruitmentExists(Long recruitmentId) {
+        if (!recruitmentRepository.existsById(recruitmentId)) {
+            throw new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND);
+        }
+    }
+
+    private Applicant findApplicantForEval(Long applicantId) {
+        return applicantRepository.findById(applicantId)
+                .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+    }
+
+    private Applicant findSubmittedApplicantForEval(Long applicantId) {
+        Applicant applicant = findApplicantForEval(applicantId);
+        if (applicant.getStatus() != Applicant.ApplicantStatus.SUBMITTED) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+        return applicant;
+    }
+
+    // 전 부문 조회/평가 권한 = 차기 대표진 (role SUPER && teamName 차기대표진)
+    private boolean isAllTrackViewer(Admin admin) {
+        return admin.getRole() == Admin.Role.SUPER && admin.getTeamName() == Admin.TeamName.차기대표진;
+    }
+
+    // 최종 평가 수정 권한 = 현재 대표진 또는 차기 대표진 (role SUPER 필수)
+    private void validateFinalDecisionAuthority(Admin admin) {
+        boolean authorized = admin.getRole() == Admin.Role.SUPER
+                && (admin.getTeamName() == Admin.TeamName.대표진
+                    || admin.getTeamName() == Admin.TeamName.차기대표진);
+        if (!authorized) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    // 부문 접근 검증 — 차기 대표진은 전 부문 허용, 그 외(현재 대표진 포함)는 본인 track 지원자만
+    private void validateTrackAccess(Admin admin, Applicant applicant) {
+        if (!isAllTrackViewer(admin) && admin.getTrack() != applicant.getTrack()) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
+
+    // minor_double_major(JSON 문자열) → List<String>
+    private List<String> parseMinorDoubleMajor(String json) {
+        if (json == null || json.isBlank()) {
+            return null;
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return null;
+        }
     }
 }

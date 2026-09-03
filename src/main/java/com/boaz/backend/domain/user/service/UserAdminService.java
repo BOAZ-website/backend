@@ -60,9 +60,16 @@ public class UserAdminService {
         // 승격: 지원서 개인정보 → User 복사 + memberType → MEMBER
         user.promote(
                 applicant.getName(),
+                applicant.getEmail(),
                 applicant.getPhone(),
                 applicant.getUniversity(),
                 applicant.getMajor(),
+                applicant.getMinorDoubleMajor(),
+                applicant.getLastSemester(),
+                applicant.getMilitaryStatus(),
+                applicant.getBirthDate(),
+                applicant.getGraduationDate(),
+                applicant.getGradSchoolPlan(),
                 applicant.getTrack(),
                 applicant.getRecruitment().getTerm()
         );

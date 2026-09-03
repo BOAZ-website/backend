@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
@@ -145,6 +146,19 @@ class FaqServiceTest {
 
             assertThat(res).isNotNull();
         }
+
+        @Test
+        @DisplayName("TC-011 동시 요청으로 existsByCategoryAndOrderNum 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
+        void raceConditionCaughtByDbConstraint() {
+            when(faqRepository.existsByCategoryAndOrderNum(Faq.Category.RECRUITMENT, 1)).thenReturn(false);
+            when(faqRepository.save(any()))
+                    .thenThrow(new DataIntegrityViolationException("duplicate entry for key 'category, order_num'"));
+
+            assertThatThrownBy(() -> faqService.createFaq(makeCreateRequest(Faq.Category.RECRUITMENT, 1)))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.DUPLICATE_ORDER_NUM);
+        }
     }
 
     // ══════════════════════════════════════════════
@@ -200,6 +214,22 @@ class FaqServiceTest {
             when(faqRepository.findById(2L)).thenReturn(Optional.of(faq));
             when(faqRepository.existsByCategoryAndOrderNumAndIdNot(Faq.Category.RECRUITMENT, 1, 2L))
                     .thenReturn(true);
+
+            assertThatThrownBy(() -> faqService.updateFaq(2L, makeUpdateRequest(null, null, null, 1)))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.DUPLICATE_ORDER_NUM);
+        }
+
+        @Test
+        @DisplayName("TC-012 동시 요청으로 existsByCategoryAndOrderNumAndIdNot 통과 후 flush 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
+        void raceConditionCaughtByDbConstraint() {
+            Faq faq = makeFaq(2L, Faq.Category.RECRUITMENT, 2);
+            when(faqRepository.findById(2L)).thenReturn(Optional.of(faq));
+            when(faqRepository.existsByCategoryAndOrderNumAndIdNot(Faq.Category.RECRUITMENT, 1, 2L))
+                    .thenReturn(false);
+            when(faqRepository.saveAndFlush(any()))
+                    .thenThrow(new DataIntegrityViolationException("duplicate entry for key 'category, order_num'"));
 
             assertThatThrownBy(() -> faqService.updateFaq(2L, makeUpdateRequest(null, null, null, 1)))
                     .isInstanceOf(CustomException.class)

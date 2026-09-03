@@ -19,7 +19,7 @@ spring:
   jpa:
     defer-datasource-initialization: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
@@ -86,9 +86,11 @@ springdoc:
 
 swagger:
   server-url: "https://api.bigdataboaz.com"
+  user: ${SWAGGER_USER}
+  password: ${SWAGGER_PASSWORD}
 
 cors:
-  allowed-origins: "https://www.bigdataboaz.com,https://prod-www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com,http://localhost:5173,http://localhost:5173/,http://localhost:5174,http://localhost:5174/,http://localhost:5174,http://localhost:8080"
+  allowed-origins: "https://www.bigdataboaz.com,https://dev.bigdataboaz.com,https://api.bigdataboaz.com,https://admin.bigdataboaz.com"
 
 jwt:
   secret: ${JWT_SECRET}
@@ -110,9 +112,9 @@ cookie:
   domain: bigdataboaz.com
 
 oauth2:
-  redirect-uri: https://prod-www.bigdataboaz.com/auth/callback
-  failure-redirect-uri: https://prod-www.bigdataboaz.com/login?error=true
-  allowed-redirect-uris: "https://prod-www.bigdataboaz.com/auth/callback,https://www.bigdataboaz.com/auth/callback,https://dev.bigdataboaz.com/auth/callback"
+  redirect-uri: https://www.bigdataboaz.com/auth/callback
+  failure-redirect-uri: https://www.bigdataboaz.com/login?error=true
+  allowed-redirect-uris: "https://www.bigdataboaz.com/auth/callback,https://dev.bigdataboaz.com/auth/callback"
 
 logging:
   level:
@@ -122,3 +124,8 @@ logging:
     com.boaz: INFO
   file:
     name: /var/log/boaz/application.log
+  logback:
+    rollingpolicy:
+      max-file-size: 50MB
+      max-history: 14
+      total-size-cap: 1GB

@@ -10,9 +10,11 @@ TRUNCATE application_question;
 TRUNCATE archive;
 TRUNCATE applicants;
 TRUNCATE applicant_answer;
+TRUNCATE applicant_eval;
 TRUNCATE curriculum;
 TRUNCATE faq;
 TRUNCATE review;
+TRUNCATE subscription;
 
 -- 외래 키 체크 재활성화
 SET FOREIGN_KEY_CHECKS = 1;
@@ -20,11 +22,29 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- 임시 데이터
 
 -- admin 임시 데이터 (비밀번호: Boaz1234!)
-INSERT INTO admin (username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES ('boaz_super', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '김보아즈', 'ENGINEERING', 27, '대표진', NULL, NOW(), NOW());
+-- id=1: 현재 대표진(ENGINEERING) — 본인 부문만 조회/평가/최종결정
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (1, 'boaz_super', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '김보아즈', 'ENGINEERING', 27, '대표진', NULL, NOW(), NOW());
 
-INSERT INTO admin (username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES ('boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
+-- id=2: 서비스운영팀 TEAM(ANALYSIS) — 본인 부문 평가자
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (2, 'boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
+
+-- id=3: 차기 대표진(SUPER + 차기대표진) — 전 부문 조회/평가/최종결정 권한
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (3, 'boaz_next_rep', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '최차기', 'ENGINEERING', 27, '차기대표진', 1, NOW(), NOW());
+
+-- id=4: ENGINEERING 부문 평가자(TEAM)
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (4, 'boaz_eng_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '박엔지', 'ENGINEERING', 27, '서비스운영팀', 1, NOW(), NOW());
+
+-- id=5: ANALYSIS 부문 평가자(TEAM)
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (5, 'boaz_ana_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '정분석', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
+
+-- id=6: VISUALIZATION 부문 평가자(TEAM)
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (6, 'boaz_vis_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '한시각', 'VISUALIZATION', 27, '서비스운영팀', 1, NOW(), NOW());
 
 -- users 임시 데이터
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
@@ -39,10 +59,29 @@ VALUES (3, 'kakao', 'dummy_kakao_003', '박시각', 'OUTSIDER', NOW(), NOW());
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
 VALUES (4, 'kakao', 'dummy_kakao_004', '스웨거테스터', 'OUTSIDER', NOW(), NOW());
 
+-- CSV 추출 필터(decision=PASS/FAIL/ALL) 테스트용 user (id=5~10)
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (5, 'kakao', 'dummy_kakao_005', '합격엔지', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (6, 'kakao', 'dummy_kakao_006', '불합격엔지', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (7, 'kakao', 'dummy_kakao_007', '합격분석', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (8, 'kakao', 'dummy_kakao_008', '불합격분석', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (9, 'kakao', 'dummy_kakao_009', '합격시각', 'OUTSIDER', NOW(), NOW());
+
+INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
+VALUES (10, 'kakao', 'dummy_kakao_010', '불합격시각', 'OUTSIDER', NOW(), NOW());
+
 -- recruitment 임시 데이터
 -- id=1: 26기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
+VALUES (1, 26, '2026-03-01 00:00:00', '2026-04-30 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-03-01", "end": "2026-03-29", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-04-04", "end": "2026-04-04", "sequence": 2 },
@@ -52,7 +91,7 @@ VALUES (1, 26, '2026-03-01 00:00:00', '2026-06-30 23:59:59',
 
 -- id=2: 27기
 INSERT INTO recruitment (id, term, start_date, end_date, schedule, brochure_url, created_at, updated_at)
-VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
+VALUES (2, 27, '2026-06-01 00:00:00', '2026-08-31 23:59:59',
 '[
   { "step": "서류 모집", "start": "2026-05-01", "end": "2026-08-31", "sequence": 1 },
   { "step": "서류 합격 발표", "start": "2026-09-05", "end": "2026-09-05", "sequence": 2 },
@@ -61,60 +100,67 @@ VALUES (2, 27, '2026-08-01 00:00:00', '2026-08-31 23:59:59',
 ]', 'https://example.com/brochure27.pdf', NOW(), NOW());
 
 -- application_question 임시 데이터 (recruitment_id = 1, 26기 - 현재 활성, Swagger 테스트용)
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (1, 1, 'COMMON', 'TEXT', 'COMMON1', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, 500, 1, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (1, 1, 'COMMON', 'TEXT', 'COMMON1', 'RECRUITMENT 동기는 무엇인가요? (500자 이내)', null, null, 500, 1, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (2, 1, 'COMMON', 'TEXT', 'COMMON2', '본인을 나타낼 수 있는 기존의 ACTIVITY 경험 (500자 이내)', null, 500, 2, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (2, 1, 'COMMON', 'TEXT', 'COMMON2', '본인을 나타낼 수 있는 기존의 ACTIVITY 경험 (500자 이내)', null, null, 500, 2, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (3, 1, 'COMMON', 'TEXT', 'COMMON5', '추가적으로 자신의 ACTIVITY 중에서 특히 어필하고 싶은 PROJECT가 있다면.. (500자 이내)', null, 500, 99, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (3, 1, 'COMMON', 'TEXT', 'COMMON5', '추가적으로 자신의 ACTIVITY 중에서 특히 어필하고 싶은 PROJECT가 있다면.. (500자 이내)', null, null, 500, 99, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (4, 1, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 TOOL 활용 경험', '{"rows":["Tableau", "Python"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (4, 1, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 TOOL 활용 경험', null, '{"rows":["Tableau", "Python"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (5, 1, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', '본인이 진행했던 VISUALIZATION를 통해 인사이트를 도출한 경험.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (5, 1, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', '본인이 진행했던 VISUALIZATION를 통해 인사이트를 도출한 경험.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (6, 1, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 경험', '{"rows":["데이터베이스", "서버 및 클라우드 서비스"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (6, 1, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 경험', null, '{"rows":["데이터베이스", "서버 및 클라우드 서비스"], "columns":["경험 없음", "관련 PROJECT 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (7, 1, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 중 관심있는 세부 분야와 해당 분야와 관련된 경험 및 ACTIVITY.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (7, 1, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 중 관심있는 세부 분야와 해당 분야와 관련된 경험 및 ACTIVITY.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (8, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '[빅데이터 / 인공지능 / 머신러닝 / 통계 및 수학] 관련 수강 과목 혹은 세미나 경험.. (300자 이내)', null, 300, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (8, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '[빅데이터 / 인공지능 / 머신러닝 / 통계 및 수학] 관련 수강 과목 혹은 세미나 경험.. (300자 이내)', null, null, 300, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (9, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '본인이 진행했던 [머신러닝 / 딥러닝 / 데이터ANALYSIS] 관련 PROJECT를 소개.. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (9, 1, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '본인이 진행했던 [머신러닝 / 딥러닝 / 데이터ANALYSIS] 관련 PROJECT를 소개.. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
 -- application_question 임시 데이터 (recruitment_id = 2, 27기)
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (10, 2, 'COMMON', 'TEXT', 'COMMON1', 'BOAZ에 지원하게 된 동기를 작성해주세요. (500자 이내)', null, 500, 1, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (10, 2, 'COMMON', 'TEXT', 'COMMON1', 'BOAZ에 지원하게 된 동기를 작성해주세요. (500자 이내)', null, null, 500, 1, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (11, 2, 'COMMON', 'TEXT', 'COMMON2', '본인의 데이터 관련 경험을 소개해주세요. (500자 이내)', null, 500, 2, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (11, 2, 'COMMON', 'TEXT', 'COMMON2', '본인의 데이터 관련 경험을 소개해주세요. (500자 이내)', null, null, 500, 2, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (12, 2, 'COMMON', 'TEXT', 'COMMON3', '활동 후 이루고 싶은 목표가 있다면 작성해주세요. (500자 이내)', null, 500, 99, false, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (12, 2, 'COMMON', 'TEXT', 'COMMON3', '활동 후 이루고 싶은 목표가 있다면 작성해주세요. (500자 이내)', null, null, 500, 99, false, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (13, 2, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 기술 경험', '{"rows":["데이터베이스", "서버 및 클라우드 서비스", "데이터 파이프라인"], "columns":["경험 없음", "학습 경험 있음", "프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (13, 2, 'ENGINEERING', 'TABLE', 'ENGINEERING1', '데이터 ENGINEERING 관련 기술 경험', null, '{"rows":["데이터베이스", "서버 및 클라우드 서비스", "데이터 파이프라인"], "columns":["경험 없음", "학습 경험 있음", "프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (14, 2, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 관심 세부 분야와 경험을 서술해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (14, 2, 'ENGINEERING', 'TEXT', 'ENGINEERING2', '데이터 ENGINEERING 분야 관심 세부 분야와 경험을 서술해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (15, 2, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 도구 경험', '{"rows":["Tableau", "Python (matplotlib/seaborn)", "D3.js"], "columns":["경험 없음", "관련 프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (15, 2, 'VISUALIZATION', 'TABLE', 'VISUALIZATION1', '데이터 VISUALIZATION 관련 도구 경험', null, '{"rows":["Tableau", "Python (matplotlib/seaborn)", "D3.js"], "columns":["경험 없음", "관련 프로젝트 경험 있음"]}', null, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (16, 2, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', 'VISUALIZATION을 통해 인사이트를 도출한 경험을 서술해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (16, 2, 'VISUALIZATION', 'TEXT', 'VISUALIZATION2', 'VISUALIZATION을 통해 인사이트를 도출한 경험을 서술해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (17, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '머신러닝 / 딥러닝 관련 수강 과목 혹은 세미나 경험을 작성해주세요. (300자 이내)', null, 300, 10, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (17, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS1', '머신러닝 / 딥러닝 관련 수강 과목 혹은 세미나 경험을 작성해주세요. (300자 이내)', null, null, 300, 10, true, NOW(), NOW());
 
-INSERT INTO application_question (id, recruitment_id, category, type, label, content, metadata, limit_length, order_num, is_required, created_at, updated_at)
-VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프로젝트 경험을 소개해주세요. (700자 이내)', null, 700, 11, true, NOW(), NOW());
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (18, 2, 'ANALYSIS', 'TEXT', 'ANALYSIS2', '데이터 ANALYSIS 관련 프로젝트 경험을 소개해주세요. (700자 이내)', null, null, 700, 11, true, NOW(), NOW());
+
+-- 복수선택 TABLE 샘플 (recruitment_id = 2, 면접 가능 시간)
+INSERT INTO application_question (id, recruitment_id, category, type, label, content, description, metadata, limit_length, order_num, is_required, created_at, updated_at)
+VALUES (19, 2, 'COMMON', 'TABLE', 'COMMON5', '면접 가능 시간 (복수 선택).',
+        '면접은 대면으로 진행될 예정입니다. 가능한 면접 시간을 모두 체크해주시기 바랍니다.\n응답이 없을 경우, 모든 면접 시간이 불가능한 것으로 간주될 수 있으니 반드시 작성 부탁드립니다.',
+        '{"rows":["7월 4일(토)","7월 5일(일)"],"columns":["11:00~13:00","13:00~15:00","15:00~17:00"],"multiple":true}',
+        null, 98, true, NOW(), NOW());
 
 -- archive 임시 데이터
 INSERT INTO archive (id, term, category, title, team_name, track, image_url, links, content_date, created_at, updated_at)
@@ -161,15 +207,36 @@ VALUES (14, 25, 'ACTIVITY', '26기 신입기수 OT', NULL, 'ALL', 'https://examp
 
 -- applicant 임시 데이터
 -- user OneToOne 적용: user_id=1~3 각 트랙 1명씩
--- status=SUBMITTED, submitted_at 설정
-INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, submitted_at, created_at, updated_at)
-VALUES (1, 1, 1, 'SUBMITTED', 'ENGINEERING', '김엔지', 'eng@example.com', '01011111111', '한국대학교', '컴퓨터공학', '["통계학"]', 7, 'COMPLETED_OR_EXEMPT', '2002-01-01', '2026-08', false, '2026-03-14 22:19:27', '2026-03-14 22:19:27', '2026-03-14 22:19:27');
+-- status=SUBMITTED, submitted_at 설정, final_decision 명시(NOT NULL, DB 기본값 없음)
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (1, 1, 1, 'SUBMITTED', 'ENGINEERING', '김엔지', 'eng@example.com', '01011111111', '한국대학교', '컴퓨터공학', '["통계학"]', 7, 'COMPLETED_OR_EXEMPT', '2002-01-01', '2026-08', false, 'PENDING', '2026-03-14 22:19:27', '2026-03-14 22:19:27', '2026-03-14 22:19:27');
 
-INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, submitted_at, created_at, updated_at)
-VALUES (3, 1, 2, 'SUBMITTED', 'ANALYSIS', '이분석', 'ana@example.com', '01022222222', '한국대학교', '통계학', null, 7, 'COMPLETED_OR_EXEMPT', '2002-01-01', '2026-08', false, '2026-03-14 22:21:18', '2026-03-14 22:21:18', '2026-03-14 22:21:18');
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (3, 1, 2, 'SUBMITTED', 'ANALYSIS', '이분석', 'ana@example.com', '01022222222', '한국대학교', '통계학', null, 7, 'COMPLETED_OR_EXEMPT', '2002-01-01', '2026-08', false, 'PASS', '2026-03-14 22:21:18', '2026-03-14 22:21:18', '2026-03-14 22:21:18');
 
-INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, submitted_at, created_at, updated_at)
-VALUES (4, 1, 3, 'SUBMITTED', 'VISUALIZATION', '박시각', 'vis@example.com', '01033333333', '한국대학교', '시각디자인', null, 7, 'NOT_COMPLETED', '2002-01-01', '2026-08', false, '2026-03-14 22:21:58', '2026-03-14 22:21:58', '2026-03-14 22:21:58');
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (4, 1, 3, 'SUBMITTED', 'VISUALIZATION', '박시각', 'vis@example.com', '01033333333', '한국대학교', '시각디자인', null, 7, 'NOT_COMPLETED', '2002-01-01', '2026-08', false, 'PENDING', '2026-03-14 22:21:58', '2026-03-14 22:21:58', '2026-03-14 22:21:58');
+
+-- CSV 추출 필터 테스트용 지원자 (recruitment_id=1, term 26)
+-- 각 부문별로 final_decision=PASS 1명 + FAIL 1명을 두어, decision=PASS/FAIL/ALL 추출 결과가 명확히 구분되도록 함
+-- (기존 id=1 ENG=PENDING, id=3 ANA=PASS, id=4 VIS=PENDING 는 그대로 유지)
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (5, 1, 5, 'SUBMITTED', 'ENGINEERING', '합격엔지', 'eng_pass@example.com', '01051110001', '한국대학교', '컴퓨터공학', null, 8, 'COMPLETED_OR_EXEMPT', '2001-05-10', '2026-02', false, 'PASS', '2026-03-15 09:00:00', '2026-03-15 09:00:00', '2026-03-15 09:00:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (6, 1, 6, 'SUBMITTED', 'ENGINEERING', '불합격엔지', 'eng_fail@example.com', '01051110002', '한국대학교', '소프트웨어', null, 6, 'NOT_COMPLETED', '2002-07-22', '2026-08', false, 'FAIL', '2026-03-15 09:10:00', '2026-03-15 09:10:00', '2026-03-15 09:10:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (7, 1, 7, 'SUBMITTED', 'ANALYSIS', '합격분석', 'ana_pass@example.com', '01052220001', '한국대학교', '통계학', '["수학"]', 7, 'COMPLETED_OR_EXEMPT', '2001-11-03', '2026-02', true, 'PASS', '2026-03-15 09:20:00', '2026-03-15 09:20:00', '2026-03-15 09:20:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (8, 1, 8, 'SUBMITTED', 'ANALYSIS', '불합격분석', 'ana_fail@example.com', '01052220002', '한국대학교', '경제학', null, 5, 'NOT_COMPLETED', '2003-02-14', '2027-02', false, 'FAIL', '2026-03-15 09:30:00', '2026-03-15 09:30:00', '2026-03-15 09:30:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (9, 1, 9, 'SUBMITTED', 'VISUALIZATION', '합격시각', 'vis_pass@example.com', '01053330001', '한국대학교', '시각디자인', null, 8, 'COMPLETED_OR_EXEMPT', '2001-08-30', '2026-02', false, 'PASS', '2026-03-15 09:40:00', '2026-03-15 09:40:00', '2026-03-15 09:40:00');
+
+INSERT INTO applicants (id, recruitment_id, user_id, status, track, name, email, phone, university, major, minor_double_major, last_semester, military_status, birth_date, graduation_date, grad_school_plan, final_decision, submitted_at, created_at, updated_at)
+VALUES (10, 1, 10, 'SUBMITTED', 'VISUALIZATION', '불합격시각', 'vis_fail@example.com', '01053330002', '한국대학교', '산업디자인', null, 6, 'NOT_COMPLETED', '2002-04-18', '2026-08', false, 'FAIL', '2026-03-15 09:50:00', '2026-03-15 09:50:00', '2026-03-15 09:50:00');
 
 -- applicant_answer 임시 데이터 (id=1, ENGINEERING)
 INSERT INTO applicant_answer (applicant_id, question_id, answer_text, answer_json, created_at, updated_at)
@@ -218,6 +285,26 @@ VALUES (4, 5, 'VISUALIZATION2답변', null, NOW(), NOW());
 
 INSERT INTO applicant_answer (applicant_id, question_id, answer_text, answer_json, created_at, updated_at)
 VALUES (4, 3, 'COMMON5답변', null, NOW(), NOW());
+
+-- applicant_eval 임시 데이터 (지원서 평가 #170)
+-- 평가자 풀: 해당 부문 평가자 + 차기 대표진(전 부문). 미평가자(예: 차기대표진 id=3)는 조회 시 null로 표시됨.
+-- 지원자 1(ENGINEERING): 부문 평가자 = id 1(현재 대표진/ENG), id 4(ENG 평가자), id 3(차기대표진/미평가)
+INSERT INTO applicant_eval (applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at)
+VALUES (1, 4, 'PASS', 9, '기술 이해도가 높고 프로젝트 경험이 적절함.', '추천 시스템 프로젝트에서 콜드스타트 문제를 어떻게 해결했나요?', NOW(), NOW());
+
+INSERT INTO applicant_eval (applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at)
+VALUES (1, 1, 'HOLD', 6, '포트폴리오는 좋으나 면접에서 확인 필요.', null, NOW(), NOW());
+
+-- 지원자 3(ANALYSIS): 부문 평가자 = id 2(ANALYSIS 운영진), id 5(ANALYSIS 평가자), id 3(차기대표진/미평가)
+INSERT INTO applicant_eval (applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at)
+VALUES (3, 5, 'PASS', 8, '데이터 분석 프로젝트 경험이 풍부함.', '협업 필터링 구현 과정에서 가장 어려웠던 점은 무엇이었나요?', NOW(), NOW());
+
+INSERT INTO applicant_eval (applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at)
+VALUES (3, 2, 'FAIL', 3, '기초 통계 이해가 부족해 보임.', null, NOW(), NOW());
+
+-- 지원자 4(VISUALIZATION): 부문 평가자 = id 6(VIS 평가자), id 3(차기대표진/미평가)
+INSERT INTO applicant_eval (applicant_id, admin_id, decision, score, memo, interview_question, created_at, updated_at)
+VALUES (4, 6, 'HOLD', 5, '시각화 도구 경험이 보통 수준.', '인터랙티브 대시보드를 만든다면 어떤 도구를 선택하겠습니까?', NOW(), NOW());
 
 -- Curriculum 임시데이터
 INSERT INTO curriculum (track, curriculum_steps, created_at, updated_at) VALUES

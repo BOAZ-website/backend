@@ -1,6 +1,6 @@
 package com.boaz.backend.domain.recruitment.dto.request;
 
-import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.global.common.enums.MilitaryStatus;
 import com.boaz.backend.global.common.enums.Track;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -51,7 +51,7 @@ public class ApplicationRequest {
     @Schema(description = "병역 상태", example = "COMPLETED_OR_EXEMPT", allowableValues = {"COMPLETED_OR_EXEMPT", "NOT_COMPLETED"})
     @NotNull(message = "병역 상태를 선택해주세요.")
     @JsonProperty("military_status")
-    private Applicant.MilitaryStatus militaryStatus;
+    private MilitaryStatus militaryStatus;
 
     @Schema(description = "생년월일", example = "2000-01-01")
     @NotBlank(message = "생년월일을 입력해주세요.")
