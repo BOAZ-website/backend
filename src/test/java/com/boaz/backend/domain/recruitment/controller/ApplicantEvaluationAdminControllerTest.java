@@ -12,8 +12,7 @@ import com.boaz.backend.domain.recruitment.service.RecruitmentService;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.boaz.backend.global.security.AdminUserDetails;
-import com.boaz.backend.global.security.UserPrincipal;
+import com.boaz.backend.support.AuthFixtures;
 import com.boaz.backend.support.TestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -25,10 +24,8 @@ import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAut
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -54,20 +51,11 @@ class ApplicantEvaluationAdminControllerTest {
     @MockitoBean RecruitmentService recruitmentService;
 
     private UsernamePasswordAuthenticationToken adminAuth() {
-        Admin admin = Admin.builder()
-                .username("rep").password("p").role(Admin.Role.SUPER).name("대표")
-                .track(Track.ENGINEERING).term(27).teamName(Admin.TeamName.대표진).createdBy(null)
-                .build();
-        ReflectionTestUtils.setField(admin, "id", 1L);
-        return new UsernamePasswordAuthenticationToken(
-                new AdminUserDetails(admin), null,
-                List.of(new SimpleGrantedAuthority("ROLE_SUPER")));
+        return AuthFixtures.adminAuth(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
     }
 
     private UsernamePasswordAuthenticationToken userAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                new UserPrincipal(1L), null,
-                List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        return AuthFixtures.userAuth(1L);
     }
 
     private MyEvaluationResponse myEval() {

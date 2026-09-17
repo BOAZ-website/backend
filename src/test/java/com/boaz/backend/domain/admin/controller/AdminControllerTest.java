@@ -5,12 +5,10 @@ import com.boaz.backend.domain.admin.dto.response.AdminIdResponse;
 import com.boaz.backend.domain.admin.dto.response.AdminMeResponse;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.service.AdminService;
-import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
 import com.boaz.backend.global.config.JacksonConfig;
-import com.boaz.backend.global.security.AdminUserDetails;
-import com.boaz.backend.global.security.UserPrincipal;
+import com.boaz.backend.support.AuthFixtures;
 import com.boaz.backend.support.TestSecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -22,10 +20,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -60,17 +56,11 @@ class AdminControllerTest {
             + "\"name\":\"김보아즈\",\"track\":\"ANALYSIS\",\"term\":25,\"team_name\":\"기획팀\"}";
 
     private Admin admin(Long id, Admin.Role role) {
-        Admin a = Admin.builder()
-                .username("user" + id).password("ENC").role(role).name("name" + id)
-                .track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀).createdBy(null)
-                .build();
-        ReflectionTestUtils.setField(a, "id", id);
-        return a;
+        return AuthFixtures.admin(id, role, Admin.TeamName.기획팀);
     }
 
     private UsernamePasswordAuthenticationToken adminAuth(Admin.Role role) {
-        AdminUserDetails principal = new AdminUserDetails(admin(1L, role));
-        return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        return AuthFixtures.adminAuth(admin(1L, role));
     }
 
     private UsernamePasswordAuthenticationToken adminAuth() {
@@ -78,8 +68,7 @@ class AdminControllerTest {
     }
 
     private UsernamePasswordAuthenticationToken userAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                new UserPrincipal(1L), null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        return AuthFixtures.userAuth(1L);
     }
 
     // ──────────────────────────────────────────────
