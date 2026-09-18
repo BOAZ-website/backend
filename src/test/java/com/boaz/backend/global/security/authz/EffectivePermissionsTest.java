@@ -59,7 +59,8 @@ class EffectivePermissionsTest {
         givenOverrides(1L, override(APPLICANT_CSV_READ, AdminPermissionOverride.Effect.GRANT));
 
         assertThat(effectivePermissions.of(admin)).containsExactlyInAnyOrder(
-                ADMIN_ACCOUNT_SELF_WRITE, EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ,
+                ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ,
                 APPLICANT_CSV_READ);
     }
 

@@ -62,4 +62,20 @@ public class ScopeGuard {
             throw new CustomException(ErrorCode.ACCESS_DENIED);
         }
     }
+
+    /**
+     * 축 ③ 본인 — 계정 단건 조회. 2층에서
+     * {@code hasAnyAuthority('ADMIN_ACCOUNT_SELF_READ','ADMIN_ACCOUNT_READ')}로 통과시킨 뒤,
+     * 어느 쪽으로 통과했는지를 여기서 가른다 — 계정 조회 권한이 없으면 본인 계정일 때만 통과한다.
+     * {@code GET /accounts/me}에는 붙이지 않는다. 주체 자신을 돌려주는 엔드포인트라 대상 판정이 없다.
+     */
+    public void checkAccountRead(Admin admin, Long targetAdminId) {
+        Set<Permission> permissions = effectivePermissions.of(admin);
+        if (permissions.contains(Permission.ADMIN_ACCOUNT_READ)) {
+            return;
+        }
+        if (!admin.getId().equals(targetAdminId)) {
+            throw new CustomException(ErrorCode.ACCESS_DENIED);
+        }
+    }
 }

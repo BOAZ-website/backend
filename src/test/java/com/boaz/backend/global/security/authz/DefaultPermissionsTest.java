@@ -23,12 +23,13 @@ class DefaultPermissionsTest {
     class ExactKeys {
 
         @Test
-        @DisplayName("(MASTER, 서비스운영팀) 서운팀장 — 평가 4행만 X, 나머지 33개 전부")
+        @DisplayName("(MASTER, 서비스운영팀) 서운팀장 — 평가 4행만 X, 나머지 34개 전부")
         void master() {
             Set<Permission> actual = DefaultPermissions.of(Role.MASTER, TeamName.서비스운영팀);
 
             assertThat(actual).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
+                    ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
                     ADMIN_ACCOUNT_CREATE_DELETE, ADMIN_PERMISSION_WRITE, AUDIT_LOG_READ,
                     CONTENT_READ, CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
@@ -59,7 +60,7 @@ class DefaultPermissionsTest {
             Set<Permission> actual = DefaultPermissions.of(Role.SUPER, TeamName.대표진);
 
             assertThat(actual).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
@@ -89,7 +90,8 @@ class DefaultPermissionsTest {
             Set<Permission> actual = DefaultPermissions.of(Role.TEAM, TeamName.서비스운영팀);
 
             assertThat(actual).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE, AUDIT_LOG_READ,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    AUDIT_LOG_READ,
                     CONTENT_READ, CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
@@ -105,7 +107,7 @@ class DefaultPermissionsTest {
             Set<Permission> actual = DefaultPermissions.of(Role.TEAM, TeamName.운영지원팀);
 
             assertThat(actual).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_SELF_WRITE,
+                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     ATTENDANCE_BASE_READ, ATTENDANCE_BASE_WRITE,
                     ATTENDANCE_ADV_READ, ATTENDANCE_ADV_WRITE,
                     ATTENDANCE_STUDY_READ, ATTENDANCE_STUDY_WRITE,
@@ -121,11 +123,12 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("(HOST, 그룹리더) — 스터디장·ADV팀장 두 열이 합쳐진 키. 본인 계정 수정 하나뿐이고 빈 집합이 아니다")
+        @DisplayName("(HOST, 그룹리더) — 스터디장·ADV팀장 두 열이 합쳐진 키. 본인 계정 조회·수정 둘뿐이고 빈 집합이 아니다")
         void groupLeader() {
             Set<Permission> actual = DefaultPermissions.of(Role.HOST, TeamName.그룹리더);
 
-            assertThat(actual).containsExactly(ADMIN_ACCOUNT_SELF_WRITE);
+            assertThat(actual).containsExactlyInAnyOrder(
+                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE);
         }
     }
 
@@ -133,11 +136,12 @@ class DefaultPermissionsTest {
     @DisplayName("TEAM 폴백 — 기타 운영진")
     class Fallback {
 
-        @ParameterizedTest(name = "(TEAM, {0}) → 기타 운영진 3개")
+        @ParameterizedTest(name = "(TEAM, {0}) → 기타 운영진 4개")
         @EnumSource(value = TeamName.class, names = {"디자인팀", "자료연구팀", "기획팀", "대외협력팀"})
         void otherTeams(TeamName teamName) {
             assertThat(DefaultPermissions.of(Role.TEAM, teamName)).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_SELF_WRITE, EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ);
+                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ);
         }
 
         @Test

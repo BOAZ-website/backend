@@ -39,7 +39,8 @@ public final class DefaultPermissions {
 
             // 서운팀장 — 서류 평가 4행만 X. 평가 결정에 대한 권한은 없다.
             key(Role.MASTER, TeamName.서비스운영팀), set(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
+                    ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
                     ADMIN_ACCOUNT_CREATE_DELETE, ADMIN_PERMISSION_WRITE, AUDIT_LOG_READ,
                     CONTENT_READ, CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
@@ -57,7 +58,7 @@ public final class DefaultPermissions {
 
             // 대표진 — 차기대표진과 `다른 부문 서류 평가` 1행만 다르다.
             key(Role.SUPER, TeamName.대표진), set(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
@@ -70,7 +71,7 @@ public final class DefaultPermissions {
 
             // 차기대표진 — 대표진 + 다른 부문 서류 평가.
             key(Role.SUPER, TeamName.차기대표진), set(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
@@ -83,7 +84,8 @@ public final class DefaultPermissions {
 
             // 서비스운영팀 — 계정 조회·감사로그·콘텐츠·리크루팅. 출결은 전부 X.
             key(Role.TEAM, TeamName.서비스운영팀), set(
-                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_WRITE, AUDIT_LOG_READ,
+                    ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                    AUDIT_LOG_READ,
                     CONTENT_READ, CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
@@ -92,7 +94,7 @@ public final class DefaultPermissions {
 
             // 운영지원팀 — 출결 전반·점수 규칙·HOST 계정 발급. 계정 목록 조회는 X.
             key(Role.TEAM, TeamName.운영지원팀), set(
-                    ADMIN_ACCOUNT_SELF_WRITE,
+                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     ATTENDANCE_BASE_READ, ATTENDANCE_BASE_WRITE,
                     ATTENDANCE_ADV_READ, ATTENDANCE_ADV_WRITE,
                     ATTENDANCE_STUDY_READ, ATTENDANCE_STUDY_WRITE,
@@ -107,7 +109,7 @@ public final class DefaultPermissions {
             // 스터디장 + ADV팀장 두 열이 여기 하나로 합쳐진다. 입력탭 _OWN_GROUP_ permission은
             // 여기 없다 — admin_group_leader ⋈ activity_group 에서 계산된다.
             key(Role.HOST, TeamName.그룹리더), set(
-                    ADMIN_ACCOUNT_SELF_WRITE)
+                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE)
     );
 
     /**
@@ -115,7 +117,8 @@ public final class DefaultPermissions {
      * 키로 다 적는 대신 폴백 하나로 둔다.
      */
     private static final Map<Role, Set<Permission>> FALLBACK = Map.of(
-            Role.TEAM, set(ADMIN_ACCOUNT_SELF_WRITE, EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
+            Role.TEAM, set(ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
+                           EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
     );
 
     /** 명시 키 → role 폴백 → 빈 집합(권한 0). 반환값은 불변이다. */

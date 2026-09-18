@@ -8,6 +8,8 @@ public enum Permission {
 
     // ── 계정·시스템 ────────────────────────────────────────────────
     ADMIN_ACCOUNT_READ,
+    /** 본인 계정 조회. 대상이 본인인지는 {@link ScopeGuard} 축 ③이 본다. */
+    ADMIN_ACCOUNT_SELF_READ,
     /** 본인 계정 정보 수정 / 비밀번호 변경. */
     ADMIN_ACCOUNT_SELF_WRITE,
     /** 타 계정 정보 수정 / 비밀번호 변경. */
