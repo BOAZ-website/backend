@@ -1,5 +1,7 @@
 package com.boaz.backend.domain.admin.entity;
 
+import com.boaz.backend.global.common.BaseEntity;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -25,7 +27,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "admin_group_leader",
        uniqueConstraints = @UniqueConstraint(
                name = "uk_group_leader", columnNames = {"group_id"}))
-public class AdminGroupLeader {
+public class AdminGroupLeader extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
