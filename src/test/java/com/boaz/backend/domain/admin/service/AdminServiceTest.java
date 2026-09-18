@@ -153,6 +153,33 @@ class AdminServiceTest {
         }
 
         @Test
+        @DisplayName("TC-010 매트릭스에 없는 (role, 소속) 조합 → INVALID_ROLE_TEAM_COMBINATION, save 안 함")
+        void invalidRoleTeamCombination() {
+            Admin currentAdmin = admin(1L, Admin.Role.SUPER);
+            AdminCreateRequest req = createRequest("boaz_bad", Track.ANALYSIS);
+            // (TEAM, 대표진) — 폴백이 role 만 보던 시절에는 평가·최종결정 권한까지 받았다
+            ReflectionTestUtils.setField(req, "teamName", Admin.TeamName.대표진);
+
+            assertThatThrownBy(() -> adminService.createAccount(req, currentAdmin))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.INVALID_ROLE_TEAM_COMBINATION);
+            verify(adminRepository, never()).save(any(Admin.class));
+        }
+
+        @Test
+        @DisplayName("TC-011 유효하지 않은 조합은 username 중복 검사보다 먼저 걸린다")
+        void combinationCheckedBeforeDuplicateUsername() {
+            Admin currentAdmin = admin(1L, Admin.Role.SUPER);
+            AdminCreateRequest req = createRequest("boaz_bad", Track.ANALYSIS);
+            ReflectionTestUtils.setField(req, "role", Admin.Role.HOST);   // (HOST, 기획팀)
+
+            assertThatThrownBy(() -> adminService.createAccount(req, currentAdmin))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.INVALID_ROLE_TEAM_COMBINATION);
+            verify(adminRepository, never()).existsByUsernameAndDeletedAtIsNull(any());
+        }
+
+        @Test
         @DisplayName("TC-002 TEAM 호출 → ACCESS_DENIED, save 안 함")
         void teamForbidden() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
@@ -302,15 +329,64 @@ class AdminServiceTest {
         @DisplayName("TC-002 SUPER 가 타 계정 role 변경 → 변경 + RefreshToken 삭제")
         void roleChange() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
-            Admin target = admin(2L, Admin.Role.TEAM);
+            Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
             when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
             AdminUpdateRequest req = new AdminUpdateRequest();
+            // role 만 SUPER 로 올리면 (SUPER, 기획팀) 이라 매트릭스에 없는 조합이 된다.
+            // 실제 승격은 소속도 같이 바뀌므로 둘을 함께 보낸다.
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.SUPER));
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.대표진));
 
             adminService.updateAccount(2L, req, currentAdmin);
 
             assertThat(target.getRole()).isEqualTo(Admin.Role.SUPER);
+            assertThat(target.getTeamName()).isEqualTo(Admin.TeamName.대표진);
             verify(refreshTokenRepository).deleteByAccountTypeAndAccountId(AccountType.ADMIN, 2L);
+        }
+
+        @Test
+        @DisplayName("TC-010 role 만 올려 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
+        void roleOnlyChangeBreakingCombination() {
+            Admin currentAdmin = admin(1L, Admin.Role.SUPER);
+            Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
+            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.SUPER));
+
+            assertThatThrownBy(() -> adminService.updateAccount(2L, req, currentAdmin))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.INVALID_ROLE_TEAM_COMBINATION);
+            assertThat(target.getRole()).isEqualTo(Admin.Role.TEAM);   // 변경되지 않았다
+        }
+
+        @Test
+        @DisplayName("TC-011 teamName 만 바꿔 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
+        void teamOnlyChangeBreakingCombination() {
+            Admin currentAdmin = admin(1L, Admin.Role.SUPER);
+            Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
+            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.대표진));
+
+            assertThatThrownBy(() -> adminService.updateAccount(2L, req, currentAdmin))
+                    .isInstanceOf(CustomException.class)
+                    .extracting("errorCode").isEqualTo(ErrorCode.INVALID_ROLE_TEAM_COMBINATION);
+            assertThat(target.getTeamName()).isEqualTo(Admin.TeamName.기획팀);
+        }
+
+        @Test
+        @DisplayName("TC-012 권한 키를 안 건드리면 조합을 보지 않는다 — 기존 잘못된 행도 이름은 고칠 수 있다")
+        void nonKeyChangeSkipsCombinationCheck() {
+            Admin currentAdmin = admin(1L, Admin.Role.SUPER);
+            // 이 검증이 생기기 전에 저장됐을 법한 조합
+            Admin target = adminWith(2L, Admin.Role.SUPER, Track.ANALYSIS, "옛이름", Admin.TeamName.기획팀);
+            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "name", JsonNullable.of("새이름"));
+
+            adminService.updateAccount(2L, req, currentAdmin);
+
+            assertThat(target.getName()).isEqualTo("새이름");
         }
 
         @Test

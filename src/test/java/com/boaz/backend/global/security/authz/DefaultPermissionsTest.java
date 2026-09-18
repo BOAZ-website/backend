@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.Set;
@@ -149,6 +150,68 @@ class DefaultPermissionsTest {
         void exactBeatsFallback() {
             assertThat(DefaultPermissions.of(Role.TEAM, TeamName.운영지원팀))
                     .isNotEqualTo(DefaultPermissions.of(Role.TEAM, TeamName.기획팀));
+        }
+
+        @ParameterizedTest(name = "(TEAM, {0}) → 권한 0")
+        @DisplayName("매트릭스에 없는 TEAM 조합은 권한 0")
+        @EnumSource(value = TeamName.class, names = {"대표진", "차기대표진", "그룹리더"})
+        void teamWithNonTeamName(TeamName teamName) {
+            assertThat(DefaultPermissions.of(Role.TEAM, teamName)).isEmpty();
+        }
+    }
+
+    @Nested
+    @DisplayName("isValidCombination — 저장 경로가 입력을 거르는 기준")
+    class ValidCombination {
+
+        @ParameterizedTest(name = "{0} + {1}")
+        @DisplayName("매트릭스 7키는 유효하다")
+        @CsvSource({
+                "MASTER, 서비스운영팀",
+                "SUPER, 대표진",
+                "SUPER, 차기대표진",
+                "TEAM, 서비스운영팀",
+                "TEAM, 운영지원팀",
+                "HOST, 그룹리더"
+        })
+        void exactKeysAreValid(Role role, TeamName teamName) {
+            assertThat(DefaultPermissions.isValidCombination(role, teamName)).isTrue();
+        }
+
+        @ParameterizedTest(name = "(TEAM, {0})")
+        @DisplayName("폴백이 닿는 네 팀도 유효하다")
+        @EnumSource(value = TeamName.class, names = {"디자인팀", "자료연구팀", "기획팀", "대외협력팀"})
+        void fallbackTeamsAreValid(TeamName teamName) {
+            assertThat(DefaultPermissions.isValidCombination(Role.TEAM, teamName)).isTrue();
+        }
+
+        @ParameterizedTest(name = "{0} + {1}")
+        @DisplayName("매트릭스에 없는 조합은 유효하지 않다")
+        @CsvSource({
+                "TEAM, 대표진",
+                "TEAM, 차기대표진",
+                "TEAM, 그룹리더",
+                "SUPER, 그룹리더",
+                "SUPER, 서비스운영팀",
+                "MASTER, 기획팀",
+                "HOST, 기획팀"
+        })
+        void unknownCombinationsAreInvalid(Role role, TeamName teamName) {
+            assertThat(DefaultPermissions.isValidCombination(role, teamName)).isFalse();
+        }
+
+        @Test
+        @DisplayName("유효하지 않은 조합은 언제나 권한 0이다 — 두 규칙이 어긋나지 않는다")
+        void invalidImpliesNoPermission() {
+            for (Role role : Role.values()) {
+                for (TeamName teamName : TeamName.values()) {
+                    if (!DefaultPermissions.isValidCombination(role, teamName)) {
+                        assertThat(DefaultPermissions.of(role, teamName))
+                                .as("(%s, %s)", role, teamName)
+                                .isEmpty();
+                    }
+                }
+            }
         }
     }
 

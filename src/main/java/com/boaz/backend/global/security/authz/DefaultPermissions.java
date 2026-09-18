@@ -15,8 +15,12 @@ import static com.boaz.backend.global.security.authz.Permission.*;
  * <p>매트릭스 열은 8개지만 키는 <b>명시 6 + {@code TEAM} 폴백 1 = 7개</b>다. {@code 스터디장}·{@code ADV팀장}
  * 두 열은 {@code (HOST, 그룹리더)} 한 키로 합쳐진다.
  *
- * <p>조회 순서는 <b>명시 키 → role 폴백 → 빈 집합</b>이다. 폴백은 {@code TEAM}에만 둔다 —
- * {@code (SUPER, 그룹리더)} 같은 무의미한 조합은 권한 0으로 <b>닫히는 쪽</b>으로 실패해야 한다.
+ * <p>조회 순서는 <b>명시 키 → TEAM 폴백 → 빈 집합</b>이다. 폴백은 {@code TEAM}이면서 팀이
+ * {@link #TEAM_FALLBACK_TEAMS} 넷 중 하나일 때만 닿는다 — {@code (SUPER, 그룹리더)}나
+ * {@code (TEAM, 대표진)}처럼 매트릭스에 없는 조합은 권한 0으로 <b>닫히는 쪽</b>으로 실패해야 한다.
+ *
+ * <p>여기는 <b>읽기 쪽 방어</b>다. 그런 조합이 애초에 저장되지 않게 막는 것은
+ * {@link #isValidCombination}을 부르는 계정 생성·수정 경로다.
  */
 public final class DefaultPermissions {
 
@@ -121,12 +125,32 @@ public final class DefaultPermissions {
                            EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
     );
 
-    /** 명시 키 → role 폴백 → 빈 집합(권한 0). 반환값은 불변이다. */
+    /**
+     * 폴백이 닿는 팀 — 매트릭스 "기타 운영진" 열에 실제로 있는 넷. role 하나로 폴백하면
+     * {@code (TEAM, 대표진)}처럼 매트릭스에 없는 조합까지 권한을 받는다.
+     */
+    private static final Set<TeamName> TEAM_FALLBACK_TEAMS = Set.of(
+            TeamName.디자인팀,
+            TeamName.자료연구팀,
+            TeamName.기획팀,
+            TeamName.대외협력팀
+    );
+
+    /** 매트릭스에 있는 (role, teamName) 조합인지. 저장 경로가 이걸로 입력을 거른다. */
+    public static boolean isValidCombination(Role role, TeamName team) {
+        return EXACT.containsKey(key(role, team))
+                || (role == Role.TEAM && TEAM_FALLBACK_TEAMS.contains(team));
+    }
+
+    /** 명시 키 → TEAM 폴백 → 빈 집합(권한 0). 반환값은 불변이다. */
     public static Set<Permission> of(Role role, TeamName team) {
         Set<Permission> exact = EXACT.get(key(role, team));
         if (exact != null) {
             return exact;
         }
-        return FALLBACK.getOrDefault(role, Set.of());
+        if (role == Role.TEAM && TEAM_FALLBACK_TEAMS.contains(team)) {
+            return FALLBACK.get(Role.TEAM);
+        }
+        return Set.of();
     }
 }

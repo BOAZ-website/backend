@@ -13,6 +13,7 @@ import com.boaz.backend.global.common.enums.AccountType;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.DefaultPermissions;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -47,6 +48,7 @@ public class AdminService {
         }
 
         request.getTrack().validateNotAll();
+        validateRoleTeam(request.getRole(), request.getTeamName());
 
         if (adminRepository.existsByUsernameAndDeletedAtIsNull(request.getUsername())) {
             throw new CustomException(ErrorCode.DUPLICATE_USERNAME);
@@ -106,6 +108,13 @@ public class AdminService {
         request.getTerm().ifPresent(t -> {
             if (t < 0) throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         });
+        // 권한 키(role·teamName)를 건드리는 요청만 조합을 본다. 부분 업데이트라 한쪽만 와도
+        // 결과는 둘의 조합이므로 변경 후 값끼리 합쳐서 판정한다.
+        if (request.getRole().isPresent() || request.getTeamName().isPresent()) {
+            validateRoleTeam(
+                    request.getRole().orElse(admin.getRole()),
+                    request.getTeamName().orElse(admin.getTeamName()));
+        }
 
         if (request.getRole().isPresent()) {
             refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
@@ -163,5 +172,18 @@ public class AdminService {
 
         admin.resetPassword(passwordEncoder.encode(request.getNewPassword()));
         refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
+    }
+
+    /**
+     * 권한 매트릭스에 있는 (role, teamName) 조합만 저장한다.
+     *
+     * <p>{@code DefaultPermissions.of}가 없는 조합에 권한 0을 주는 것은 <b>읽기 쪽 방어</b>일 뿐이다.
+     * 저장까지 허용하면 어느 매트릭스 열에도 해당하지 않는 계정이 생기고, 그 계정은 로그인은 되는데
+     * 본인 계정 조회조차 막히는 상태가 된다 — 원인을 추적하기 어려운 실패라 입력에서 거절한다.
+     */
+    private void validateRoleTeam(Admin.Role role, Admin.TeamName teamName) {
+        if (!DefaultPermissions.isValidCombination(role, teamName)) {
+            throw new CustomException(ErrorCode.INVALID_ROLE_TEAM_COMBINATION);
+        }
     }
 }
