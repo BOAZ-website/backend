@@ -6,7 +6,11 @@ import com.boaz.backend.domain.admin.repository.AdminPermissionOverrideRepositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,6 +35,42 @@ public class EffectivePermissions {
 
     private final AdminPermissionOverrideRepository overrideRepository;
 
+    /**
+     * 여러 계정의 유효 권한을 한 번에 계산한다. 오버라이드 조회가 계정 수와 무관하게 <b>1회</b>다 —
+     * {@link #of(Admin)} 를 반복하면 계정마다 한 번씩 나간다.
+     *
+     * @return admin id → 유효 권한. 오버라이드가 없는 계정도 기본 세트로 항상 들어간다
+     */
+    public Map<Long, Set<Permission>> of(Collection<Admin> admins) {
+        Map<Long, Set<Permission>> result = new HashMap<>();
+        for (Admin admin : admins) {
+            Set<Permission> base = EnumSet.noneOf(Permission.class);
+            base.addAll(DefaultPermissions.of(admin.getRole(), admin.getTeamName()));
+            result.put(admin.getId(), base);
+        }
+
+        List<Long> ids = admins.stream().map(Admin::getId).toList();
+        if (ids.isEmpty()) {
+            return result;
+        }
+        for (AdminPermissionOverride o : overrideRepository.findByAdminIdIn(ids)) {
+            Set<Permission> permissions = result.get(o.getAdminId());
+            if (permissions == null) {
+                continue;   // 조회 대상 밖의 행은 무시한다
+            }
+            apply(permissions, o);
+        }
+        return result;
+    }
+
+    private static void apply(Set<Permission> permissions, AdminPermissionOverride o) {
+        if (o.getEffect() == AdminPermissionOverride.Effect.REVOKE) {
+            permissions.remove(o.getPermission());
+        } else {
+            permissions.add(o.getPermission());
+        }
+    }
+
     public Set<Permission> of(Admin admin) {
         // EnumSet.copyOf 는 빈 컬렉션에서 던진다 — 권한 0인 조합(폴백에 없는 role)이 실제로 존재하므로
         // noneOf + addAll 로 만든다.
@@ -38,11 +78,7 @@ public class EffectivePermissions {
         result.addAll(DefaultPermissions.of(admin.getRole(), admin.getTeamName()));
 
         for (AdminPermissionOverride o : overrideRepository.findByAdminId(admin.getId())) {
-            if (o.getEffect() == AdminPermissionOverride.Effect.REVOKE) {
-                result.remove(o.getPermission());
-            } else {
-                result.add(o.getPermission());
-            }
+            apply(result, o);
         }
         return result;
     }
