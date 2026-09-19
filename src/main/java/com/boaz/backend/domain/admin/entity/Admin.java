@@ -19,8 +19,10 @@ import java.time.LocalDateTime;
 public class Admin extends BaseEntity {
 
     public enum Role {
+        @Schema(description = "서비스운영팀장") MASTER,
         @Schema(description = "슈퍼 관리자") SUPER,
-        @Schema(description = "팀 관리자") TEAM
+        @Schema(description = "팀 관리자") TEAM,
+        @Schema(description = "그룹(ADV/스터디) 리더") HOST
     }
 
     public enum TeamName {
@@ -32,6 +34,7 @@ public class Admin extends BaseEntity {
         @Schema(description = "기획팀") 기획팀,
         @Schema(description = "대외협력팀") 대외협력팀,
         @Schema(description = "서비스운영팀") 서비스운영팀,
+        @Schema(description = "그룹리더(스터디장/ADV팀장)") 그룹리더,
     }
 
     @Id

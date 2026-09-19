@@ -121,13 +121,18 @@ class AdminIntegrationTest extends TestcontainersBase {
             em.clear();
 
             AdminUpdateRequest req = new AdminUpdateRequest();
+            // saveAdmin 의 기본 소속은 기획팀이다. role 만 SUPER 로 올리면 (SUPER, 기획팀) 이라
+            // 매트릭스에 없는 조합이 되므로 실제 승격처럼 소속도 함께 바꾼다.
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.SUPER));
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.대표진));
             adminService.updateAccount(target.getId(), req, superAdmin);
             em.flush();
             em.clear();
 
             assertThat(adminRepository.findById(target.getId()).orElseThrow().getRole())
                     .isEqualTo(Admin.Role.SUPER);
+            assertThat(adminRepository.findById(target.getId()).orElseThrow().getTeamName())
+                    .isEqualTo(Admin.TeamName.대표진);
             assertThat(refreshTokenRepository.findByAccountTypeAndAccountId(AccountType.ADMIN, target.getId()))
                     .isEmpty();
         }

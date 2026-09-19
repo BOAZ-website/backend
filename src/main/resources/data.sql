@@ -15,6 +15,8 @@ TRUNCATE curriculum;
 TRUNCATE faq;
 TRUNCATE review;
 TRUNCATE subscription;
+TRUNCATE admin_permission_override;
+TRUNCATE admin_group_leader;
 
 -- 외래 키 체크 재활성화
 SET FOREIGN_KEY_CHECKS = 1;
@@ -45,6 +47,23 @@ VALUES (5, 'boaz_ana_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQ
 -- id=6: VISUALIZATION 부문 평가자(TEAM)
 INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
 VALUES (6, 'boaz_vis_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '한시각', 'VISUALIZATION', 27, '서비스운영팀', 1, NOW(), NOW());
+
+-- 권한 재설계로 늘어난 기본 세트 키를 로컬에서 밟을 수 있게 하는 시드 3건.
+-- (MASTER,서비스운영팀)·(TEAM,운영지원팀)·(HOST,그룹리더)
+
+-- id=7: 서운팀장(MASTER) — 평가 4행만 X, 나머지 전권
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (7, 'boaz_master', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'MASTER', '장서운', 'ENGINEERING', 27, '서비스운영팀', 1, NOW(), NOW());
+
+-- id=8: 운영지원팀(TEAM) — 출결 전반·점수 규칙·HOST 계정 발급
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (8, 'boaz_ops_support', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '윤영지', 'ANALYSIS', 27, '운영지원팀', 1, NOW(), NOW());
+
+-- id=9: 그룹리더(HOST) — 기본 세트는 본인 계정 수정 하나뿐.
+--       입력탭 _OWN_GROUP_ 권한은 admin_group_leader 에서 파생되는데 그 계산이 아직 범위 밖이라
+--       지금 이 계정은 본인 계정 수정만 할 수 있다.
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
+VALUES (9, 'boaz_group_leader', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'HOST', '김대표', 'VISUALIZATION', 26, '그룹리더', 1, NOW(), NOW());
 
 -- users 임시 데이터
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)

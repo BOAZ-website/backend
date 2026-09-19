@@ -4,11 +4,10 @@ import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.auth.dto.response.LoginResponse;
 import com.boaz.backend.domain.auth.dto.response.TokenRefreshResponse;
 import com.boaz.backend.domain.auth.service.AuthService;
-import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.boaz.backend.global.security.AdminUserDetails;
 import com.boaz.backend.global.util.CookieProvider;
+import com.boaz.backend.support.AuthFixtures;
 import com.boaz.backend.support.TestSecurityConfig;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
@@ -23,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -45,18 +43,8 @@ class AdminAuthControllerTest {
     @MockitoBean AuthService authService;
     @MockitoBean CookieProvider cookieProvider;
 
-    private Admin admin(Long id) {
-        Admin a = Admin.builder()
-                .username("boaz_team").password("ENCODED").role(Admin.Role.TEAM)
-                .name("name" + id).track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀).createdBy(null)
-                .build();
-        ReflectionTestUtils.setField(a, "id", id);
-        return a;
-    }
-
     private UsernamePasswordAuthenticationToken adminAuth() {
-        AdminUserDetails principal = new AdminUserDetails(admin(1L));
-        return new UsernamePasswordAuthenticationToken(principal, null, principal.getAuthorities());
+        return AuthFixtures.adminAuth(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

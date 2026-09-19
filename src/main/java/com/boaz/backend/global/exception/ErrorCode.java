@@ -29,6 +29,9 @@ public enum ErrorCode {
     CANNOT_MODIFY_OWN_ROLE(HttpStatus.FORBIDDEN, "CANNOT_MODIFY_OWN_ROLE", "본인 계정의 역할은 변경할 수 없습니다."),
     LAST_SUPER_ACCOUNT(HttpStatus.BAD_REQUEST, "LAST_SUPER_ACCOUNT", "마지막 SUPER 계정은 삭제할 수 없습니다."),
     INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_CURRENT_PASSWORD", "현재 비밀번호가 올바르지 않습니다."),
+    // 권한 매트릭스에 없는 (role, 소속) 조합. 저장되면 어느 열에도 해당하지 않는 계정이 생긴다.
+    INVALID_ROLE_TEAM_COMBINATION(HttpStatus.BAD_REQUEST, "INVALID_ROLE_TEAM_COMBINATION",
+            "권한 체계에 없는 역할과 소속의 조합입니다."),
 
     // Recruitment
     DUPLICATE_TERM(HttpStatus.CONFLICT, "DUPLICATE_TERM", "이미 존재하는 기수입니다."),
