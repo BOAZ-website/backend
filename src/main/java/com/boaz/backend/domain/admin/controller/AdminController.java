@@ -102,7 +102,7 @@ public class AdminController {
 
     @Operation(summary = "id별 계정 삭제",
             description = "ADMIN_ACCOUNT_CREATE_DELETE 보유자만 호출 가능. soft delete. "
-                    + "계정 관리 권한(ADMIN_ACCOUNT_WRITE)을 가진 마지막 계정은 삭제 불가. "
+                    + "계정 관리 권한(ADMIN_ACCOUNT_CREATE_DELETE)을 가진 마지막 계정은 삭제 불가. "
                     + "삭제 시 RefreshToken도 함께 삭제.")
     @PreAuthorize("hasAuthority('ADMIN_ACCOUNT_CREATE_DELETE')")
     @DeleteMapping("/accounts/{id}")
