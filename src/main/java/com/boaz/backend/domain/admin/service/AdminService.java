@@ -93,11 +93,8 @@ public class AdminService {
                                          Set<Permission> currentPermissions) {
         scopeGuard.checkAccountWrite(currentAdmin, currentPermissions, id);
 
-        // role·teamName 이 기본 권한 세트의 키다. 본인 키를 스스로 바꾸는 것은 인가 예외가 아니라
-        // 락아웃 방지 장치라 2층·3층이 열려도 막는다 — 매트릭스가 연 것은 "계정 정보/비밀번호"이지
-        // 자기 권한 키가 아니다.
-        boolean keyChange = request.getRole().isPresent() || request.getTeamName().isPresent();
-        if (currentAdmin.getId().equals(id) && keyChange) {
+        // role·teamName 이 기본 권한 세트의 키다. 본인 키를 스스로 바꾸는 것은 금지이다. 
+        if (currentAdmin.getId().equals(id) && isKeyChange(currentAdmin, request)) {
             throw new CustomException(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
         }
 
@@ -108,7 +105,7 @@ public class AdminService {
         request.getTerm().ifPresent(t -> {
             if (t < 0) throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         });
-        if (keyChange) {
+        if (isKeyChange(admin, request)) {
             // 부분 업데이트다. 한쪽만 와도 결과는 둘의 조합이라 변경 후 값끼리 합쳐서 본다.
             // 키를 안 건드리는 요청(이름·기수만 수정)까지 검사하지는 않는다.
             Admin.Role newRole = request.getRole().orElse(admin.getRole());
@@ -170,6 +167,18 @@ public class AdminService {
 
         admin.resetPassword(passwordEncoder.encode(request.getNewPassword()));
         refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
+    }
+
+    /**
+     * 키가 실제로 달라질 때만 true. 같은 값으로 들어온 요청은 키 변경이 아니고, 부재는 orElse 가 흡수한다.
+     *
+     * <p>본인 검사(DB 조회 전, 대상이 {@code currentAdmin})와 정리 로직의 진입 조건이 이 하나를 공유한다 —
+     * 여기서 갈라지면 "자기 키는 못 바꾸는데 남의 계정은 정리 없이 통과" 같은 불일치가 조용히 생긴다.
+     * 유도 방식은 블록 안의 {@code newRole}·{@code newTeam} 과 같아야 한다.
+     */
+    private boolean isKeyChange(Admin admin, AdminUpdateRequest request) {
+        return request.getRole().orElse(admin.getRole()) != admin.getRole()
+                || request.getTeamName().orElse(admin.getTeamName()) != admin.getTeamName();
     }
 
     /**

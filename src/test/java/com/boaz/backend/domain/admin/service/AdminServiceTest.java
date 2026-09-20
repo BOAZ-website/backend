@@ -560,6 +560,42 @@ class AdminServiceTest {
 
             verify(adminRepository, never()).findAllByDeletedAtIsNullOrderByCreatedAtAsc();
         }
+
+        @Test
+        @DisplayName("TC-014 본인에게 현재와 같은 role·teamName 을 보내면 키 변경이 아니다 → 허용")
+        void selfSameKeyIsNotKeyChange() {
+            Admin currentAdmin = master(1L);   // (MASTER, 서비스운영팀)
+            when(adminRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(currentAdmin));
+
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.MASTER));
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.서비스운영팀));
+            ReflectionTestUtils.setField(req, "name", JsonNullable.of("새이름"));
+
+            adminService.updateAccount(1L, req, currentAdmin, PERMISSIONS);
+
+            assertThat(currentAdmin.getName()).isEqualTo("새이름");
+            verify(overrideRepository, never()).deleteByAdminId(anyLong());
+            verify(refreshTokenRepository, never()).deleteByAccountTypeAndAccountId(any(), anyLong());
+            verifyNoInteractions(effectivePermissions);
+        }
+
+        @Test
+        @DisplayName("TC-015 타 계정도 키가 그대로면 정리하지 않는다 — 불필요한 재로그인·오버라이드 삭제 금지")
+        void sameKeySkipsCleanup() {
+            Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
+            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.TEAM));
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.기획팀));
+
+            adminService.updateAccount(2L, req, master(1L), PERMISSIONS);
+
+            verify(overrideRepository, never()).deleteByAdminId(anyLong());
+            verify(refreshTokenRepository, never()).deleteByAccountTypeAndAccountId(any(), anyLong());
+            verifyNoInteractions(effectivePermissions);   // 락아웃 카운트도 안 센다
+        }
     }
 
     // ──────────────────────────────────────────────
