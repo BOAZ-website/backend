@@ -98,7 +98,12 @@ public class AdminService {
             throw new CustomException(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
         }
 
-        Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
+        // 이 트랜잭션의 첫 DB 접근이다. 살아 있는 계정 전원을 잠그면서 읽고 대상도 여기서 꺼낸다.
+        // 대상을 따로 읽으면 뒤에 무엇을 잠그든 영속성 컨텍스트가 먼저 읽은 객체를 돌려주므로 Stale Read가 발생한다.
+        List<Admin> live = adminRepository.findAllLiveForUpdate();
+        Admin admin = live.stream()
+                .filter(a -> a.getId().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
         request.getTrack().ifPresent(Track::validateNotAll);
@@ -114,7 +119,7 @@ public class AdminService {
             // 락아웃 검사보다 먼저다. 무효 조합이면 DefaultPermissions.of 가 빈 집합을 주므로,
             // 순서가 뒤집히면 조합이 틀린 요청이 LAST_ACCOUNT_MANAGER 로 잘못 보고된다.
             validateRoleTeam(newRole, newTeam);
-            guardAccountManagerRemains(admin, DefaultPermissions.of(newRole, newTeam));
+            guardAccountManagerRemains(live, admin, DefaultPermissions.of(newRole, newTeam));
 
             // 오버라이드는 절대 목록이 아니라 base 대비 차이다. 키가 바뀌면 기준이 달라지므로
             // 남겨 두면 조용히 다른 권한이 된다.
@@ -137,10 +142,14 @@ public class AdminService {
     @Transactional
     /** 주체를 안 받는다 — 2층이 {@code ADMIN_ACCOUNT_CREATE_DELETE} 를 보고, 락아웃 검사는 대상만 본다. */
     public void deleteAccount(Long id) {
-        Admin admin = adminRepository.findByIdAndDeletedAtIsNull(id)
+        // updateAccount 와 같은 이유로 첫 DB 접근이 잠금 읽기다.
+        List<Admin> live = adminRepository.findAllLiveForUpdate();
+        Admin admin = live.stream()
+                .filter(a -> a.getId().equals(id))
+                .findFirst()
                 .orElseThrow(() -> new CustomException(ErrorCode.ADMIN_NOT_FOUND));
 
-        guardAccountManagerRemains(admin, Set.of());
+        guardAccountManagerRemains(live, admin, Set.of());
 
         admin.softDelete();
         refreshTokenRepository.deleteByAccountTypeAndAccountId(AccountType.ADMIN, id);
@@ -200,10 +209,14 @@ public class AdminService {
      * <p>기준이 role 이 아닌 이유: {@code role = MASTER} 인 계정 수를 세면,
      * 생성 권한이 REVOKE 된 {@code MASTER} 는 role 카운트를 통과하지만 아무것도 못 만든다.
      *
+     * <p><b>조회를 직접 하지 않고 받는다.</b>
+     * 세는 집합은 {@link AdminRepository#findAllLiveForUpdate()} 에서 X Lock이 잡힌 상태이다.
+     * 
+     * @param live               살아 있는 계정 전원. 대상 포함, 잠긴 상태여야 한다
      * @param target             바뀌는(또는 삭제되는) 계정
      * @param targetPermissions  변경 후 그 계정이 갖게 될 권한. 삭제면 빈 집합이다
      */
-    private void guardAccountManagerRemains(Admin target, Set<Permission> targetPermissions) {
+    private void guardAccountManagerRemains(List<Admin> live, Admin target, Set<Permission> targetPermissions) {
         boolean losesCreateDelete =
                 effectivePermissions.of(target).contains(Permission.ADMIN_ACCOUNT_CREATE_DELETE)
                         && !targetPermissions.contains(Permission.ADMIN_ACCOUNT_CREATE_DELETE);
@@ -211,7 +224,7 @@ public class AdminService {
             return;
         }
 
-        List<Admin> others = adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc().stream()
+        List<Admin> others = live.stream()
                 .filter(a -> !a.getId().equals(target.getId()))
                 .toList();
 

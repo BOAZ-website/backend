@@ -37,6 +37,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -319,7 +320,7 @@ class AdminServiceTest {
         @DisplayName("TC-001 프로필 필드만 수정 → 변경, 토큰·오버라이드 그대로")
         void profileOnly() {
             Admin target = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "name", JsonNullable.of("새이름"));
 
@@ -336,7 +337,7 @@ class AdminServiceTest {
         @DisplayName("TC-002 타 계정 role 변경 → 변경 + RefreshToken 삭제 + 오버라이드 전삭제")
         void roleChange() {
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of());
             AdminUpdateRequest req = new AdminUpdateRequest();
             // role 만 SUPER 로 올리면 (SUPER, 기획팀) 이라 매트릭스에 없는 조합이 된다.
@@ -357,7 +358,7 @@ class AdminServiceTest {
         void roleOnlyChangeBreakingCombination() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.SUPER));
 
@@ -372,7 +373,7 @@ class AdminServiceTest {
         void teamOnlyChangeBreakingCombination() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.대표진));
 
@@ -388,7 +389,7 @@ class AdminServiceTest {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             // 이 검증이 생기기 전에 저장됐을 법한 조합
             Admin target = adminWith(2L, Admin.Role.SUPER, Track.ANALYSIS, "옛이름", Admin.TeamName.기획팀);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "name", JsonNullable.of("새이름"));
 
@@ -401,7 +402,7 @@ class AdminServiceTest {
         @DisplayName("TC-003 teamName 변경도 권한 키 변경이다 → 토큰·오버라이드 정리")
         void teamNameChange() {
             Admin target = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of());
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.운영지원팀));
@@ -424,7 +425,7 @@ class AdminServiceTest {
             assertThatThrownBy(() -> adminService.updateAccount(2L, req, currentAdmin, PERMISSIONS))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
-            verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
+            verify(adminRepository, never()).findAllLiveForUpdate();
         }
 
         @Test
@@ -437,7 +438,7 @@ class AdminServiceTest {
             assertThatThrownBy(() -> adminService.updateAccount(1L, req, currentAdmin, PERMISSIONS))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
-            verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
+            verify(adminRepository, never()).findAllLiveForUpdate();
         }
 
         @Test
@@ -450,14 +451,14 @@ class AdminServiceTest {
             assertThatThrownBy(() -> adminService.updateAccount(1L, req, currentAdmin, PERMISSIONS))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.CANNOT_MODIFY_OWN_ROLE);
-            verify(adminRepository, never()).findByIdAndDeletedAtIsNull(anyLong());
+            verify(adminRepository, never()).findAllLiveForUpdate();
         }
 
         @Test
         @DisplayName("TC-007 본인 프로필(이름)만 수정 → 허용. 막는 것은 권한 키뿐이다")
         void selfProfileAllowed() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(5L)).thenReturn(Optional.of(currentAdmin));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(currentAdmin));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "name", JsonNullable.of("새이름"));
 
@@ -469,7 +470,7 @@ class AdminServiceTest {
         @Test
         @DisplayName("TC-008 존재하지 않는 계정 → ADMIN_NOT_FOUND")
         void notFound() {
-            when(adminRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of());
             AdminUpdateRequest req = new AdminUpdateRequest();
 
             assertThatThrownBy(() -> adminService.updateAccount(999L, req, master(1L), PERMISSIONS))
@@ -480,8 +481,8 @@ class AdminServiceTest {
         @Test
         @DisplayName("TC-009 track=ALL → INVALID_TRACK_SELECTION")
         void trackAll() {
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L))
-                    .thenReturn(Optional.of(admin(2L, Admin.Role.TEAM)));
+            when(adminRepository.findAllLiveForUpdate())
+                    .thenReturn(List.of(admin(2L, Admin.Role.TEAM)));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "track", JsonNullable.of(Track.ALL));
 
@@ -493,8 +494,8 @@ class AdminServiceTest {
         @Test
         @DisplayName("TC-010 term < 0 → INVALID_INPUT_VALUE")
         void negativeTerm() {
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L))
-                    .thenReturn(Optional.of(admin(2L, Admin.Role.TEAM)));
+            when(adminRepository.findAllLiveForUpdate())
+                    .thenReturn(List.of(admin(2L, Admin.Role.TEAM)));
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "term", JsonNullable.of(-1));
 
@@ -508,9 +509,8 @@ class AdminServiceTest {
         void lastManagerDemotionBlocked() {
             Admin target = master(2L);
             Admin other = admin(3L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE));
-            when(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc())
+            when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(target, other));
             when(effectivePermissions.of(List.of(other))).thenReturn(Map.of(other.getId(), Set.of()));
 
@@ -529,9 +529,8 @@ class AdminServiceTest {
         void demotionAllowedWhenAnotherManagerRemains() {
             Admin target = master(2L);
             Admin other = master(3L);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE));
-            when(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc())
+            when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(target, other));
             when(effectivePermissions.of(List.of(other)))
                     .thenReturn(Map.of(other.getId(), Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE)));
@@ -549,7 +548,7 @@ class AdminServiceTest {
         @DisplayName("TC-013 권한을 잃지 않는 키 변경은 카운트를 안 센다")
         void noCountWhenPermissionKept() {
             Admin target = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of());
 
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -558,14 +557,14 @@ class AdminServiceTest {
 
             adminService.updateAccount(2L, req, master(1L), PERMISSIONS);
 
-            verify(adminRepository, never()).findAllByDeletedAtIsNullOrderByCreatedAtAsc();
+            verify(effectivePermissions, never()).of(anyCollection());
         }
 
         @Test
         @DisplayName("TC-014 본인에게 현재와 같은 role·teamName 을 보내면 키 변경이 아니다 → 허용")
         void selfSameKeyIsNotKeyChange() {
             Admin currentAdmin = master(1L);   // (MASTER, 서비스운영팀)
-            when(adminRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(currentAdmin));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(currentAdmin));
 
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.MASTER));
@@ -584,7 +583,7 @@ class AdminServiceTest {
         @DisplayName("TC-015 타 계정도 키가 그대로면 정리하지 않는다 — 불필요한 재로그인·오버라이드 삭제 금지")
         void sameKeySkipsCleanup() {
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
 
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.TEAM));
@@ -609,14 +608,14 @@ class AdminServiceTest {
         @DisplayName("TC-001 계정 관리 권한이 없는 대상 삭제 → soft delete + RefreshToken 삭제 (카운트 안 셈)")
         void deletesOther() {
             Admin target = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(2L)).thenReturn(Optional.of(target));
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of());
 
             adminService.deleteAccount(2L);
 
             assertThat(target.isDeleted()).isTrue();
             verify(refreshTokenRepository).deleteByAccountTypeAndAccountId(AccountType.ADMIN, 2L);
-            verify(adminRepository, never()).findAllByDeletedAtIsNullOrderByCreatedAtAsc();
+            verify(effectivePermissions, never()).of(anyCollection());
         }
 
         @Test
@@ -624,9 +623,8 @@ class AdminServiceTest {
         void deletesManagerWhenAnotherRemains() {
             Admin target = master(1L);
             Admin other = master(2L);
-            when(adminRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE));
-            when(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc())
+            when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(target, other));
             when(effectivePermissions.of(List.of(other)))
                     .thenReturn(Map.of(other.getId(), Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE)));
@@ -642,9 +640,8 @@ class AdminServiceTest {
         void lastManagerBlocked() {
             Admin target = master(1L);
             Admin other = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE));
-            when(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc())
+            when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(target, other));
             when(effectivePermissions.of(List.of(other))).thenReturn(Map.of(other.getId(), Set.of()));
 
@@ -660,9 +657,8 @@ class AdminServiceTest {
         void grantedByOverrideCounts() {
             Admin target = master(1L);
             Admin granted = admin(2L, Admin.Role.TEAM);
-            when(adminRepository.findByIdAndDeletedAtIsNull(1L)).thenReturn(Optional.of(target));
             when(effectivePermissions.of(target)).thenReturn(Set.of(Permission.ADMIN_ACCOUNT_CREATE_DELETE));
-            when(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc())
+            when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(target, granted));
             // role 은 TEAM 이지만 GRANT 오버라이드로 유효 권한을 갖는다.
             when(effectivePermissions.of(List.of(granted)))
@@ -676,7 +672,7 @@ class AdminServiceTest {
         @Test
         @DisplayName("TC-005 존재하지 않는 계정 → ADMIN_NOT_FOUND")
         void notFound() {
-            when(adminRepository.findByIdAndDeletedAtIsNull(999L)).thenReturn(Optional.empty());
+            when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of());
 
             assertThatThrownBy(() -> adminService.deleteAccount(999L))
                     .isInstanceOf(CustomException.class)
