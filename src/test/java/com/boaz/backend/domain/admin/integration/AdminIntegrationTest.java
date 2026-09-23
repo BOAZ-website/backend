@@ -4,6 +4,8 @@ import com.boaz.backend.domain.admin.dto.request.AdminCreateRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminPasswordResetRequest;
 import com.boaz.backend.domain.admin.dto.request.AdminUpdateRequest;
 import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.admin.entity.AdminPermissionOverride;
+import com.boaz.backend.domain.admin.repository.AdminPermissionOverrideRepository;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.domain.admin.service.AdminService;
 import com.boaz.backend.domain.auth.entity.RefreshToken;
@@ -12,6 +14,8 @@ import com.boaz.backend.global.common.enums.AccountType;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.EffectivePermissions;
+import com.boaz.backend.global.security.authz.Permission;
 import com.boaz.backend.support.TestcontainersBase;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -27,6 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -39,18 +44,34 @@ class AdminIntegrationTest extends TestcontainersBase {
     @Autowired AdminService adminService;
     @Autowired AdminRepository adminRepository;
     @Autowired RefreshTokenRepository refreshTokenRepository;
+    @Autowired AdminPermissionOverrideRepository overrideRepository;
     @Autowired PasswordEncoder passwordEncoder;
+    @Autowired EffectivePermissions effectivePermissions;
 
     @PersistenceContext EntityManager em;
 
     private int seq = 0;
 
-    private Admin saveAdmin(Admin.Role role, String rawPassword) {
+    /** 권한 키는 {@code (role, teamName)} 이라 role 만으로는 주체가 정해지지 않는다. */
+    /**
+     * 운영과 같은 경로로 유효 권한을 계산한다. 컨트롤러가 {@code AdminUserDetails} 에서 꺼내
+     * 서비스로 넘기는 값과 같아야 3층 판정이 실제와 같은 입력을 받는다.
+     */
+    private Set<Permission> permissionsOf(Admin admin) {
+        return effectivePermissions.of(admin);
+    }
+
+    private Admin saveAdmin(Admin.Role role, Admin.TeamName teamName, String rawPassword) {
         Admin a = Admin.builder()
                 .username("user" + (++seq)).password(passwordEncoder.encode(rawPassword)).role(role)
-                .name("name" + seq).track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀).createdBy(null)
+                .name("name" + seq).track(Track.ANALYSIS).term(25).teamName(teamName).createdBy(null)
                 .build();
         return adminRepository.save(a);
+    }
+
+    /** 계정 CRUD 권한을 다 가진 유일한 키. 옛 테스트의 SUPER 주체 자리를 대신한다. */
+    private Admin saveMaster(String rawPassword) {
+        return saveAdmin(Admin.Role.MASTER, Admin.TeamName.서비스운영팀, rawPassword);
     }
 
     private void saveRefreshToken(Long adminId) {
@@ -79,29 +100,29 @@ class AdminIntegrationTest extends TestcontainersBase {
         @Test
         @DisplayName("생성 → DB 영속, password BCrypt 해시, createdBy = 생성자 id")
         void persistsWithHashedPassword() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
+            Admin master = saveMaster("Master1234!");
             em.flush();
             em.clear();
 
-            var res = adminService.createAccount(createReq("new_team"), superAdmin);
+            var res = adminService.createAccount(createReq("new_team"), master);
             em.flush();
             em.clear();
 
             Admin saved = adminRepository.findById(res.getId()).orElseThrow();
             assertThat(saved.getPassword()).isNotEqualTo("Boaz1234!");
             assertThat(passwordEncoder.matches("Boaz1234!", saved.getPassword())).isTrue();
-            assertThat(saved.getCreatedBy()).isEqualTo(superAdmin.getId());
+            assertThat(saved.getCreatedBy()).isEqualTo(master.getId());
         }
 
         @Test
         @DisplayName("동일 username 재생성 → DUPLICATE_USERNAME")
         void duplicateUsername() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            adminService.createAccount(createReq("dup_team"), superAdmin);
+            Admin master = saveMaster("Master1234!");
+            adminService.createAccount(createReq("dup_team"), master);
             em.flush();
             em.clear();
 
-            assertThatThrownBy(() -> adminService.createAccount(createReq("dup_team"), superAdmin))
+            assertThatThrownBy(() -> adminService.createAccount(createReq("dup_team"), master))
                     .isInstanceOf(CustomException.class)
                     .extracting("errorCode").isEqualTo(ErrorCode.DUPLICATE_USERNAME);
         }
@@ -114,8 +135,8 @@ class AdminIntegrationTest extends TestcontainersBase {
         @Test
         @DisplayName("role 변경 → 영속 반영 + 대상 RefreshToken 삭제")
         void roleChangeDeletesToken() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            Admin target = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin master = saveMaster("Master1234!");
+            Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(target.getId());
             em.flush();
             em.clear();
@@ -125,7 +146,7 @@ class AdminIntegrationTest extends TestcontainersBase {
             // 매트릭스에 없는 조합이 되므로 실제 승격처럼 소속도 함께 바꾼다.
             ReflectionTestUtils.setField(req, "role", JsonNullable.of(Admin.Role.SUPER));
             ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.대표진));
-            adminService.updateAccount(target.getId(), req, superAdmin);
+            adminService.updateAccount(target.getId(), req, master, permissionsOf(master));
             em.flush();
             em.clear();
 
@@ -138,17 +159,40 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
+        @DisplayName("role 변경 → 그 계정의 오버라이드 행 전삭제 (base 가 바뀌면 차이도 무의미해진다)")
+        void keyChangeClearsOverrides() {
+            Admin master = saveMaster("Master1234!");
+            Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
+            overrideRepository.save(AdminPermissionOverride.builder()
+                    .adminId(target.getId())
+                    .permission(Permission.CONTENT_WRITE)
+                    .effect(AdminPermissionOverride.Effect.GRANT)
+                    .grantedBy(master.getId())
+                    .build());
+            em.flush();
+            em.clear();
+
+            AdminUpdateRequest req = new AdminUpdateRequest();
+            ReflectionTestUtils.setField(req, "teamName", JsonNullable.of(Admin.TeamName.운영지원팀));
+            adminService.updateAccount(target.getId(), req, master, permissionsOf(master));
+            em.flush();
+            em.clear();
+
+            assertThat(overrideRepository.findByAdminId(target.getId())).isEmpty();
+        }
+
+        @Test
         @DisplayName("프로필 필드만 수정 → 대상 RefreshToken 유지")
         void profileOnlyKeepsToken() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            Admin target = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin master = saveMaster("Master1234!");
+            Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(target.getId());
             em.flush();
             em.clear();
 
             AdminUpdateRequest req = new AdminUpdateRequest();
             ReflectionTestUtils.setField(req, "name", JsonNullable.of("변경된이름"));
-            adminService.updateAccount(target.getId(), req, superAdmin);
+            adminService.updateAccount(target.getId(), req, master, permissionsOf(master));
             em.flush();
             em.clear();
 
@@ -166,13 +210,13 @@ class AdminIntegrationTest extends TestcontainersBase {
         @Test
         @DisplayName("soft delete → deletedAt 세팅, 목록 제외, RefreshToken 삭제")
         void softDeleteExcludesAndDeletesToken() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            Admin target = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin master = saveMaster("Master1234!");
+            Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(target.getId());
             em.flush();
             em.clear();
 
-            adminService.deleteAccount(target.getId(), superAdmin);
+            adminService.deleteAccount(target.getId());
             em.flush();
             em.clear();
 
@@ -189,16 +233,40 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("마지막 SUPER 삭제 → LAST_SUPER_ACCOUNT (삭제 안 됨)")
-        void lastSuperBlocked() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
+        @DisplayName("마지막 계정 관리자 삭제 → LAST_ACCOUNT_MANAGER (삭제 안 됨)")
+        void lastAccountManagerBlocked() {
+            Admin master = saveMaster("Master1234!");
+            saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             em.flush();
             em.clear();
 
-            assertThatThrownBy(() -> adminService.deleteAccount(superAdmin.getId(), superAdmin))
+            // 다른 계정이 있어도 ADMIN_ACCOUNT_CREATE_DELETE 를 가진 계정이 이것뿐이면 막힌다 —
+            // 기준이 계정 수가 아니라 유효 권한 보유자 수다.
+            assertThatThrownBy(() -> adminService.deleteAccount(master.getId()))
                     .isInstanceOf(CustomException.class)
-                    .extracting("errorCode").isEqualTo(ErrorCode.LAST_SUPER_ACCOUNT);
-            assertThat(adminRepository.findByIdAndDeletedAtIsNull(superAdmin.getId())).isPresent();
+                    .extracting("errorCode").isEqualTo(ErrorCode.LAST_ACCOUNT_MANAGER);
+            assertThat(adminRepository.findByIdAndDeletedAtIsNull(master.getId())).isPresent();
+        }
+
+        @Test
+        @DisplayName("오버라이드로 권한을 받은 계정이 있으면 마지막 관리자도 삭제된다 — role 로 세지 않는다")
+        void grantedByOverrideCountsAsManager() {
+            Admin master = saveMaster("Master1234!");
+            Admin granted = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
+            overrideRepository.save(AdminPermissionOverride.builder()
+                    .adminId(granted.getId())
+                    .permission(Permission.ADMIN_ACCOUNT_CREATE_DELETE)
+                    .effect(AdminPermissionOverride.Effect.GRANT)
+                    .grantedBy(master.getId())
+                    .build());
+            em.flush();
+            em.clear();
+
+            adminService.deleteAccount(master.getId());
+            em.flush();
+            em.clear();
+
+            assertThat(adminRepository.findByIdAndDeletedAtIsNull(master.getId())).isEmpty();
         }
     }
 
@@ -207,17 +275,17 @@ class AdminIntegrationTest extends TestcontainersBase {
     class ResetPassword {
 
         @Test
-        @DisplayName("SUPER 타인 초기화 → 해시 변경(matches new) + RefreshToken 삭제")
+        @DisplayName("계정 관리자의 타인 초기화 → 해시 변경(matches new) + RefreshToken 삭제")
         void superResetsOther() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            Admin target = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin master = saveMaster("Master1234!");
+            Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(target.getId());
             em.flush();
             em.clear();
 
             AdminPasswordResetRequest req = new AdminPasswordResetRequest();
             ReflectionTestUtils.setField(req, "newPassword", "NewBoaz1234!");
-            adminService.resetPassword(target.getId(), req, superAdmin);
+            adminService.resetPassword(target.getId(), req, master, permissionsOf(master));
             em.flush();
             em.clear();
 
@@ -230,7 +298,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         @Test
         @DisplayName("본인 변경 (currentPassword 일치) → 해시 변경")
         void selfChange() {
-            Admin self = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin self = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(self.getId());
             em.flush();
             em.clear();
@@ -239,7 +307,7 @@ class AdminIntegrationTest extends TestcontainersBase {
             AdminPasswordResetRequest req = new AdminPasswordResetRequest();
             ReflectionTestUtils.setField(req, "currentPassword", "Team1234!");
             ReflectionTestUtils.setField(req, "newPassword", "NewBoaz1234!");
-            adminService.resetPassword(self.getId(), req, currentAdmin);
+            adminService.resetPassword(self.getId(), req, currentAdmin, permissionsOf(currentAdmin));
             em.flush();
             em.clear();
 
@@ -255,17 +323,17 @@ class AdminIntegrationTest extends TestcontainersBase {
         @Test
         @DisplayName("soft delete 제외하고 활성 계정만 반환")
         void excludesDeleted() {
-            Admin superAdmin = saveAdmin(Admin.Role.SUPER, "Super1234!");
-            Admin active = saveAdmin(Admin.Role.TEAM, "Team1234!");
-            Admin deleted = saveAdmin(Admin.Role.TEAM, "Team1234!");
+            Admin master = saveMaster("Master1234!");
+            Admin active = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
+            Admin deleted = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             deleted.softDelete();
             em.flush();
             em.clear();
 
-            var result = adminService.getAccounts(superAdmin);
+            var result = adminService.getAccounts();
 
             assertThat(result).extracting("id")
-                    .contains(superAdmin.getId(), active.getId())
+                    .contains(master.getId(), active.getId())
                     .doesNotContain(deleted.getId());
         }
     }

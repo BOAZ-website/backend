@@ -136,24 +136,6 @@ class AdminRepositoryTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("countByRoleAndDeletedAtIsNull")
-    class CountByRole {
-
-        @Test
-        @DisplayName("역할별 활성 계정 수 (soft delete 제외)")
-        void countExcludingDeleted() {
-            persistAdmin("s1", Admin.Role.SUPER, Track.ANALYSIS, "super1", Admin.TeamName.대표진);
-            persistAdmin("s2", Admin.Role.SUPER, Track.ANALYSIS, "super2", Admin.TeamName.대표진);
-            persistDeletedAdmin("s3", Admin.Role.SUPER, Track.ANALYSIS, "super-deleted", Admin.TeamName.대표진);
-            persistAdmin("t1", Admin.Role.TEAM, Track.ANALYSIS, "team1", Admin.TeamName.기획팀);
-            em.clear();
-
-            assertThat(adminRepository.countByRoleAndDeletedAtIsNull(Admin.Role.SUPER)).isEqualTo(2);
-            assertThat(adminRepository.countByRoleAndDeletedAtIsNull(Admin.Role.TEAM)).isEqualTo(1);
-        }
-    }
-
-    @Nested
     @DisplayName("findByTrackAndDeletedAtIsNullOrderByNameAsc")
     class FindByTrack {
 

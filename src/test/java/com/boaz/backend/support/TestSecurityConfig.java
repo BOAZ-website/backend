@@ -19,8 +19,8 @@ public class TestSecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER", "TEAM")
-                .requestMatchers("/api/v1/auth/admin/logout").hasAnyRole("SUPER", "TEAM")
+                .requestMatchers("/api/v1/admin/**").hasAnyRole("MASTER", "SUPER", "TEAM", "HOST")
+                .requestMatchers("/api/v1/auth/admin/logout").hasAnyRole("MASTER", "SUPER", "TEAM", "HOST")
                 .requestMatchers("/api/v1/auth/user/logout").hasRole("USER")
                 .requestMatchers(HttpMethod.POST, "/api/v1/recruitment/*/applications").hasRole("USER")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/recruitment/*/applications/draft").hasRole("USER")

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -118,6 +119,27 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+
+    /**
+     * 2층({@code @PreAuthorize}) 거부. Spring Security 6의 {@code AuthorizationDeniedException}이
+     * {@link AccessDeniedException}의 하위라 둘 다 여기로 온다.
+     *
+     * <p><b>이 핸들러가 없으면 아래 {@code Exception} 핸들러가 먼저 잡아 500이 나간다.</b> 필터체인에서
+     * 거부되는 1층과 달리 2층 거부는 핸들러 호출 시점에 던져져 {@code DispatcherServlet} 안에서 끝나므로,
+     * {@code SecurityConfig}의 {@code accessDeniedHandler}까지 가지 못한다. 응답 형태는 그쪽과 맞춘다.
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException e) {
+        ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
+        log.warn("AccessDeniedException: {}", e.getMessage());
+        return ResponseEntity
+                .status(errorCode.getHttpStatus())
+                .body(ApiResponse.error(
+                        errorCode.getHttpStatus().value(),
+                        errorCode.getCode(),
+                        errorCode.getMessage()
+                ));
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {

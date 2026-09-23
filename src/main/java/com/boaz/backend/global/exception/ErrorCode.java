@@ -26,8 +26,10 @@ public enum ErrorCode {
     // Admin
     ADMIN_NOT_FOUND(HttpStatus.NOT_FOUND, "ADMIN_NOT_FOUND", "해당 계정을 찾을 수 없습니다."),
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "DUPLICATE_USERNAME", "이미 존재하는 아이디입니다."),
-    CANNOT_MODIFY_OWN_ROLE(HttpStatus.FORBIDDEN, "CANNOT_MODIFY_OWN_ROLE", "본인 계정의 역할은 변경할 수 없습니다."),
-    LAST_SUPER_ACCOUNT(HttpStatus.BAD_REQUEST, "LAST_SUPER_ACCOUNT", "마지막 SUPER 계정은 삭제할 수 없습니다."),
+    CANNOT_MODIFY_OWN_ROLE(HttpStatus.FORBIDDEN, "CANNOT_MODIFY_OWN_ROLE", "본인 계정의 역할과 소속은 변경할 수 없습니다."),
+    // 락아웃 방지. 기준은 계정 생성 권한이다 — 셋 중 유일하게 무에서 복구가 되는 권한이라서다.
+    LAST_ACCOUNT_MANAGER(HttpStatus.BAD_REQUEST, "LAST_ACCOUNT_MANAGER",
+            "계정 생성 권한을 가진 마지막 계정입니다. 권한을 가진 계정을 먼저 만든 뒤 다시 시도해 주세요."),
     INVALID_CURRENT_PASSWORD(HttpStatus.UNAUTHORIZED, "INVALID_CURRENT_PASSWORD", "현재 비밀번호가 올바르지 않습니다."),
     // 권한 매트릭스에 없는 (role, 소속) 조합. 저장되면 어느 열에도 해당하지 않는 계정이 생긴다.
     INVALID_ROLE_TEAM_COMBINATION(HttpStatus.BAD_REQUEST, "INVALID_ROLE_TEAM_COMBINATION",
