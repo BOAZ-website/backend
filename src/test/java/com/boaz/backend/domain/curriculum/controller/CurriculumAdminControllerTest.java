@@ -1,5 +1,6 @@
 package com.boaz.backend.domain.curriculum.controller;
 
+import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.curriculum.dto.response.CurriculumResponse;
 import com.boaz.backend.domain.curriculum.dto.response.CurriculumStepResponse;
 import com.boaz.backend.domain.curriculum.entity.Curriculum;
@@ -7,7 +8,8 @@ import com.boaz.backend.domain.curriculum.service.CurriculumService;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.boaz.backend.support.TestSecurityConfig;
+import com.boaz.backend.support.AuthFixtures;
+import com.boaz.backend.support.PermissionTestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -21,7 +23,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -43,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         value = CurriculumAdminController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
-@Import(TestSecurityConfig.class)
+@Import(PermissionTestSecurityConfig.class)
 class CurriculumAdminControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -51,9 +52,7 @@ class CurriculumAdminControllerTest {
     @MockitoBean CurriculumService curriculumService;
 
     private UsernamePasswordAuthenticationToken adminAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                "admin", null,
-                List.of(new SimpleGrantedAuthority("ROLE_SUPER")));
+        return AuthFixtures.adminAuth(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
     }
 
     private CurriculumResponse makeCurriculumResponse(Long id, Track track) {

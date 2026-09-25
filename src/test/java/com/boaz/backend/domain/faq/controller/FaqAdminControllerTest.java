@@ -1,11 +1,13 @@
 package com.boaz.backend.domain.faq.controller;
 
+import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.faq.dto.response.FaqResponse;
 import com.boaz.backend.domain.faq.entity.Faq;
 import com.boaz.backend.domain.faq.service.FaqService;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.boaz.backend.support.TestSecurityConfig;
+import com.boaz.backend.support.AuthFixtures;
+import com.boaz.backend.support.PermissionTestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,13 +19,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         value = FaqAdminController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
-@Import(TestSecurityConfig.class)
+@Import(PermissionTestSecurityConfig.class)
 class FaqAdminControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -46,9 +46,7 @@ class FaqAdminControllerTest {
     @MockitoBean FaqService faqService;
 
     private UsernamePasswordAuthenticationToken adminAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                "admin", null,
-                List.of(new SimpleGrantedAuthority("ROLE_SUPER")));
+        return AuthFixtures.adminAuth(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
     }
 
     private FaqResponse makeFaqResponse(Long id, Faq.Category category, int orderNum) {

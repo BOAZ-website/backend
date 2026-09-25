@@ -1,10 +1,12 @@
 package com.boaz.backend.domain.archive.controller;
 
+import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.archive.entity.Archive.Category;
 import com.boaz.backend.domain.archive.service.ArchiveAdminService;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
-import com.boaz.backend.support.TestSecurityConfig;
+import com.boaz.backend.support.AuthFixtures;
+import com.boaz.backend.support.PermissionTestSecurityConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -17,13 +19,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +42,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         value = ArchiveAdminController.class,
         excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
-@Import(TestSecurityConfig.class)
+@Import(PermissionTestSecurityConfig.class)
 class ArchiveAdminControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -51,13 +51,11 @@ class ArchiveAdminControllerTest {
     @MockitoBean ArchiveAdminService archiveAdminService;
 
     private UsernamePasswordAuthenticationToken adminAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                "admin", null, List.of(new SimpleGrantedAuthority("ROLE_SUPER")));
+        return AuthFixtures.adminAuth(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
     }
 
     private UsernamePasswordAuthenticationToken userAuth() {
-        return new UsernamePasswordAuthenticationToken(
-                "user", null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
+        return AuthFixtures.userAuth(1L);
     }
 
     private MockMultipartFile dataPart(Map<String, Object> body) throws Exception {
