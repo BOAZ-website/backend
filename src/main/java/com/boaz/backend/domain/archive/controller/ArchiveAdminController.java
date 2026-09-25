@@ -20,6 +20,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -42,6 +43,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PostMapping(value = "/projects", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createProject(
         @Valid @RequestPart("data") ArchiveCreateRequest request,
@@ -61,6 +63,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PostMapping(value = "/activities", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createActivity(
         @Valid @RequestPart("data") ArchiveCreateRequest request,
@@ -80,6 +83,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PostMapping(value = "/blogs", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> createBlog(
         @Valid @RequestPart("data") ArchiveCreateRequest request,
@@ -99,6 +103,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PatchMapping(value = "/projects/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateProject(
         @PathVariable Long id,
@@ -119,6 +124,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PatchMapping(value = "/activities/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateActivity(
         @PathVariable Long id,
@@ -139,6 +145,7 @@ public class ArchiveAdminController {
         },
         encoding = @Encoding(name = "data", contentType = MediaType.APPLICATION_JSON_VALUE)
     ))
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PatchMapping(value = "/blogs/{id}", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<Void>> updateBlog(
         @PathVariable Long id,
@@ -151,6 +158,7 @@ public class ArchiveAdminController {
 
     // 프로젝트 삭제
     @Operation(summary = "프로젝트 삭제", description = "프로젝트 데이터를 삭제합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @DeleteMapping("/projects/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteProject(
         @PathVariable Long id
@@ -161,6 +169,7 @@ public class ArchiveAdminController {
 
     // 활동사진 삭제
     @Operation(summary = "활동사진 삭제", description = "활동사진 데이터를 삭제합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @DeleteMapping("/activities/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteActivity(
         @PathVariable Long id
@@ -171,6 +180,7 @@ public class ArchiveAdminController {
 
     // 기술블로그 삭제
     @Operation(summary = "기술블로그 삭제", description = "기술블로그 데이터를 삭제합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @DeleteMapping("/blogs/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteBlog(
         @PathVariable Long id
