@@ -24,6 +24,7 @@ import com.boaz.backend.global.common.enums.MemberType;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.Permission;
 import com.boaz.backend.support.TestcontainersBase;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -52,6 +54,19 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     @Autowired ApplicantAnswerRepository applicantAnswerRepository;
     @Autowired AdminRepository adminRepository;
     @Autowired UserRepository userRepository;
+
+    // ── 주체의 유효 권한 — 최종 권한 매트릭스의 해당 열을 그대로 옮긴 것 (recruitment 평가 관련 행만) ──
+    // 컨트롤러가 AdminUserDetails.getPermissions() 로 넘기는 자리다. role/teamName 이 아니라 이 집합이 판정을 가른다.
+    /** 운영진(서비스운영팀·운영지원팀·기타 운영진) — 본인 부문 평가 + 최종 합불 조회. */
+    private static final Set<Permission> STAFF = Set.of(
+            Permission.EVALUATION_OWN_TRACK_WRITE, Permission.FINAL_DECISION_READ);
+    /** 대표진 — 본인 부문 평가 + 최종 합불 조회/CUD. */
+    private static final Set<Permission> REP = Set.of(
+            Permission.EVALUATION_OWN_TRACK_WRITE, Permission.FINAL_DECISION_READ, Permission.FINAL_DECISION_WRITE);
+    /** 차기대표진 — 대표진 + 다른 부문 평가. */
+    private static final Set<Permission> NEXT_REP = Set.of(
+            Permission.EVALUATION_OWN_TRACK_WRITE, Permission.EVALUATION_ALL_TRACK_WRITE,
+            Permission.FINAL_DECISION_READ, Permission.FINAL_DECISION_WRITE);
 
     private int seq = 0;
 
@@ -101,10 +116,10 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Admin ev1 = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
         Admin ev2 = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
-        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.PASS, 9, "good"), ev1);
-        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.HOLD, 5, "maybe"), ev2);
+        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.PASS, 9, "good"), ev1, STAFF);
+        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.HOLD, 5, "maybe"), ev2, STAFF);
 
-        List<ApplicantEvaluationResponse> dashboard = recruitmentService.getApplicantEvaluations(r.getId(), ev1);
+        List<ApplicantEvaluationResponse> dashboard = recruitmentService.getApplicantEvaluations(r.getId(), ev1, STAFF);
         ApplicantEvaluationResponse row = dashboard.stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
 
@@ -121,14 +136,14 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
         Admin ev = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
-        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.HOLD, 5, "v1"), ev);
+        recruitmentService.saveMyEvaluation(a.getId(), saveReq(EvaluationDecision.HOLD, 5, "v1"), ev, STAFF);
         MyEvaluationResponse second = recruitmentService.saveMyEvaluation(
-                a.getId(), saveReq(EvaluationDecision.PASS, 10, "v2"), ev);
+                a.getId(), saveReq(EvaluationDecision.PASS, 10, "v2"), ev, STAFF);
 
         assertThat(second.getDecision()).isEqualTo(EvaluationDecision.PASS);
         assertThat(second.getScore()).isEqualTo(10);
         // 같은 평가자의 평가는 1건만 (집계 개수로 검증)
-        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), ev).stream()
+        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), ev, STAFF).stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
         assertThat(row.getPassCount()).isEqualTo(1);
         assertThat(row.getHoldCount()).isZero();
@@ -142,7 +157,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Admin analysisAdmin = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
 
         assertThatThrownBy(() -> recruitmentService.saveMyEvaluation(
-                engApplicant.getId(), saveReq(EvaluationDecision.PASS, 9, "x"), analysisAdmin))
+                engApplicant.getId(), saveReq(EvaluationDecision.PASS, 9, "x"), analysisAdmin, STAFF))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
     }
@@ -154,24 +169,34 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
         Admin rep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
 
-        recruitmentService.updateFinalDecision(a.getId(), decisionReq(EvaluationDecision.PASS), rep);
+        recruitmentService.updateFinalDecision(a.getId(), decisionReq(EvaluationDecision.PASS), rep, REP);
 
-        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), rep).stream()
+        ApplicantEvaluationResponse row = recruitmentService.getApplicantEvaluations(r.getId(), rep, REP).stream()
                 .filter(x -> x.getId().equals(a.getId())).findFirst().orElseThrow();
         assertThat(row.getFinalDecision()).isEqualTo(EvaluationDecision.PASS);
     }
 
+    // "대표진이 아니면 최종 평가 수정 불가"는 2층(@PreAuthorize FINAL_DECISION_WRITE)이 막는다 —
+    // ApplicantEvaluationPermissionGridTest 가 본다. 여기서는 3층 부문 범위를 실제 빈으로 확인한다.
     @Test
-    @DisplayName("서비스운영팀 SUPER의 최종 평가 수정 → ACCESS_DENIED (대표진 아님)")
-    void finalDecisionByNonRepresentative() {
+    @DisplayName("현재 대표진의 타 부문 최종 평가 수정 → ACCESS_DENIED, final_decision 변경 없음 / 차기대표진은 가능")
+    void finalDecisionTrackScope() {
         Recruitment r = saveRecruitment(27);
-        Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
-        Admin superOps = saveAdmin(Admin.Role.SUPER, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
+        Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
+        Admin analysisRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
+        Admin analysisNextRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
 
         assertThatThrownBy(() -> recruitmentService.updateFinalDecision(
-                a.getId(), decisionReq(EvaluationDecision.PASS), superOps))
+                eng.getId(), decisionReq(EvaluationDecision.PASS), analysisRep, REP))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
+        assertThat(applicantRepository.findById(eng.getId()).orElseThrow().getFinalDecision())
+                .isEqualTo(EvaluationDecision.PENDING);
+
+        recruitmentService.updateFinalDecision(
+                eng.getId(), decisionReq(EvaluationDecision.FAIL), analysisNextRep, NEXT_REP);
+        assertThat(applicantRepository.findById(eng.getId()).orElseThrow().getFinalDecision())
+                .isEqualTo(EvaluationDecision.FAIL);
     }
 
     @Test
@@ -184,14 +209,14 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Admin analysisNormal = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ANALYSIS);
 
         // 지원서별 평가 조회 (자기 부문이라 조회 가능한 엔지 평가자로 호출)
-        var res = recruitmentService.getApplicantEvaluators(eng.getId(), engEvaluator);
+        var res = recruitmentService.getApplicantEvaluators(eng.getId(), engEvaluator, STAFF);
 
         assertThat(res.getEvaluations()).extracting(e -> e.getAdminId())
                 .contains(engEvaluator.getId(), analysisNextRep.getId())   // 엔지 평가자 + 타 부문 차기대표진 포함
                 .doesNotContain(analysisNormal.getId());                   // 타 부문 일반 운영진은 제외
 
         // 면접 질문 조회도 동일 풀
-        var iq = recruitmentService.getApplicantInterviewQuestions(eng.getId(), engEvaluator);
+        var iq = recruitmentService.getApplicantInterviewQuestions(eng.getId(), engEvaluator, STAFF);
         assertThat(iq.getInterviewQuestions()).extracting(q -> q.getAdminId())
                 .contains(engEvaluator.getId(), analysisNextRep.getId())
                 .doesNotContain(analysisNormal.getId());
@@ -206,15 +231,15 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Admin ev2 = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
         recruitmentService.saveMyEvaluation(a.getId(),
-                saveReq(EvaluationDecision.PASS, 9, "good", "콜드스타트 문제를 어떻게 해결했나요?"), ev1);
+                saveReq(EvaluationDecision.PASS, 9, "good", "콜드스타트 문제를 어떻게 해결했나요?"), ev1, STAFF);
 
         // 개인 평가 조회에 면접 질문 포함 (라운드트립)
-        MyEvaluationResponse mine = recruitmentService.getMyEvaluation(a.getId(), ev1);
+        MyEvaluationResponse mine = recruitmentService.getMyEvaluation(a.getId(), ev1, STAFF);
         assertThat(mine.getInterviewQuestion()).isEqualTo("콜드스타트 문제를 어떻게 해결했나요?");
 
         // 지원서별 면접 질문 조회 — 평가자 풀 전체, 미작성자(ev2)는 null
         ApplicantInterviewQuestionsResponse res =
-                recruitmentService.getApplicantInterviewQuestions(a.getId(), ev1);
+                recruitmentService.getApplicantInterviewQuestions(a.getId(), ev1, STAFF);
         assertThat(res.getApplicantId()).isEqualTo(a.getId());
         assertThat(res.getInterviewQuestions()).hasSize(2);
         assertThat(res.getInterviewQuestions())
@@ -246,7 +271,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
                 .applicant(a).question(q1).answerText("저는 ~~").build());
         Admin viewer = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
 
-        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(a.getId(), viewer);
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(a.getId(), viewer, STAFF);
 
         assertThat(res.getApplicantId()).isEqualTo(a.getId());
         assertThat(res.getAnswers()).hasSize(2);
@@ -261,7 +286,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("타 부문 지원서 답변 조회 — 비대표진/현재 대표진은 차단, 차기 대표진만 가능")
+    @DisplayName("타 부문 지원서 답변 조회 — 본인 부문 권한만 있으면(운영진·현재 대표진) 차단, 전 부문 권한(차기 대표진)만 가능")
     void getApplicantAnswersTrackAccess() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -269,18 +294,18 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
         Admin currentRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);
         Admin nextRep = saveAdmin(Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
 
-        // 비대표진(분석)이 엔지 지원자 답변 조회 → 차단
-        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), analysisAdmin))
+        // 운영진(분석, 본인 부문 권한만)이 엔지 지원자 답변 조회 → 차단
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), analysisAdmin, STAFF))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
 
-        // 현재 대표진(분석)도 엔지 지원자 답변 조회 → 차단 (본인 track만)
-        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), currentRep))
+        // 현재 대표진(분석)도 전 부문 권한이 없어 차단 (본인 track만)
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(eng.getId(), currentRep, REP))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.ACCESS_DENIED);
 
-        // 차기 대표진은 타 부문이어도 조회 가능
-        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(eng.getId(), nextRep);
+        // 차기 대표진은 전 부문 권한이 있어 타 부문이어도 조회 가능
+        ApplicantAnswersResponse res = recruitmentService.getApplicantAnswers(eng.getId(), nextRep, NEXT_REP);
         assertThat(res.getApplicantId()).isEqualTo(eng.getId());
         assertThat(res.getAnswers()).isEmpty();
     }
@@ -289,7 +314,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     @DisplayName("존재하지 않는 지원자 답변 조회 → APPLICATION_NOT_FOUND")
     void getApplicantAnswersNotFound() {
         Admin viewer = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
-        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L, viewer))
+        assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L, viewer, STAFF))
                 .isInstanceOf(CustomException.class)
                 .extracting("errorCode").isEqualTo(ErrorCode.APPLICATION_NOT_FOUND);
     }

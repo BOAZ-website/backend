@@ -78,7 +78,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200 + data 배열")
         void success() throws Exception {
-            given(recruitmentService.getApplicants(eq(3L), any())).willReturn(List.of());
+            given(recruitmentService.getApplicants(eq(3L), any(), any())).willReturn(List.of());
 
             mockMvc.perform(get("/api/v1/admin/recruitment/3/applicants").with(authentication(adminAuth())))
                     .andExpect(status().isOk())
@@ -105,7 +105,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[예외] 존재하지 않는 공고 → 404")
         void notFound() throws Exception {
-            given(recruitmentService.getApplicants(eq(999L), any()))
+            given(recruitmentService.getApplicants(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/999/applicants").with(authentication(adminAuth())))
@@ -122,7 +122,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200 + data 배열")
         void success() throws Exception {
-            given(recruitmentService.getApplicantEvaluations(eq(3L), any())).willReturn(List.of());
+            given(recruitmentService.getApplicantEvaluations(eq(3L), any(), any())).willReturn(List.of());
 
             mockMvc.perform(get("/api/v1/admin/recruitment/3/applicants/evaluations").with(authentication(adminAuth())))
                     .andExpect(status().isOk())
@@ -138,7 +138,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200")
         void success() throws Exception {
-            given(recruitmentService.updateFinalDecision(eq(101L), any(), any())).willReturn(null);
+            given(recruitmentService.updateFinalDecision(eq(101L), any(), any(), any())).willReturn(null);
 
             mockMvc.perform(patch("/api/v1/admin/recruitment/applicants/101/final-decision")
                             .with(authentication(adminAuth()))
@@ -162,7 +162,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[권한] 대표진 아님(서비스 throw) → 403")
         void notRepresentative() throws Exception {
-            given(recruitmentService.updateFinalDecision(eq(101L), any(), any()))
+            given(recruitmentService.updateFinalDecision(eq(101L), any(), any(), any()))
                     .willThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
             mockMvc.perform(patch("/api/v1/admin/recruitment/applicants/101/final-decision")
@@ -182,7 +182,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200 + applicant_id + evaluations")
         void success() throws Exception {
-            given(recruitmentService.getApplicantEvaluators(eq(101L), any()))
+            given(recruitmentService.getApplicantEvaluators(eq(101L), any(), any()))
                     .willReturn(ApplicantEvaluatorsResponse.of(101L, List.of()));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/evaluations").with(authentication(adminAuth())))
@@ -194,7 +194,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
-            given(recruitmentService.getApplicantEvaluators(eq(999L), any()))
+            given(recruitmentService.getApplicantEvaluators(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/evaluations").with(authentication(adminAuth())))
@@ -211,7 +211,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200 + applicant_id + interview_questions 배열")
         void success() throws Exception {
-            given(recruitmentService.getApplicantInterviewQuestions(eq(101L), any()))
+            given(recruitmentService.getApplicantInterviewQuestions(eq(101L), any(), any()))
                     .willReturn(ApplicantInterviewQuestionsResponse.of(101L, List.of()));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/interview-questions")
@@ -224,7 +224,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
-            given(recruitmentService.getApplicantInterviewQuestions(eq(999L), any()))
+            given(recruitmentService.getApplicantInterviewQuestions(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/interview-questions")
@@ -242,7 +242,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200 + applicant_id + answers 배열")
         void success() throws Exception {
-            given(recruitmentService.getApplicantAnswers(eq(101L), any()))
+            given(recruitmentService.getApplicantAnswers(eq(101L), any(), any()))
                     .willReturn(ApplicantAnswersResponse.of(101L, List.of()));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/answers").with(authentication(adminAuth())))
@@ -254,7 +254,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
-            given(recruitmentService.getApplicantAnswers(eq(999L), any()))
+            given(recruitmentService.getApplicantAnswers(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/999/answers").with(authentication(adminAuth())))
@@ -280,7 +280,7 @@ class ApplicantEvaluationAdminControllerTest {
         @DisplayName("[정상] 평가 있음 → 200 + data")
         void found() throws Exception {
             MyEvaluationResponse res = myEval();
-            given(recruitmentService.getMyEvaluation(eq(101L), any())).willReturn(res);
+            given(recruitmentService.getMyEvaluation(eq(101L), any(), any())).willReturn(res);
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/evaluations/me").with(authentication(adminAuth())))
                     .andExpect(status().isOk())
@@ -291,7 +291,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 평가 없음 → 200 + data null")
         void none() throws Exception {
-            given(recruitmentService.getMyEvaluation(eq(101L), any())).willReturn(null);
+            given(recruitmentService.getMyEvaluation(eq(101L), any(), any())).willReturn(null);
 
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/evaluations/me").with(authentication(adminAuth())))
                     .andExpect(status().isOk())
@@ -308,7 +308,7 @@ class ApplicantEvaluationAdminControllerTest {
         @DisplayName("[정상] 200")
         void success() throws Exception {
             MyEvaluationResponse res = myEval();
-            given(recruitmentService.saveMyEvaluation(eq(101L), any(), any())).willReturn(res);
+            given(recruitmentService.saveMyEvaluation(eq(101L), any(), any(), any())).willReturn(res);
 
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
                             .with(authentication(adminAuth()))
@@ -365,7 +365,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[권한] 타 부문(서비스 throw) → 403")
         void trackMismatch() throws Exception {
-            given(recruitmentService.saveMyEvaluation(eq(101L), any(), any()))
+            given(recruitmentService.saveMyEvaluation(eq(101L), any(), any(), any()))
                     .willThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
