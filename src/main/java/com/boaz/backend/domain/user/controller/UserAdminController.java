@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +29,11 @@ public class UserAdminController {
 
     @Operation(
             summary = "합격자 승격",
-            description = "합격자 userIds를 받아 memberType을 MEMBER로 변경하고 지원서 개인정보를 User에 복사한다. " +
+            description = "MEMBER_PROMOTION_WRITE 보유자만 호출 가능. " +
+                          "합격자 userIds를 받아 memberType을 MEMBER로 변경하고 지원서 개인정보를 User에 복사한다. " +
                           "비즈니스 오류가 발생한 userId는 skip하고 failedUserIds에 포함하여 반환한다."
     )
+    @PreAuthorize("hasAuthority('MEMBER_PROMOTION_WRITE')")
     @PatchMapping("/promote")
     public ResponseEntity<ApiResponse<PromoteUsersResponse>> promoteUsers(
             @RequestBody @Valid PromoteUsersRequest request) {

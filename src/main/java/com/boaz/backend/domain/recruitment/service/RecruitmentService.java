@@ -53,6 +53,8 @@ import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.Permission;
+import com.boaz.backend.global.security.authz.ScopeGuard;
 import com.boaz.backend.global.util.S3Service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -100,6 +102,7 @@ public class RecruitmentService {
     private final SubscriptionRepository subscriptionRepository;
     private final CsvService csvService;
     private final Clock clock;
+    private final ScopeGuard scopeGuard;
 
     @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
@@ -974,11 +977,14 @@ public class RecruitmentService {
     }
 
     // ===== 지원서 평가 (어드민 전용) =====
+    // 기능 접근은 컨트롤러 @PreAuthorize 가, 대상 지원자의 부문 범위는 ScopeGuard 가 본다.
+    // permissions 는 AdminUserDetails 가 이미 계산해 둔 유효 권한이다 — 여기서 다시 계산하지 않는다.
 
-    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함, 비대표진은 본인 track만
-    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId, Admin currentAdmin) {
+    // 전체 지원서 조회 (지원자 대시보드) — DRAFT 포함. 전 부문 평가 권한이 없으면 본인 track만
+    public List<ApplicantSummaryResponse> getApplicants(Long recruitmentId, Admin currentAdmin,
+                                                        Set<Permission> permissions) {
         validateRecruitmentExists(recruitmentId);
-        boolean allTrack = isAllTrackViewer(currentAdmin);
+        boolean allTrack = permissions.contains(Permission.EVALUATION_ALL_TRACK_WRITE);
 
         return applicantRepository.findByRecruitmentIdWithUser(recruitmentId).stream()
                 .filter(a -> allTrack || a.getTrack() == currentAdmin.getTrack())
@@ -986,10 +992,11 @@ public class RecruitmentService {
                 .toList();
     }
 
-    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계, 비대표진은 본인 track만
-    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId, Admin currentAdmin) {
+    // 전체 지원서 및 평가 조회 (평가 대시보드) — SUBMITTED만 + 서버 집계. 전 부문 평가 권한이 없으면 본인 track만
+    public List<ApplicantEvaluationResponse> getApplicantEvaluations(Long recruitmentId, Admin currentAdmin,
+                                                                     Set<Permission> permissions) {
         validateRecruitmentExists(recruitmentId);
-        boolean allTrack = isAllTrackViewer(currentAdmin);
+        boolean allTrack = permissions.contains(Permission.EVALUATION_ALL_TRACK_WRITE);
 
         List<Applicant> applicants = applicantRepository
                 .findByRecruitmentIdAndStatusWithUser(recruitmentId, Applicant.ApplicantStatus.SUBMITTED)
@@ -1026,22 +1033,22 @@ public class RecruitmentService {
         return result;
     }
 
-    // 최종 평가 수정 — 현재/차기 대표진만. 단 현재 대표진은 본인 track 지원자만(차기 대표진은 전 부문)
+    // 최종 평가 수정 — FINAL_DECISION_WRITE 보유자(2층). 부문 범위는 평가와 같은 축을 따른다:
+    // 전 부문 평가 권한(차기 대표진)이 없으면 본인 track 지원자만 (현재 대표진)
     @Transactional
     public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request,
-                                                     Admin currentAdmin) {
-        validateFinalDecisionAuthority(currentAdmin);
-
+                                                     Admin currentAdmin, Set<Permission> permissions) {
         Applicant applicant = findSubmittedApplicantForEval(applicantId);
-        validateTrackAccess(currentAdmin, applicant);
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
         applicant.updateFinalDecision(request.getFinalDecision());
         return FinalDecisionResponse.from(applicant);
     }
 
-    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함), 비대표진은 본인 track만
-    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId, Admin currentAdmin) {
+    // 지원서별 평가 조회 — 한 지원자의 전체 평가자 평가 (미평가자 null 포함). 전 부문 평가 권한이 없으면 본인 track만
+    public ApplicantEvaluatorsResponse getApplicantEvaluators(Long applicantId, Admin currentAdmin,
+                                                              Set<Permission> permissions) {
         Applicant applicant = findApplicantForEval(applicantId);
-        validateTrackAccess(currentAdmin, applicant);
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
         // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미평가자도 포함.
         List<Admin> evaluators = adminRepository.findEvaluatorPool(
@@ -1058,10 +1065,11 @@ public class RecruitmentService {
         return ApplicantEvaluatorsResponse.of(applicantId, evaluations);
     }
 
-    // 지원서별 면접 질문 조회 — 한 지원자의 부문 평가자별 면접 질문 (미작성자 null 포함), 비대표진은 본인 track만
-    public ApplicantInterviewQuestionsResponse getApplicantInterviewQuestions(Long applicantId, Admin currentAdmin) {
+    // 지원서별 면접 질문 조회 — 한 지원자의 부문 평가자별 면접 질문 (미작성자 null 포함). 전 부문 평가 권한이 없으면 본인 track만
+    public ApplicantInterviewQuestionsResponse getApplicantInterviewQuestions(Long applicantId, Admin currentAdmin,
+                                                                              Set<Permission> permissions) {
         Applicant applicant = findApplicantForEval(applicantId);
-        validateTrackAccess(currentAdmin, applicant);
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
         // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미작성자도 포함.
         List<Admin> evaluators = adminRepository.findEvaluatorPool(
@@ -1078,10 +1086,10 @@ public class RecruitmentService {
         return ApplicantInterviewQuestionsResponse.of(applicantId, interviewQuestions);
     }
 
-    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null), 비대표진은 본인 track만
-    public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin) {
+    // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null). 전 부문 평가 권한이 없으면 본인 track만
+    public MyEvaluationResponse getMyEvaluation(Long applicantId, Admin currentAdmin, Set<Permission> permissions) {
         Applicant applicant = findApplicantForEval(applicantId);
-        validateTrackAccess(currentAdmin, applicant);
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
         return applicantEvalRepository.findByApplicantIdAndAdminId(applicantId, currentAdmin.getId())
                 .map(MyEvaluationResponse::from)
@@ -1091,11 +1099,11 @@ public class RecruitmentService {
     // 개인 평가 저장 (upsert) — 본인 부문 지원자만
     @Transactional
     public MyEvaluationResponse saveMyEvaluation(Long applicantId, EvaluationSaveRequest request,
-                                                 Admin currentAdmin) {
+                                                 Admin currentAdmin, Set<Permission> permissions) {
         Applicant applicant = findSubmittedApplicantForEval(applicantId);
 
-        // 본인 부문 지원자만 평가 가능 (단, 대표진은 모든 부문 평가 가능)
-        validateTrackAccess(currentAdmin, applicant);
+        // 본인 부문 지원자만 평가 가능 (단, 전 부문 평가 권한 보유자는 모든 부문 평가 가능)
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
         // 원자적 upsert (없으면 INSERT, 있으면 UPDATE) — 동시 최초 저장 시에도 멱등
         applicantEvalRepository.upsert(
@@ -1109,10 +1117,11 @@ public class RecruitmentService {
         return MyEvaluationResponse.from(eval);
     }
 
-    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로), 비대표진은 본인 track만
-    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId, Admin currentAdmin) {
+    // 지원서 답변 조회 — 한 지원자의 문항별 답변 (문항 정보 포함, 문항 순서대로). 전 부문 평가 권한이 없으면 본인 track만
+    public ApplicantAnswersResponse getApplicantAnswers(Long applicantId, Admin currentAdmin,
+                                                        Set<Permission> permissions) {
         Applicant applicant = findApplicantForEval(applicantId);
-        validateTrackAccess(currentAdmin, applicant);
+        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
         String trackName = applicant.getTrack() != null ? applicant.getTrack().getDisplayName() : null;
 
         List<ApplicantAnswersResponse.AnswerDetailResponse> answers =
@@ -1171,28 +1180,6 @@ public class RecruitmentService {
             throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
         }
         return applicant;
-    }
-
-    // 전 부문 조회/평가 권한 = 차기 대표진 (role SUPER && teamName 차기대표진)
-    private boolean isAllTrackViewer(Admin admin) {
-        return admin.getRole() == Admin.Role.SUPER && admin.getTeamName() == Admin.TeamName.차기대표진;
-    }
-
-    // 최종 평가 수정 권한 = 현재 대표진 또는 차기 대표진 (role SUPER 필수)
-    private void validateFinalDecisionAuthority(Admin admin) {
-        boolean authorized = admin.getRole() == Admin.Role.SUPER
-                && (admin.getTeamName() == Admin.TeamName.대표진
-                    || admin.getTeamName() == Admin.TeamName.차기대표진);
-        if (!authorized) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
-    }
-
-    // 부문 접근 검증 — 차기 대표진은 전 부문 허용, 그 외(현재 대표진 포함)는 본인 track 지원자만
-    private void validateTrackAccess(Admin admin, Applicant applicant) {
-        if (!isAllTrackViewer(admin) && admin.getTrack() != applicant.getTrack()) {
-            throw new CustomException(ErrorCode.ACCESS_DENIED);
-        }
     }
 
     // minor_double_major(JSON 문자열) → List<String>
