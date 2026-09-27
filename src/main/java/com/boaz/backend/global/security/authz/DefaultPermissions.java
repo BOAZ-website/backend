@@ -112,8 +112,9 @@ public final class DefaultPermissions {
 
             // 스터디장 + ADV팀장 두 열이 여기 하나로 합쳐진다. 입력탭 _OWN_GROUP_ permission은
             // 여기 없다 — admin_group_leader ⋈ activity_group 에서 계산된다.
+            // 본인 계정 정보 조회(R)는 매트릭스상 X — SELF_READ 없음. 자기 정보는 /accounts/me 로 본다.
             key(Role.HOST, TeamName.그룹리더), set(
-                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE)
+                    ADMIN_ACCOUNT_SELF_WRITE)
     );
 
     /**

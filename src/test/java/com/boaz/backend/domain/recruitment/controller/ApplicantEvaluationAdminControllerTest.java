@@ -138,7 +138,7 @@ class ApplicantEvaluationAdminControllerTest {
         @Test
         @DisplayName("[정상] 200")
         void success() throws Exception {
-            given(recruitmentService.updateFinalDecision(eq(101L), any(), any(), any())).willReturn(null);
+            given(recruitmentService.updateFinalDecision(eq(101L), any())).willReturn(null);
 
             mockMvc.perform(patch("/api/v1/admin/recruitment/applicants/101/final-decision")
                             .with(authentication(adminAuth()))
@@ -160,17 +160,18 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[권한] 대표진 아님(서비스 throw) → 403")
-        void notRepresentative() throws Exception {
-            given(recruitmentService.updateFinalDecision(eq(101L), any(), any(), any()))
-                    .willThrow(new CustomException(ErrorCode.ACCESS_DENIED));
+        @DisplayName("[예외] 존재하지 않는 지원자(서비스 throw) → 404")
+        void applicantNotFound() throws Exception {
+            // 최종 합불 서비스는 더 이상 ACCESS_DENIED 를 던지지 않는다 — 인가는 2층(격자 테스트)에서 본다
+            given(recruitmentService.updateFinalDecision(eq(101L), any()))
+                    .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
 
             mockMvc.perform(patch("/api/v1/admin/recruitment/applicants/101/final-decision")
                             .with(authentication(adminAuth()))
                             .contentType("application/json")
                             .content("{\"final_decision\":\"PASS\"}"))
-                    .andExpect(status().isForbidden())
-                    .andExpect(jsonPath("$.error_code").value("ACCESS_DENIED"));
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error_code").value("APPLICATION_NOT_FOUND"));
         }
     }
 

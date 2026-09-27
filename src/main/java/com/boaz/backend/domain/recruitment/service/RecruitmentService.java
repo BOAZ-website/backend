@@ -53,6 +53,7 @@ import com.boaz.backend.domain.recruitment.dto.response.MyEvaluationResponse;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.EffectivePermissions;
 import com.boaz.backend.global.security.authz.Permission;
 import com.boaz.backend.global.security.authz.ScopeGuard;
 import com.boaz.backend.global.util.S3Service;
@@ -77,7 +78,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -103,6 +107,7 @@ public class RecruitmentService {
     private final CsvService csvService;
     private final Clock clock;
     private final ScopeGuard scopeGuard;
+    private final EffectivePermissions effectivePermissions;
 
     @Value("${spring.cloud.aws.s3.recruitment-bucket}")
     private String recruitmentBucket;
@@ -1033,13 +1038,11 @@ public class RecruitmentService {
         return result;
     }
 
-    // 최종 평가 수정 — FINAL_DECISION_WRITE 보유자(2층). 부문 범위는 평가와 같은 축을 따른다:
-    // 전 부문 평가 권한(차기 대표진)이 없으면 본인 track 지원자만 (현재 대표진)
+    // 최종 평가 수정 — FINAL_DECISION_WRITE 보유자(2층)만. 최종 합불 CUD는 독립 permission이라
+    // 서류 평가의 부문 범위(checkTrack)를 적용하지 않는다 — 대표진·차기대표진 모두 전 부문 수정 가능
     @Transactional
-    public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request,
-                                                     Admin currentAdmin, Set<Permission> permissions) {
+    public FinalDecisionResponse updateFinalDecision(Long applicantId, FinalDecisionUpdateRequest request) {
         Applicant applicant = findSubmittedApplicantForEval(applicantId);
-        scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
         applicant.updateFinalDecision(request.getFinalDecision());
         return FinalDecisionResponse.from(applicant);
     }
@@ -1050,13 +1053,12 @@ public class RecruitmentService {
         Applicant applicant = findApplicantForEval(applicantId);
         scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
-        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미평가자도 포함.
-        List<Admin> evaluators = adminRepository.findEvaluatorPool(
-                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
-
         Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
                 .stream()
                 .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        // 평가자 풀 = 현재 이 부문 평가 권한 보유자 ∪ 이미 평가를 남긴 사람. 미평가자도 포함.
+        List<Admin> evaluators = resolveEvaluators(applicant.getTrack(), evalByAdmin.values());
 
         List<EvaluatorEvaluationResponse> evaluations = evaluators.stream()
                 .map(admin -> EvaluatorEvaluationResponse.of(admin, evalByAdmin.get(admin.getId())))
@@ -1071,19 +1073,45 @@ public class RecruitmentService {
         Applicant applicant = findApplicantForEval(applicantId);
         scopeGuard.checkTrack(currentAdmin, permissions, applicant.getTrack());
 
-        // 평가자 풀 = 해당 부문 + 차기 대표진(전 부문 평가 권한). 미작성자도 포함.
-        List<Admin> evaluators = adminRepository.findEvaluatorPool(
-                applicant.getTrack(), Admin.Role.SUPER, Admin.TeamName.차기대표진);
-
         Map<Long, ApplicantEval> evalByAdmin = applicantEvalRepository.findByApplicantIdWithAdmin(applicantId)
                 .stream()
                 .collect(Collectors.toMap(e -> e.getAdmin().getId(), Function.identity()));
+
+        // 평가자 풀 = 현재 이 부문 평가 권한 보유자 ∪ 이미 면접 질문/평가를 남긴 사람. 미작성자도 포함.
+        List<Admin> evaluators = resolveEvaluators(applicant.getTrack(), evalByAdmin.values());
 
         List<EvaluatorInterviewQuestionResponse> interviewQuestions = evaluators.stream()
                 .map(admin -> EvaluatorInterviewQuestionResponse.of(admin, evalByAdmin.get(admin.getId())))
                 .toList();
 
         return ApplicantInterviewQuestionsResponse.of(applicantId, interviewQuestions);
+    }
+
+    // 평가자 풀 계산 — role/teamName이 아니라 유효 권한(기본 + 오버라이드) 기준.
+    // A: 살아 있는 계정 중 전 부문 평가 권한 보유자, 또는 본인 부문 평가 권한 + 같은 track
+    // B: 이 지원자에 이미 평가를 남긴 계정 — soft delete 여부와 무관. 과거 평가 기록이라 집계(getApplicantEvaluations)와
+    //    같은 기준으로 보존한다. 삭제 계정은 A(live 조회)에 없으므로 미평가 상태로 새로 노출되지는 않는다
+    // A ∪ B 를 adminId 기준 중복 제거 후 이름순 정렬
+    private List<Admin> resolveEvaluators(Track track, Collection<ApplicantEval> evals) {
+        List<Admin> liveAdmins = adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc();
+        Map<Long, Set<Permission>> permissionsByAdmin = effectivePermissions.of(liveAdmins);
+
+        Map<Long, Admin> pool = new LinkedHashMap<>();
+        for (Admin admin : liveAdmins) {
+            Set<Permission> p = permissionsByAdmin.getOrDefault(admin.getId(), Set.of());
+            if (p.contains(Permission.EVALUATION_ALL_TRACK_WRITE)
+                    || (p.contains(Permission.EVALUATION_OWN_TRACK_WRITE) && admin.getTrack() == track)) {
+                pool.put(admin.getId(), admin);
+            }
+        }
+        for (ApplicantEval e : evals) {
+            Admin author = e.getAdmin();
+            pool.putIfAbsent(author.getId(), author);
+        }
+
+        return pool.values().stream()
+                .sorted(Comparator.comparing(Admin::getName).thenComparing(Admin::getId))
+                .toList();
     }
 
     // 개인 평가 조회 — 본인이 이 지원자에 매긴 평가 1건 (없으면 null). 전 부문 평가 권한이 없으면 본인 track만

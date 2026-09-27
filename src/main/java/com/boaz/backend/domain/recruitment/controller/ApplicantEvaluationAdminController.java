@@ -64,16 +64,14 @@ public class ApplicantEvaluationAdminController {
 
     @Operation(summary = "최종 평가 수정",
             description = "FINAL_DECISION_WRITE 보유자만 호출 가능. 지원자의 최종 평가(final_decision)를 수정합니다. "
-                    + "EVALUATION_ALL_TRACK_WRITE 보유 시 전 부문, 그 외에는 본인 부문 지원자만 수정 가능(타 부문이면 403). "
-                    + "SUBMITTED 지원서만 가능.")
+                    + "부문과 무관하게 모든 지원자 수정 가능. SUBMITTED 지원서만 가능.")
     @PreAuthorize("hasAuthority('FINAL_DECISION_WRITE')")
     @PatchMapping("/applicants/{applicantId}/final-decision")
     public ResponseEntity<ApiResponse<FinalDecisionResponse>> updateFinalDecision(
             @PathVariable Long applicantId,
-            @RequestBody @Valid FinalDecisionUpdateRequest request,
-            @AuthenticationPrincipal AdminUserDetails userDetails) {
+            @RequestBody @Valid FinalDecisionUpdateRequest request) {
         return ResponseEntity.ok(ApiResponse.ok(
-                recruitmentService.updateFinalDecision(applicantId, request, userDetails.getAdmin(), userDetails.getPermissions())));
+                recruitmentService.updateFinalDecision(applicantId, request)));
     }
 
     @Operation(summary = "지원서별 평가 조회",

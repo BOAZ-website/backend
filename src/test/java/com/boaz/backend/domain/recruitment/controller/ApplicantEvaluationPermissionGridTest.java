@@ -200,6 +200,52 @@ class ApplicantEvaluationPermissionGridTest {
                 eq(101L), any(), argThat(a -> a.getId().equals(1L)), eq(granted));
     }
 
+    // ── 최종 합불 CUD — FINAL_DECISION_WRITE 하나로만 갈린다 (평가 부문 권한과 무관) ──
+
+    @Test
+    @DisplayName("[인가실패] 평가 권한(본인·전 부문)을 다 가져도 FINAL_DECISION_WRITE 가 없으면 최종 합불 수정 → 403")
+    void finalDecisionRequiresFinalDecisionWriteOnly() throws Exception {
+        Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
+        Set<Permission> evaluationOnly = Set.of(
+                Permission.EVALUATION_OWN_TRACK_WRITE, Permission.EVALUATION_ALL_TRACK_WRITE,
+                Permission.FINAL_DECISION_READ);
+
+        mockMvc.perform(patch(BASE + "/applicants/101/final-decision")
+                        .contentType(MediaType.APPLICATION_JSON).content(FINAL_DECISION_BODY)
+                        .with(authentication(AuthFixtures.adminAuth(admin, evaluationOnly))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error_code").value("ACCESS_DENIED"));
+        verifyNoInteractions(recruitmentService);
+    }
+
+    @Test
+    @DisplayName("[정상] 기본값에 없는 운영진이라도 FINAL_DECISION_WRITE 만 GRANT 되면 최종 합불 수정 통과")
+    void finalDecisionCustomGrant() throws Exception {
+        Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
+        Set<Permission> grantedOnly = Set.of(Permission.FINAL_DECISION_WRITE);
+
+        mockMvc.perform(patch(BASE + "/applicants/101/final-decision")
+                        .contentType(MediaType.APPLICATION_JSON).content(FINAL_DECISION_BODY)
+                        .with(authentication(AuthFixtures.adminAuth(admin, grantedOnly))))
+                .andExpect(status().isOk());
+        verify(recruitmentService).updateFinalDecision(eq(101L), any());
+    }
+
+    @Test
+    @DisplayName("[인가실패] 대표진 기본 세트에서 FINAL_DECISION_WRITE 만 REVOKE → 최종 합불 수정 403")
+    void finalDecisionCustomRevoke() throws Exception {
+        Admin admin = AuthFixtures.admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진);
+        Set<Permission> revoked = Set.of(
+                Permission.EVALUATION_OWN_TRACK_WRITE, Permission.FINAL_DECISION_READ);   // FINAL_DECISION_WRITE 회수
+
+        mockMvc.perform(patch(BASE + "/applicants/101/final-decision")
+                        .contentType(MediaType.APPLICATION_JSON).content(FINAL_DECISION_BODY)
+                        .with(authentication(AuthFixtures.adminAuth(admin, revoked))))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.error_code").value("ACCESS_DENIED"));
+        verifyNoInteractions(recruitmentService);
+    }
+
     @Test
     @DisplayName("[인가실패] 평가 권한은 있어도 최종 합불 조회 권한이 없으면 평가 대시보드 → 403")
     void dashboardRequiresFinalDecisionRead() throws Exception {

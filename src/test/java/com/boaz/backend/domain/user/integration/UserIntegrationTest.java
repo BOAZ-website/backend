@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.user.integration;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.recruitment.repository.RecruitmentRepository;
@@ -54,8 +55,13 @@ class UserIntegrationTest extends TestcontainersBase {
                 .memberType(MemberType.OUTSIDER).build());
     }
 
+    /** 최종 합격(PASS) 지원서 — 승격 성공 케이스의 기본 픽스처. */
     private Applicant saveSubmittedApplicant(User u, Recruitment r) {
-        return applicantRepository.save(Applicant.builder()
+        return saveSubmittedApplicant(u, r, EvaluationDecision.PASS);
+    }
+
+    private Applicant saveSubmittedApplicant(User u, Recruitment r, EvaluationDecision finalDecision) {
+        Applicant a = Applicant.builder()
                 .recruitment(r).user(u).status(Applicant.ApplicantStatus.SUBMITTED)
                 .track(Track.ENGINEERING).name("홍길동").email("hong@example.com")
                 .phone("01012345678").university("한국대").major("컴공")
@@ -63,7 +69,9 @@ class UserIntegrationTest extends TestcontainersBase {
                 .militaryStatus(MilitaryStatus.COMPLETED_OR_EXEMPT)
                 .birthDate(LocalDate.of(2000, 3, 15))
                 .graduationDate("2026-02").gradSchoolPlan(false)
-                .build());
+                .build();
+        a.updateFinalDecision(finalDecision);
+        return applicantRepository.save(a);
     }
 
     @Nested
@@ -125,6 +133,27 @@ class UserIntegrationTest extends TestcontainersBase {
             assertThat(promoted.getGradSchoolPlan()).isFalse();
             assertThat(promoted.getTrack()).isEqualTo(Track.ENGINEERING);
             assertThat(promoted.getTerm()).isEqualTo(27);
+        }
+
+        @Test
+        @DisplayName("finalDecision=FAIL 지원서 → APPLICANT_NOT_PASSED, DB 상 MEMBER 로 바뀌지 않음")
+        void failNotPromoted() {
+            User u = saveUser("닉네임");
+            Recruitment r = recruitmentRepository.save(Recruitment.create(27,
+                    LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1), "[]", null));
+            saveSubmittedApplicant(u, r, EvaluationDecision.FAIL);
+            em.flush();
+            em.clear();
+
+            PromoteUsersResponse res = userAdminService.bulkPromote(List.of(u.getId()));
+            em.flush();
+            em.clear();
+
+            assertThat(res.getFailedUserIds()).singleElement()
+                    .satisfies(f -> assertThat(f.getErrorCode()).isEqualTo("APPLICANT_NOT_PASSED"));
+            User notPromoted = userRepository.findById(u.getId()).orElseThrow();
+            assertThat(notPromoted.getMemberType()).isEqualTo(MemberType.OUTSIDER);
+            assertThat(notPromoted.getName()).isNull();
         }
 
         @Test

@@ -124,12 +124,13 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("(HOST, 그룹리더) — 스터디장·ADV팀장 두 열이 합쳐진 키. 본인 계정 조회·수정 둘뿐이고 빈 집합이 아니다")
+        @DisplayName("(HOST, 그룹리더) — 스터디장·ADV팀장 두 열이 합쳐진 키. 본인 계정 수정 하나뿐이고 빈 집합이 아니다")
         void groupLeader() {
             Set<Permission> actual = DefaultPermissions.of(Role.HOST, TeamName.그룹리더);
 
-            assertThat(actual).containsExactlyInAnyOrder(
-                    ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE);
+            assertThat(actual).containsExactly(ADMIN_ACCOUNT_SELF_WRITE);
+            // 매트릭스 "본인 계정 정보 조회 (R)" HOST = X
+            assertThat(actual).doesNotContain(ADMIN_ACCOUNT_SELF_READ);
         }
     }
 
