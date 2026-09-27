@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "[Admin] FAQ", description = "Admin 전용 FAQ API")
@@ -24,6 +25,7 @@ public class FaqAdminController {
     private final FaqService faqService;
 
     @Operation(summary = "FAQ 등록", description = "카테고리별 FAQ를 등록합니다. 동일 카테고리 내 순서 번호 중복 불가.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PostMapping
     public ResponseEntity<ApiResponse<FaqResponse>> createFaq(
             @RequestBody @Valid FaqCreateRequest request) {
@@ -32,6 +34,7 @@ public class FaqAdminController {
     }
 
     @Operation(summary = "FAQ 수정", description = "등록된 FAQ를 부분 수정합니다. (PATCH)")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PatchMapping("/{faqId}")
     public ResponseEntity<ApiResponse<FaqResponse>> updateFaq(
             @PathVariable Long faqId,
@@ -41,6 +44,7 @@ public class FaqAdminController {
     }
 
     @Operation(summary = "FAQ 삭제", description = "등록된 FAQ를 삭제합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @DeleteMapping("/{faqId}")
     public ResponseEntity<ApiResponse<Void>> deleteFaq(
             @PathVariable Long faqId) {

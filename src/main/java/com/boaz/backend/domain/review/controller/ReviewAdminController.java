@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "[Admin] Review", description = "Admin 전용 수료자 후기 API")
@@ -24,6 +25,7 @@ public class ReviewAdminController {
     private final ReviewService reviewService;
 
     @Operation(summary = "수료자 후기 등록", description = "수료자의 동아리 활동 후기를 등록합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PostMapping
     public ResponseEntity<ApiResponse<ReviewResponse>> createReview(
             @RequestBody @Valid ReviewCreateRequest request) {
@@ -32,6 +34,7 @@ public class ReviewAdminController {
     }
 
     @Operation(summary = "수료자 후기 수정", description = "등록된 수료자 후기를 부분 수정합니다. (PATCH)")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @PatchMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<ReviewResponse>> updateReview(
             @PathVariable Long reviewId,
@@ -41,6 +44,7 @@ public class ReviewAdminController {
     }
 
     @Operation(summary = "수료자 후기 삭제", description = "등록된 수료자 후기를 삭제합니다.")
+    @PreAuthorize("hasAuthority('CONTENT_WRITE')")
     @DeleteMapping("/{reviewId}")
     public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable Long reviewId) {
