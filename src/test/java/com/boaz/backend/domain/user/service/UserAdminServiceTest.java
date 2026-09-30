@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.user.service;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.entity.Recruitment;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.user.dto.response.PromoteUsersResponse;
@@ -76,10 +77,15 @@ class UserAdminServiceTest {
         return u;
     }
 
+    /** 최종 합격(PASS) 지원서 — 승격 성공 케이스의 기본 픽스처. */
     private Applicant submittedApplicant(int term) {
+        return submittedApplicant(term, EvaluationDecision.PASS);
+    }
+
+    private Applicant submittedApplicant(int term, EvaluationDecision finalDecision) {
         Recruitment r = Recruitment.create(term,
                 LocalDateTime.now().minusDays(1), LocalDateTime.now().plusDays(1), "[]", null);
-        return Applicant.builder()
+        Applicant a = Applicant.builder()
                 .recruitment(r)
                 .status(Applicant.ApplicantStatus.SUBMITTED)
                 .track(Track.ENGINEERING)
@@ -90,6 +96,8 @@ class UserAdminServiceTest {
                 .birthDate(LocalDate.of(2000, 3, 15))
                 .graduationDate("2026-02").gradSchoolPlan(false)
                 .build();
+        a.updateFinalDecision(finalDecision);
+        return a;
     }
 
     @Test
@@ -203,5 +211,74 @@ class UserAdminServiceTest {
                 .isInstanceOf(RuntimeException.class);
 
         verify(userRepository, never()).findById(2L);
+    }
+
+    // ── 승격 대상 검증 — 최종 합격(PASS)자만. 권한 매핑이 아니라 추가 비즈니스 무결성 검증이다 ──
+
+    @Test
+    @DisplayName("TC-008 finalDecision=PASS → 승격 성공, MEMBER 전환")
+    void passPromoted() {
+        User user = outsider(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(applicantRepository.findByUserIdAndStatus(1L, Applicant.ApplicantStatus.SUBMITTED))
+                .thenReturn(Optional.of(submittedApplicant(27, EvaluationDecision.PASS)));
+
+        PromoteUsersResponse res = userAdminService.bulkPromote(List.of(1L));
+
+        assertThat(res.getFailedUserIds()).isEmpty();
+        assertThat(user.getMemberType()).isEqualTo(MemberType.MEMBER);
+    }
+
+    @Test
+    @DisplayName("TC-009 finalDecision=FAIL → APPLICANT_NOT_PASSED, MEMBER 로 바뀌지 않음")
+    void failRejected() {
+        User user = outsider(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(applicantRepository.findByUserIdAndStatus(1L, Applicant.ApplicantStatus.SUBMITTED))
+                .thenReturn(Optional.of(submittedApplicant(27, EvaluationDecision.FAIL)));
+
+        PromoteUsersResponse res = userAdminService.bulkPromote(List.of(1L));
+
+        assertThat(res.getFailedUserIds()).singleElement().satisfies(f -> {
+            assertThat(f.getUserId()).isEqualTo(1L);
+            assertThat(f.getErrorCode()).isEqualTo("APPLICANT_NOT_PASSED");
+        });
+        assertThat(user.getMemberType()).isEqualTo(MemberType.OUTSIDER);
+        assertThat(user.getName()).isNull();   // 개인정보 복사도 일어나지 않음
+    }
+
+    @Test
+    @DisplayName("TC-010 finalDecision=PENDING → APPLICANT_NOT_PASSED, MEMBER 로 바뀌지 않음")
+    void pendingRejected() {
+        User user = outsider(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(applicantRepository.findByUserIdAndStatus(1L, Applicant.ApplicantStatus.SUBMITTED))
+                .thenReturn(Optional.of(submittedApplicant(27, EvaluationDecision.PENDING)));
+
+        PromoteUsersResponse res = userAdminService.bulkPromote(List.of(1L));
+
+        assertThat(res.getFailedUserIds()).singleElement()
+                .satisfies(f -> assertThat(f.getErrorCode()).isEqualTo("APPLICANT_NOT_PASSED"));
+        assertThat(user.getMemberType()).isEqualTo(MemberType.OUTSIDER);
+    }
+
+    @Test
+    @DisplayName("TC-011 PASS + FAIL 혼합 → 사용자 단위 처리: PASS 는 승격, FAIL 은 실패 목록 (전체 롤백 아님)")
+    void mixedPassAndFail() {
+        User passUser = outsider(1L);
+        User failUser = outsider(2L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(passUser));
+        when(userRepository.findById(2L)).thenReturn(Optional.of(failUser));
+        when(applicantRepository.findByUserIdAndStatus(1L, Applicant.ApplicantStatus.SUBMITTED))
+                .thenReturn(Optional.of(submittedApplicant(27, EvaluationDecision.PASS)));
+        when(applicantRepository.findByUserIdAndStatus(2L, Applicant.ApplicantStatus.SUBMITTED))
+                .thenReturn(Optional.of(submittedApplicant(27, EvaluationDecision.FAIL)));
+
+        PromoteUsersResponse res = userAdminService.bulkPromote(List.of(1L, 2L));
+
+        assertThat(res.getFailedUserIds()).extracting(PromoteUsersResponse.FailedUserInfo::getUserId)
+                .containsExactly(2L);
+        assertThat(passUser.getMemberType()).isEqualTo(MemberType.MEMBER);
+        assertThat(failUser.getMemberType()).isEqualTo(MemberType.OUTSIDER);
     }
 }

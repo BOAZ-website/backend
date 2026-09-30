@@ -144,7 +144,7 @@ class AdminPermissionGridTest {
             "(TEAM,서비스운영팀)        X     O    O    O    O    X    O",
             "(TEAM,운영지원팀)          X     X    O    O    O    X    O",
             "(TEAM,기획팀)폴백          X     X    O    O    O    X    O",
-            "(HOST,그룹리더)           X     X    O    O    O    X    O",
+            "(HOST,그룹리더)           X     X    O    X    O    X    O",
             "(SUPER,그룹리더)권한0      X     X    O    X    X    X    X",
     };
 

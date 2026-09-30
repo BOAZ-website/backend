@@ -1,6 +1,7 @@
 package com.boaz.backend.domain.user.service;
 
 import com.boaz.backend.domain.recruitment.entity.Applicant;
+import com.boaz.backend.domain.recruitment.entity.EvaluationDecision;
 import com.boaz.backend.domain.recruitment.repository.ApplicantRepository;
 import com.boaz.backend.domain.user.dto.response.PromoteUsersResponse;
 import com.boaz.backend.domain.user.entity.User;
@@ -56,6 +57,13 @@ public class UserAdminService {
         Applicant applicant = applicantRepository
                 .findByUserIdAndStatus(userId, Applicant.ApplicantStatus.SUBMITTED)
                 .orElseThrow(() -> new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
+
+        // 최종 합격(PASS)자만 승격 — 설계 문서가 정한 것은 권한 매핑(MEMBER_PROMOTION_WRITE)까지이고,
+        // 이 검사는 기능명("합격자 정회원 승격")과 데이터 무결성을 위해 추가한 비즈니스 검증이다.
+        // 인가(누가 승격할 수 있나)는 컨트롤러 @PreAuthorize, 대상 검증(이 지원자가 승격 대상인가)은 여기서 본다.
+        if (applicant.getFinalDecision() != EvaluationDecision.PASS) {
+            throw new CustomException(ErrorCode.APPLICANT_NOT_PASSED);
+        }
 
         // 승격: 지원서 개인정보 → User 복사 + memberType → MEMBER
         user.promote(

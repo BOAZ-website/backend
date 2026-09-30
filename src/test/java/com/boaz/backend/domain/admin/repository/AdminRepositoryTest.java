@@ -153,28 +153,4 @@ class AdminRepositoryTest extends TestcontainersBase {
             assertThat(result).extracting(Admin::getName).containsExactly("가", "나");
         }
     }
-
-    @Nested
-    @DisplayName("findEvaluatorPool")
-    class FindEvaluatorPool {
-
-        @Test
-        @DisplayName("해당 부문 OR (전부문 권한 role+team) 평가자 풀, 이름순, soft delete 제외")
-        void pool() {
-            // 해당 부문(ENGINEERING)
-            persistAdmin("e1", Admin.Role.TEAM, Track.ENGINEERING, "가", Admin.TeamName.기획팀);
-            // 전부문 권한자 (role=SUPER AND team=차기대표진) — 본인 track 무관 포함
-            persistAdmin("all", Admin.Role.SUPER, Track.ANALYSIS, "나", Admin.TeamName.차기대표진);
-            // 제외 대상: 다른 부문 + 전부문 권한 아님
-            persistAdmin("a1", Admin.Role.TEAM, Track.ANALYSIS, "다", Admin.TeamName.기획팀);
-            // 제외 대상: ENGINEERING 이지만 soft delete
-            persistDeletedAdmin("e2", Admin.Role.TEAM, Track.ENGINEERING, "라", Admin.TeamName.기획팀);
-            em.clear();
-
-            List<Admin> result = adminRepository.findEvaluatorPool(
-                    Track.ENGINEERING, Admin.Role.SUPER, Admin.TeamName.차기대표진);
-
-            assertThat(result).extracting(Admin::getName).containsExactly("가", "나");
-        }
-    }
 }

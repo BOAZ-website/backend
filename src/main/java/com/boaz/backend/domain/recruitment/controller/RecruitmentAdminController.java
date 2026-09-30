@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,15 +34,21 @@ import java.util.List;
 @RequestMapping("/api/v1/admin/recruitment")
 public class RecruitmentAdminController {
 
+    // 기능 접근은 여기(@PreAuthorize)서 본다. 대상 범위가 갈리는 기능이 없어 3층(ScopeGuard)은 없다.
+    // permission 이름에 ROLE_ 접두사가 없어 hasRole 이 아니라 hasAuthority 다.
+    // 문자열 오타는 컴파일 타임에 안 잡힌다. RecruitmentAdminPermissionGridTest 가 사실상 컴파일러 역할을 한다.
+
     private final RecruitmentService recruitmentService;
 
-    @Operation(summary = "모든 모집 공고 조회", description = "is_active 무관 전체 공고를 term 내림차순으로 반환합니다.")
+    @Operation(summary = "모든 모집 공고 조회", description = "RECRUITMENT_NOTICE_READ 보유자만 호출 가능. is_active 무관 전체 공고를 term 내림차순으로 반환합니다.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_READ')")
     @GetMapping
     public ResponseEntity<ApiResponse<List<RecruitmentResponse>>> getAllRecruitments() {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAllRecruitments()));
     }
 
-    @Operation(summary = "모집 공고 등록", description = "새로운 모집 공고를 등록합니다. 동일 기수 중복 등록 불가.")
+    @Operation(summary = "모집 공고 등록", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 새로운 모집 공고를 등록합니다. 동일 기수 중복 등록 불가.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @PostMapping
     public ResponseEntity<ApiResponse<RecruitmentIdResponse>> createRecruitment(
             @RequestBody @Valid RecruitmentCreateRequest request) {
@@ -49,7 +56,8 @@ public class RecruitmentAdminController {
                 .body(ApiResponse.created(recruitmentService.createRecruitment(request)));
     }
 
-    @Operation(summary = "모집 공고 수정", description = "특정 모집 공고를 부분 수정합니다. schedule 수정 시 배열 전체 교체.")
+    @Operation(summary = "모집 공고 수정", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 특정 모집 공고를 부분 수정합니다. schedule 수정 시 배열 전체 교체.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<RecruitmentIdResponse>> updateRecruitment(
             @PathVariable Long id,
@@ -57,7 +65,8 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.updateRecruitment(id, request)));
     }
 
-    @Operation(summary = "모집 공고 삭제", description = "특정 모집 공고를 삭제합니다. 연관 데이터(지원자, 질문) 존재 시 삭제 불가.")
+    @Operation(summary = "모집 공고 삭제", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 특정 모집 공고를 삭제합니다. 연관 데이터(지원자, 질문) 존재 시 삭제 불가.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteRecruitment(
             @PathVariable Long id) {
@@ -66,7 +75,8 @@ public class RecruitmentAdminController {
     }
 
     @Operation(summary = "지원서 CSV 파일 생성",
-            description = "term 공고의 지원서를 부문별 CSV로 생성합니다. decision으로 합격(PASS)/불합격(FAIL)/전체(ALL) 추출 범위를 지정합니다.")
+            description = "APPLICANT_CSV_READ 보유자만 호출 가능. term 공고의 지원서를 부문별 CSV로 생성합니다. decision으로 합격(PASS)/불합격(FAIL)/전체(ALL) 추출 범위를 지정합니다.")
+    @PreAuthorize("hasAuthority('APPLICANT_CSV_READ')")
     @PostMapping("/applications/download")
     public ResponseEntity<ApiResponse<Void>> downloadApplications(
             @RequestParam Integer term,
@@ -75,7 +85,8 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "지원서 전체 삭제", description = "특정 모집 공고의 지원서를 전체 삭제합니다. 모집 진행 중인 경우 삭제 불가.")
+    @Operation(summary = "지원서 전체 삭제", description = "APPLICATION_DELETE_ALL 보유자만 호출 가능. 특정 모집 공고의 지원서를 전체 삭제합니다. 모집 진행 중인 경우 삭제 불가.")
+    @PreAuthorize("hasAuthority('APPLICATION_DELETE_ALL')")
     @DeleteMapping("/{recruitmentId}/applicants")
     public ResponseEntity<ApiResponse<Void>> deleteApplicants(
             @PathVariable Long recruitmentId) {
@@ -83,14 +94,16 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "지원서 질문 목록 조회", description = "특정 모집 공고의 질문 목록을 조회합니다. 모집 중 여부와 무관하게 조회 가능.")
+    @Operation(summary = "지원서 질문 목록 조회", description = "RECRUITMENT_NOTICE_READ 보유자만 호출 가능. 특정 모집 공고의 질문 목록을 조회합니다. 모집 중 여부와 무관하게 조회 가능.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_READ')")
     @GetMapping("/{recruitmentId}/questions")
     public ResponseEntity<ApiResponse<List<QuestionResponse>>> getAdminQuestions(
             @PathVariable Long recruitmentId) {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAdminQuestions(recruitmentId)));
     }
 
-    @Operation(summary = "지원서 질문 등록", description = "모집 공고에 지원서 질문을 다건 등록합니다. 하나라도 실패 시 전체 롤백.")
+    @Operation(summary = "지원서 질문 등록", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 모집 공고에 지원서 질문을 다건 등록합니다. 하나라도 실패 시 전체 롤백.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @PostMapping("/questions")
     public ResponseEntity<ApiResponse<QuestionIdsResponse>> createQuestions(
             @RequestBody @Valid QuestionsCreateRequest request) {
@@ -98,7 +111,8 @@ public class RecruitmentAdminController {
                 .body(ApiResponse.created(recruitmentService.createQuestions(request)));
     }
 
-    @Operation(summary = "지원서 질문 수정", description = "등록된 지원서 질문을 부분 수정합니다. type 변경 시 연관 필드 함께 처리.")
+    @Operation(summary = "지원서 질문 수정", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 등록된 지원서 질문을 부분 수정합니다. type 변경 시 연관 필드 함께 처리.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @PatchMapping("/questions/{questionId}")
     public ResponseEntity<ApiResponse<QuestionIdResponse>> updateQuestion(
             @PathVariable Long questionId,
@@ -106,7 +120,8 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.updateQuestion(questionId, request)));
     }
 
-    @Operation(summary = "지원서 질문 삭제", description = "등록된 지원서 질문을 삭제합니다. 참조 답변 데이터 존재 시 삭제 불가.")
+    @Operation(summary = "지원서 질문 삭제", description = "RECRUITMENT_NOTICE_WRITE 보유자만 호출 가능. 등록된 지원서 질문을 삭제합니다. 참조 답변 데이터 존재 시 삭제 불가.")
+    @PreAuthorize("hasAuthority('RECRUITMENT_NOTICE_WRITE')")
     @DeleteMapping("/questions/{questionId}")
     public ResponseEntity<ApiResponse<Void>> deleteQuestion(
             @PathVariable Long questionId) {
@@ -114,13 +129,15 @@ public class RecruitmentAdminController {
         return ResponseEntity.ok(ApiResponse.ok(null));
     }
 
-    @Operation(summary = "모집 사전 알림 신청 목록 조회", description = "모든 사전 알림 신청 목록을 최신순으로 반환합니다.")
+    @Operation(summary = "모집 사전 알림 신청 목록 조회", description = "PRE_NOTIFICATION_READ 보유자만 호출 가능. 모든 사전 알림 신청 목록을 최신순으로 반환합니다.")
+    @PreAuthorize("hasAuthority('PRE_NOTIFICATION_READ')")
     @GetMapping("/subscriptions")
     public ResponseEntity<ApiResponse<List<SubscriptionResponse>>> getAllSubscriptions() {
         return ResponseEntity.ok(ApiResponse.ok(recruitmentService.getAllSubscriptions()));
     }
 
-    @Operation(summary = "모집 사전 알림 신청 전체 삭제", description = "모든 사전 알림 신청 데이터를 삭제합니다. 데이터가 없어도 200을 반환합니다.")
+    @Operation(summary = "모집 사전 알림 신청 전체 삭제", description = "PRE_NOTIFICATION_DELETE 보유자만 호출 가능. 모든 사전 알림 신청 데이터를 삭제합니다. 데이터가 없어도 200을 반환합니다.")
+    @PreAuthorize("hasAuthority('PRE_NOTIFICATION_DELETE')")
     @DeleteMapping("/subscriptions")
     public ResponseEntity<ApiResponse<Void>> deleteAllSubscriptions() {
         recruitmentService.deleteAllSubscriptions();
