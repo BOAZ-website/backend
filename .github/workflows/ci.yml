@@ -46,4 +46,12 @@ jobs:
           name: app-jar
           path: build/libs/backend-0.0.1-SNAPSHOT.jar
           retention-days: 1
- 
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      id-token: write
+      contents: read
+    uses: ./.github/workflows/cd.yml
