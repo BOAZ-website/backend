@@ -60,7 +60,7 @@ infra/scripts/
 
 ### Step 2의 잠재적 다운타임
 
-CodeDeploy `OneAtATime`이 EC2-A를 재배포하는 동안 ~30초 5xx 발생 가능. 시즌-up은 **트래픽 적은 시간대(예: 새벽)**에 실행 권장.
+Step 2 시점에는 ALB가 아직 없어 CloudFront가 EC2-A에 직접 연결되어 있다. 그래서 CodeDeploy `OneAtATime`이 EC2-A를 재배포하는 동안 API 전체가 응답하지 않는다. 최근 운영 배포 3건(2026-07~09) 기준으로 앱 중지(BeforeInstall)부터 상태 확인 통과(ValidateService)까지 47~53초였으므로, 최대 약 1분 동안 5xx가 날 수 있다. 시즌-up은 **트래픽 적은 시간대(예: 새벽)**에 실행 권장.
 
 ---
 
@@ -213,6 +213,45 @@ curl https://api.bigdataboaz.com/actuator/health
 
 ---
 
+## 시즌 중 배포 동결
+
+모집 시즌에는 운영 백엔드 배포를 멈춘다. 지원서 제출이 몰리는 기간에 배포 때문에 장애가 생기지 않게 하기 위해서다.
+
+### 동결 기간
+
+시즌마다 시작일을 정하고, 시즌 종료(season-down) 완료 후 3일이 지나면 끝난다. season-down 뒤 3일은 단일 인스턴스로 돌아온 구성을 지켜보는 기간이다.
+
+| 시즌 | 시작 | 끝 |
+| --- | --- | --- |
+| 2026-12 모집 | 2026-12-07(예정) | season-down 완료 후 3일 |
+
+2026-12 모집 일정이 확정되지 않아 시작일은 예정값이다. 일정이 확정되면 이 표를 고친다.
+
+`season-up.sh`는 2단계에서 운영 배포를 하므로 동결 시작 전(리크루팅 월 첫째 주)에 실행하고, 실행하는 동안은 `main` 머지를 멈춘다. EC2-B에 CodeDeploy 대상 태그(`app=boaz-api`)를 붙인 직후 CI 배포가 끼어들면, EC2-B가 CodeDeploy 에이전트 준비 전에 배포 대상에 들어가 실패가 가려질 수 있다.
+
+### 동결 중 하지 않는 것
+
+- `main` 머지와 운영 배포. `dev` 머지는 해도 된다. `dev`에서는 배포 job이 실행되지 않는다
+- 운영 DB 스키마 변경. 운영은 `ddl-auto: validate`라 새 테이블·컬럼을 배포 전에 직접 적용해야 하는데, 이 작업도 동결 뒤로 미룬다
+
+### 예외 배포
+
+운영 장애, 보안 문제, 모집 진행을 막는 버그만 예외로 배포한다.
+
+1. 이슈를 만들고 사유와 영향 범위를 적는다. 인프라 담당에게 배포 예정 시각을 알린다
+2. `origin/main`에서 `hotfix/#이슈번호-설명` 브랜치를 만들어 수정한다. `dev`에 쌓여 있는 다음 릴리즈 변경이 같이 나가지 않게 하기 위해서다
+3. 같은 브랜치로 `main` 대상 PR과 `dev` 대상 PR을 만들고 둘 다 머지한다. `dev` 대상 PR에서 브랜치 업데이트(Update branch) 버튼이나 웹 충돌 해결을 쓰지 않는다. `dev` 변경이 hotfix 브랜치에 섞여 `main`으로 나간다
+4. `main` 머지 후 운영 배포 job이 `production` environment 승인을 기다린다. 필수 리뷰어(백엔드 리드, 인프라 담당) 중 배포를 실행한 사람(`main` PR을 머지한 사람)은 승인할 수 없으므로, 다른 리뷰어가 바로 승인할 수 있는지 머지 전에 확인한다
+5. 지원이 적은 새벽 시간대에 배포한다
+6. 배포 후 `curl https://api.bigdataboaz.com/actuator/health`로 확인한다. 서버가 2대일 때는 마지막으로 배포된 서버가 실패해도 배포 전체는 성공으로 표시되므로, CodeDeploy 배포 상세에서 EC2-A·EC2-B 각각의 결과도 확인한다. CodeDeploy는 배포 순서를 보장하지 않으므로 마지막 서버가 EC2-A일 수도 있다. 결과는 1번 이슈에 기록한다
+7. 실패한 서버가 있으면 Target Group의 healthy 대수를 확인한다. 실패한 서버는 BeforeInstall 단계에서 멈춘 채 남고 ALB가 대상에서 걸러 내므로 1대로 운영된다. Actions → CI → Run workflow(브랜치 `main`)로 같은 커밋을 다시 배포하고, 또 실패하면 되돌림 PR을 머지한다
+
+### 동결 해제 후
+
+`dev`에 쌓인 변경을 평소대로 `dev` → `main` PR로 릴리즈한다. 동결 중 미룬 운영 DB 스키마 변경은 이 릴리즈 전에 적용한다.
+
+---
+
 ## 실행 환경 주의사항
 
 ### Windows Git Bash
@@ -237,7 +276,7 @@ AWS_PROFILE=other ./season-up.sh
 
 1. ALB 생성됐으면 콘솔에서 삭제
 2. EC2-B를 Target Group에서 deregister
-3. EC2-B stop
+3. EC2-B의 CodeDeploy 대상 태그(`app=boaz-api`)를 제거하고 stop. 태그가 남은 채로 멈춰 있으면 다음 배포가 실패하거나 실패가 가려진다
 4. CloudFront origin이 EC2-A인지 확인, 아니면 콘솔에서 수동 복귀(domain + port 8080)
 5. RDS Multi-AZ 토글된 상태면 콘솔에서 되돌리기
 
