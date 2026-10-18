@@ -61,7 +61,7 @@ jobs:
             --application-name boaz-backend \
             --deployment-group-name codedeploy-prod \
             --s3-location bucket=boaz-codedeploy-bucket,key=deploy-bundle-${{ github.sha }}.zip,bundleType=zip \
-            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --deployment-config-name CodeDeployDefault.OneAtATime \
             --description "Deploy ${{ github.sha }}" \
             --query 'deploymentId' \
             --output text)

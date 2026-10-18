@@ -241,7 +241,7 @@ curl https://api.bigdataboaz.com/actuator/health
 3. 같은 브랜치로 `main` 대상 PR과 `dev` 대상 PR을 만들고 둘 다 머지한다. `dev` 대상 PR에서 브랜치 업데이트(Update branch) 버튼이나 웹 충돌 해결을 쓰지 않는다. `dev` 변경이 hotfix 브랜치에 섞여 `main`으로 나간다
 4. `main` 머지 후 운영 배포 job이 `production` environment 승인을 기다린다. 필수 리뷰어(백엔드 리드, 인프라 담당) 중 배포를 실행한 사람(`main` PR을 머지한 사람)은 승인할 수 없으므로, 다른 리뷰어가 바로 승인할 수 있는지 머지 전에 확인한다
 5. 지원이 적은 새벽 시간대에 배포한다
-6. 배포 후 `curl https://api.bigdataboaz.com/actuator/health`로 확인하고, 결과를 1번 이슈에 기록한다
+6. 배포 후 `curl https://api.bigdataboaz.com/actuator/health`로 확인한다. 서버가 2대일 때는 마지막 서버 배포가 실패해도 배포 전체는 성공으로 표시되므로, CodeDeploy 배포 상세에서 EC2-A·EC2-B 각각의 결과도 확인한다. 결과는 1번 이슈에 기록한다
 
 ### 동결 해제 후
 
