@@ -79,13 +79,13 @@ jobs:
           TARGET_IDS=$(aws deploy list-deployment-targets \
             --deployment-id $DEPLOYMENT_ID \
             --query 'targetIds' --output text)
-          aws deploy batch-get-deployment-targets \
+          TOTAL=$(echo $TARGET_IDS | wc -w)
+          RESULT=$(aws deploy batch-get-deployment-targets \
             --deployment-id $DEPLOYMENT_ID --target-ids $TARGET_IDS \
-            --query 'deploymentTargets[].instanceTarget.[targetId,status]' --output text
-          FAILED=$(aws deploy batch-get-deployment-targets \
-            --deployment-id $DEPLOYMENT_ID --target-ids $TARGET_IDS \
-            --query "length(deploymentTargets[?instanceTarget.status!='Succeeded'])" --output text)
-          if [ "$FAILED" != "0" ]; then
-            echo "::error::배포 대상 중 $FAILED 대 실패: $DEPLOYMENT_ID"
+            --query 'deploymentTargets[].instanceTarget.[targetId,status]' --output text)
+          echo "$RESULT"
+          OK=$(echo "$RESULT" | awk '$2 == "Succeeded"' | wc -l)
+          if [ "$OK" != "$TOTAL" ]; then
+            echo "::error::배포 대상 $TOTAL 대 중 $OK 대만 성공: $DEPLOYMENT_ID"
             exit 1
           fi
