@@ -243,7 +243,7 @@ curl https://api.bigdataboaz.com/actuator/health
 3. 같은 브랜치로 `main` 대상 PR과 `dev` 대상 PR을 만들고 둘 다 머지한다. `dev` 대상 PR에서 브랜치 업데이트(Update branch) 버튼이나 웹 충돌 해결을 쓰지 않는다. `dev` 변경이 hotfix 브랜치에 섞여 `main`으로 나간다
 4. `main` 머지 후 운영 배포 job이 `production` environment 승인을 기다린다. 필수 리뷰어(백엔드 리드, 인프라 담당) 중 배포를 실행한 사람(`main` PR을 머지한 사람)은 승인할 수 없으므로, 다른 리뷰어가 바로 승인할 수 있는지 머지 전에 확인한다
 5. 지원이 적은 새벽 시간대에 배포한다
-6. 배포 후 `curl https://api.bigdataboaz.com/actuator/health`로 확인한다. 서버가 2대일 때는 마지막으로 배포된 서버가 실패해도 배포 전체는 성공으로 표시되므로, CodeDeploy 배포 상세에서 EC2-A·EC2-B 각각의 결과도 확인한다. CodeDeploy는 배포 순서를 보장하지 않으므로 마지막 서버가 EC2-A일 수도 있다. 결과는 1번 이슈에 기록한다
+6. 배포 후 `curl https://api.bigdataboaz.com/actuator/health`로 확인한다. 서버가 2대일 때는 마지막으로 배포된 서버가 실패해도 배포 전체는 성공으로 표시되므로, 배포 job의 "서버별 배포 결과 확인" 단계가 서버별 상태를 조회해 하나라도 실패하면 job을 실패로 처리한다. 이 단계가 실패하면 로그에서 실패한 서버를 확인한다. CodeDeploy는 배포 순서를 보장하지 않으므로 마지막 서버가 EC2-A일 수도 있다. 결과는 1번 이슈에 기록한다
 7. 실패한 서버가 있으면 Target Group의 healthy 대수를 확인한다. 실패한 서버는 BeforeInstall 단계에서 멈춘 채 남고 ALB가 대상에서 걸러 내므로 1대로 운영된다. Actions → CI → Run workflow(브랜치 `main`)로 같은 커밋을 다시 배포하고, 또 실패하면 되돌림 PR을 머지한다
 
 ### 동결 해제 후

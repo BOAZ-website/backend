@@ -73,3 +73,19 @@ jobs:
           aws deploy wait deployment-successful \
             --deployment-id $DEPLOYMENT_ID
           echo "✅ 배포 성공: $DEPLOYMENT_ID"
+
+      - name: 서버별 배포 결과 확인
+        run: |
+          TARGET_IDS=$(aws deploy list-deployment-targets \
+            --deployment-id $DEPLOYMENT_ID \
+            --query 'targetIds' --output text)
+          TOTAL=$(echo $TARGET_IDS | wc -w)
+          RESULT=$(aws deploy batch-get-deployment-targets \
+            --deployment-id $DEPLOYMENT_ID --target-ids $TARGET_IDS \
+            --query 'deploymentTargets[].instanceTarget.[targetId,status]' --output text)
+          echo "$RESULT"
+          OK=$(echo "$RESULT" | awk '$2 == "Succeeded"' | wc -l)
+          if [ "$OK" != "$TOTAL" ]; then
+            echo "::error::배포 대상 $TOTAL 대 중 $OK 대만 성공: $DEPLOYMENT_ID"
+            exit 1
+          fi
