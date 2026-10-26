@@ -20,6 +20,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DisplayName("REC-ADMIN-01 지원서 CSV 파일 생성 서비스 단위 테스트")
 class CsvServiceTest {
 
     private CsvService csvService;

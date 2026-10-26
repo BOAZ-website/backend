@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
 @Import(TestSecurityConfig.class)
+@DisplayName("USER-ADMIN-01 합격자 승격 컨트롤러 테스트")
 class UserAdminControllerTest {
 
     @Autowired MockMvc mockMvc;

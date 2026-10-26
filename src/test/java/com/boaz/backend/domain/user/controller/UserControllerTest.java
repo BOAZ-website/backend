@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
 @Import(TestSecurityConfig.class)
+@DisplayName("USER-01 내 정보 조회 컨트롤러 테스트")
 class UserControllerTest {
 
     @Autowired MockMvc mockMvc;

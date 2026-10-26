@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("USER-01 내 정보 조회 서비스 단위 테스트")
 class UserServiceTest {
 
     @InjectMocks
