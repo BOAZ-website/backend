@@ -1,0 +1,119 @@
+name: Docs Sync Reminder
+
+# dev 로 가는 PR 이 API·스키마 관련 파일을 바꾸면 "backend-docs 반영 필요" 안내 코멘트를 남깁니다.
+# 기능 명세서·ERD 는 비공개 저장소(BOAZ-website/backend-docs)에 있어서, 코드만 바뀌고 문서가 빠지는 일을 막기 위함입니다.
+# 차단하지 않으며(소프트 알림), 코드를 체크아웃하지 않고 GitHub API 로 바뀐 파일 목록만 읽습니다.
+# 코멘트는 PR 당 하나만 유지합니다. 새 커밋으로 대상 파일이 바뀌면 기존 코멘트를 고치고, 대상 파일이 없어지면 지웁니다.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+    branches: [dev]
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment when API or schema files change
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const MARKER = '<!-- docs-sync-reminder -->';
+            const issue_number = context.payload.pull_request.number;
+            const ROOT = 'src/main/java/com/boaz/backend/';
+
+            // 도메인 폴더 아래 controller·dto·entity, 그리고 공통 에러 코드·권한 정의
+            const DOMAIN_RE = new RegExp(`^${ROOT}domain/([^/]+)/(controller|dto|entity)/`);
+            const GLOBAL_FILES = {
+              [`${ROOT}global/exception/ErrorCode.java`]: 'ErrorCode',
+              [`${ROOT}global/security/authz/Permission.java`]: '권한',
+              [`${ROOT}global/security/authz/DefaultPermissions.java`]: '권한',
+            };
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: issue_number,
+              per_page: 100,
+            });
+
+            const matched = [];             // 대상 파일 경로
+            const kindsByDomain = new Map(); // 도메인 → 바뀐 종류(controller, dto, ...)
+            const addKind = (domain, kind) => {
+              if (!kindsByDomain.has(domain)) kindsByDomain.set(domain, new Set());
+              kindsByDomain.get(domain).add(kind);
+            };
+            for (const f of files) {
+              const m = f.filename.match(DOMAIN_RE);
+              if (m) {
+                matched.push(f.filename);
+                addKind(m[1], m[2]);
+              } else if (GLOBAL_FILES[f.filename]) {
+                matched.push(f.filename);
+                addKind('global', GLOBAL_FILES[f.filename]);
+              }
+            }
+
+            const comments = await github.paginate(github.rest.issues.listComments, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              per_page: 100,
+            });
+            const prev = comments.find(
+              (c) => c.user.type === 'Bot' && c.body.includes(MARKER)
+            );
+
+            if (matched.length === 0) {
+              // 이후 커밋으로 대상 파일 변경이 없어졌으면 이전 코멘트 제거
+              if (prev) {
+                await github.rest.issues.deleteComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: prev.id,
+                });
+              }
+              return;
+            }
+
+            const summary = [...kindsByDomain.entries()]
+              .map(([domain, kinds]) => `${domain}: ${[...kinds].join(', ')}`)
+              .join(' / ');
+            const body = [
+              MARKER,
+              `🤖 **API·스키마 관련 파일이 바뀌었어요.** (${summary})`,
+              '',
+              '머지 후 backend-docs에 반영이 필요한지 확인해 주세요.',
+              `반영할 때는 backend-docs에서 \`/sync-spec ${issue_number}\`를 쓰면 돼요.`,
+              '',
+              '<details><summary>바뀐 파일</summary>',
+              '',
+              ...matched.map((p) => `- \`${p.replace(ROOT, '')}\``),
+              '',
+              '</details>',
+              '',
+              '_알림용이며 머지를 막지 않습니다. API·스키마가 바뀌지 않았다면 무시하세요._',
+            ].join('\n');
+
+            if (prev) {
+              if (prev.body === body) return;
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: prev.id,
+                body,
+              });
+              return;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number,
+              body,
+            });
