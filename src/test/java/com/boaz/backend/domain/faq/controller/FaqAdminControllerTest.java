@@ -65,7 +65,7 @@ class FaqAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // FAQ-002: POST /api/v1/admin/faqs
+    // FAQ-ADMIN-01: POST /api/v1/admin/faqs
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("FAQ-ADMIN-01 POST /api/v1/admin/faqs")
@@ -127,7 +127,7 @@ class FaqAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // FAQ-003: PATCH /api/v1/admin/faqs/{faqId}
+    // FAQ-ADMIN-02: PATCH /api/v1/admin/faqs/{faqId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("FAQ-ADMIN-02 PATCH /api/v1/admin/faqs/{faqId}")
@@ -193,7 +193,7 @@ class FaqAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // FAQ-004: DELETE /api/v1/admin/faqs/{faqId}
+    // FAQ-ADMIN-03: DELETE /api/v1/admin/faqs/{faqId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("FAQ-ADMIN-03 DELETE /api/v1/admin/faqs/{faqId}")

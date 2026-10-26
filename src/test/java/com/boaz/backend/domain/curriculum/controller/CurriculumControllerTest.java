@@ -48,7 +48,7 @@ class CurriculumControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-001: GET /api/v1/curriculums
+    // CUR-01: GET /api/v1/curriculums
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("CUR-01 GET /api/v1/curriculums")

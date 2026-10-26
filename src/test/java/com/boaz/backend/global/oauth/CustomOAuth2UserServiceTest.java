@@ -74,7 +74,7 @@ class CustomOAuth2UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-004 provider=kakao
+    // provider=kakao
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-001 provider=kakao → KakaoOAuth2UserInfo 파싱값으로 findOrCreate() 호출, OAuth2UserAdapter 반환")
@@ -92,7 +92,7 @@ class CustomOAuth2UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-005 provider=google
+    // provider=google
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-002 provider=google → GoogleOAuth2UserInfo 파싱값으로 findOrCreate() 호출")
@@ -108,7 +108,7 @@ class CustomOAuth2UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-006 provider=naver
+    // provider=naver
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-003 provider=naver → NaverOAuth2UserInfo 파싱값으로 findOrCreate() 호출")
@@ -124,7 +124,7 @@ class CustomOAuth2UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-007 지원하지 않는 provider
+    // 지원하지 않는 provider
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-004 지원하지 않는 provider → OAuth2AuthenticationException, findOrCreate 미호출")
@@ -141,7 +141,7 @@ class CustomOAuth2UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-008 providerId=null
+    // providerId=null
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-005 providerId=null → OAuth2AuthenticationException, findOrCreate 미호출")

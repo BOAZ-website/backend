@@ -48,7 +48,7 @@ class ArchiveRepositoryTest extends TestcontainersBase {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-001 searchArchives - PROJECT 통합 테스트
+    // ARC-01 searchArchives - PROJECT 통합 테스트
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-01 searchArchives(PROJECT) 통합 테스트")
@@ -212,7 +212,7 @@ class ArchiveRepositoryTest extends TestcontainersBase {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-002 searchArchives - ACTIVITY 통합 테스트
+    // ARC-02 searchArchives - ACTIVITY 통합 테스트
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-02 searchArchives(ACTIVITY) 통합 테스트")
@@ -376,7 +376,7 @@ class ArchiveRepositoryTest extends TestcontainersBase {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-003 searchArchives - BLOG 통합 테스트
+    // ARC-03 searchArchives - BLOG 통합 테스트
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-03 searchArchives(BLOG) 통합 테스트")
@@ -540,7 +540,7 @@ class ArchiveRepositoryTest extends TestcontainersBase {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-004 findDistinctTermsOrdered 통합 테스트
+    // ARC-04 findDistinctTermsOrdered 통합 테스트
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-04 findDistinctTermsOrdered 통합 테스트")

@@ -48,7 +48,7 @@ class AdminAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-001 POST /api/v1/auth/admin/login
+    // AUTH-01 POST /api/v1/auth/admin/login
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-01 POST /api/v1/auth/admin/login")
@@ -108,7 +108,7 @@ class AdminAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-002 POST /api/v1/auth/admin/refresh
+    // AUTH-02 POST /api/v1/auth/admin/refresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-02 POST /api/v1/auth/admin/refresh")
@@ -152,7 +152,7 @@ class AdminAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-003 POST /api/v1/auth/admin/logout
+    // AUTH-03 POST /api/v1/auth/admin/logout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-03 POST /api/v1/auth/admin/logout")

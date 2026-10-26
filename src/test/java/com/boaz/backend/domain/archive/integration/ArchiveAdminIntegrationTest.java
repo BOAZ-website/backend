@@ -36,7 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * ARC-005 ~ ARC-013 아카이빙 등록/수정/삭제 통합 테스트 (Testcontainers MySQL).
+ * ARC-ADMIN 아카이빙 등록/수정/삭제 통합 테스트 (Testcontainers MySQL).
  * S3Service 는 mock 처리하며, 커밋 후 콜백(afterCommit)을 검증하기 위해 각 시나리오를
  * TransactionTemplate 로 실제 커밋한다.
  */
@@ -95,7 +95,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-005 프로젝트 등록
+    // ARC-ADMIN-02 프로젝트 등록
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-02 프로젝트 등록 통합")
@@ -133,7 +133,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-006 활동사진 등록
+    // ARC-ADMIN-06 활동사진 등록
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-06 활동사진 등록 통합")
@@ -153,7 +153,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-007 기술블로그 등록 (ARC-005 TC-I-001/002 를 category=BLOG 로 동일 적용)
+    // ARC-ADMIN-10 기술블로그 등록 (ARC-ADMIN-02 프로젝트 등록 통합 테스트를 category=BLOG 로 동일 적용)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-10 기술블로그 등록 통합")
@@ -187,7 +187,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-008 프로젝트 수정
+    // ARC-ADMIN-03 프로젝트 수정
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-03 프로젝트 수정 통합")
@@ -241,7 +241,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-011 프로젝트 삭제
+    // ARC-ADMIN-04 프로젝트 삭제
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-04 프로젝트 삭제 통합")
@@ -300,7 +300,7 @@ class ArchiveAdminIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-012 / ARC-013 활동사진·기술블로그 삭제
+    // ARC-ADMIN-08 / ARC-ADMIN-12 활동사진·기술블로그 삭제
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-08 / ARC-ADMIN-12 삭제 통합")

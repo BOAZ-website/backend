@@ -74,7 +74,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-019 최초 로그인 - RefreshToken 신규 저장
+    // 최초 로그인 - RefreshToken 신규 저장
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-001 최초 로그인 → RefreshToken 신규 저장 + AccessToken 발급 + 쿠키 세팅")
@@ -100,7 +100,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-020 재로그인 - RefreshToken 업데이트
+    // 재로그인 - RefreshToken 업데이트
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-002 재로그인 → 기존 RefreshToken 업데이트 (save 없이 더티체킹)")
@@ -126,7 +126,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-021 허용된 redirect URI 쿠키 있는 경우
+    // 허용된 redirect URI 쿠키 있는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-003 허용된 redirect URI 쿠키 → 해당 URI로 리다이렉트")
@@ -148,7 +148,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-022 redirect URI 쿠키 없는 경우
+    // redirect URI 쿠키 없는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-004 redirect URI 쿠키 없음 → defaultRedirectUri로 리다이렉트")
@@ -169,7 +169,7 @@ class OAuth2AuthenticationSuccessHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-023 비허용 redirect URI
+    // 비허용 redirect URI
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-005 허용되지 않은 redirect URI → defaultRedirectUri로 리다이렉트")

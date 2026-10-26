@@ -59,7 +59,7 @@ class JwtAuthenticationFilterTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-001 Authorization 헤더 없는 경우
+    // Authorization 헤더 없는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-001 Authorization 헤더 없음 → 필터 통과, SecurityContext 비어있음")
@@ -76,7 +76,7 @@ class JwtAuthenticationFilterTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-002 Bearer 형식이 아닌 경우
+    // Bearer 형식이 아닌 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-002 Bearer 형식 아닌 Authorization 헤더 → 필터 통과, SecurityContext 비어있음")
@@ -93,7 +93,7 @@ class JwtAuthenticationFilterTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-003 유효한 USER Access Token
+    // 유효한 USER Access Token
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-003 유효한 USER Access Token → UserPrincipal + ROLE_USER 세팅 후 통과")
@@ -116,7 +116,7 @@ class JwtAuthenticationFilterTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-004 유효한 ADMIN Access Token
+    // 유효한 ADMIN Access Token
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-004 유효한 ADMIN Access Token → AdminUserDetails 세팅 후 통과")

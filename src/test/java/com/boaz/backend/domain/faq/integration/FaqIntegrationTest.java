@@ -65,7 +65,7 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-001: FAQ 목록 조회
+    // FAQ-01: FAQ 목록 조회
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("FAQ-01 FAQ 목록 조회 end-to-end")
@@ -96,7 +96,7 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-002: FAQ 등록
+    // FAQ-ADMIN-01: FAQ 등록
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("FAQ-ADMIN-01 FAQ 등록 end-to-end")
@@ -186,7 +186,7 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-003: FAQ 수정
+    // FAQ-ADMIN-02: FAQ 수정
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("FAQ-ADMIN-02 FAQ 수정 end-to-end")
@@ -239,7 +239,7 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-004: FAQ 삭제
+    // FAQ-ADMIN-03: FAQ 삭제
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("FAQ-ADMIN-03 FAQ 삭제 end-to-end")

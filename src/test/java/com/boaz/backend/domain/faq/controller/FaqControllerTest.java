@@ -43,7 +43,7 @@ class FaqControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // FAQ-001: GET /api/v1/archiving/faqs
+    // FAQ-01: GET /api/v1/archiving/faqs
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("FAQ-01 GET /api/v1/archiving/faqs")

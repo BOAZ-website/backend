@@ -77,7 +77,7 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-002: POST /api/v1/admin/curriculums
+    // CUR-ADMIN-01: POST /api/v1/admin/curriculums
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("CUR-ADMIN-01 POST /api/v1/admin/curriculums")
@@ -149,7 +149,7 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-003: PUT /api/v1/admin/curriculums/{id}
+    // CUR-ADMIN-02: PUT /api/v1/admin/curriculums/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("CUR-ADMIN-02 PUT /api/v1/admin/curriculums/{curriculumId}")
@@ -194,7 +194,7 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-004: DELETE /api/v1/admin/curriculums/{id}
+    // CUR-ADMIN-03: DELETE /api/v1/admin/curriculums/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("CUR-ADMIN-03 DELETE /api/v1/admin/curriculums/{curriculumId}")

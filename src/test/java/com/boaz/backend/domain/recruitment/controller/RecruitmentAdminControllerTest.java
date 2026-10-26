@@ -75,7 +75,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-001: POST /api/v1/admin/recruitment/applications/download
+    // REC-ADMIN-01: POST /api/v1/admin/recruitment/applications/download
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-01 POST /api/v1/admin/recruitment/applications/download")
@@ -166,7 +166,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-010: DELETE /api/v1/admin/recruitment/{id}/applicants
+    // REC-ADMIN-10: DELETE /api/v1/admin/recruitment/{id}/applicants
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-10 DELETE /api/v1/admin/recruitment/{id}/applicants")
@@ -212,7 +212,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-011: GET /api/v1/admin/recruitment/subscriptions
+    // REC-ADMIN-11: GET /api/v1/admin/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-11 GET /api/v1/admin/recruitment/subscriptions")
@@ -260,7 +260,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-012: DELETE /api/v1/admin/recruitment/subscriptions
+    // REC-ADMIN-12: DELETE /api/v1/admin/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-12 DELETE /api/v1/admin/recruitment/subscriptions")
@@ -375,7 +375,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-002: GET /api/v1/admin/recruitment
+    // REC-ADMIN-02: GET /api/v1/admin/recruitment
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-02 GET /api/v1/admin/recruitment")
@@ -414,7 +414,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-003: POST /api/v1/admin/recruitment
+    // REC-ADMIN-03: POST /api/v1/admin/recruitment
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-03 POST /api/v1/admin/recruitment")
@@ -513,7 +513,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-004: PATCH /api/v1/admin/recruitment/{id}
+    // REC-ADMIN-04: PATCH /api/v1/admin/recruitment/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-04 PATCH /api/v1/admin/recruitment/{id}")
@@ -567,7 +567,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-005: DELETE /api/v1/admin/recruitment/{id}
+    // REC-ADMIN-05: DELETE /api/v1/admin/recruitment/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-05 DELETE /api/v1/admin/recruitment/{id}")
@@ -613,7 +613,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-006: POST /api/v1/admin/recruitment/questions
+    // REC-ADMIN-06: POST /api/v1/admin/recruitment/questions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-06 POST /api/v1/admin/recruitment/questions")
@@ -767,7 +767,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-007: GET /api/v1/admin/recruitment/{recruitmentId}/questions
+    // REC-ADMIN-07: GET /api/v1/admin/recruitment/{recruitmentId}/questions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-07 GET /api/v1/admin/recruitment/{recruitmentId}/questions")
@@ -815,7 +815,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-008: PATCH /api/v1/admin/recruitment/questions/{questionId}
+    // REC-ADMIN-08: PATCH /api/v1/admin/recruitment/questions/{questionId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-08 PATCH /api/v1/admin/recruitment/questions/{questionId}")
@@ -869,7 +869,7 @@ class RecruitmentAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-ADMIN-009: DELETE /api/v1/admin/recruitment/questions/{questionId}
+    // REC-ADMIN-09: DELETE /api/v1/admin/recruitment/questions/{questionId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-ADMIN-09 DELETE /api/v1/admin/recruitment/questions/{questionId}")

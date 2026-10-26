@@ -43,7 +43,7 @@ class ArchiveControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-001 GET /api/v1/archiving/projects
+    // ARC-01 GET /api/v1/archiving/projects
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-01 GET /api/v1/archiving/projects")
@@ -64,7 +64,7 @@ class ArchiveControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-002 GET /api/v1/archiving/activities
+    // ARC-02 GET /api/v1/archiving/activities
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-02 GET /api/v1/archiving/activities")
@@ -85,7 +85,7 @@ class ArchiveControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-003 GET /api/v1/archiving/blogs
+    // ARC-03 GET /api/v1/archiving/blogs
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-03 GET /api/v1/archiving/blogs")
@@ -106,7 +106,7 @@ class ArchiveControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // ARC-004 GET /api/v1/archiving/terms
+    // ARC-04 GET /api/v1/archiving/terms
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("ARC-04 GET /api/v1/archiving/terms")

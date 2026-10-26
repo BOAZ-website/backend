@@ -38,7 +38,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // ARC-001 프로젝트 조회 end-to-end
+    // ARC-01 프로젝트 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-01 프로젝트 조회 end-to-end")
@@ -187,7 +187,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // ARC-002 활동사진 조회 end-to-end
+    // ARC-02 활동사진 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-02 활동사진 조회 end-to-end")
@@ -336,7 +336,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // ARC-003 기술블로그 조회 end-to-end
+    // ARC-03 기술블로그 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-03 기술블로그 조회 end-to-end")
@@ -485,7 +485,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // ARC-004 기수 조회 end-to-end
+    // ARC-04 기수 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-04 기수 조회 end-to-end")

@@ -47,7 +47,7 @@ class ReviewControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-001: GET /api/v1/reviews
+    // REV-01: GET /api/v1/reviews
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REV-01 GET /api/v1/reviews")

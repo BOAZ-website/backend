@@ -62,7 +62,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // REV-001: 후기 조회
+    // REV-01: 후기 조회
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("REV-01 후기 조회 end-to-end")
@@ -140,7 +140,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // REV-002: 후기 등록
+    // REV-ADMIN-01: 후기 등록
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("REV-ADMIN-01 후기 등록 end-to-end")
@@ -167,7 +167,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // REV-003: 후기 수정
+    // REV-ADMIN-02: 후기 수정
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("REV-ADMIN-02 후기 수정 end-to-end")
@@ -209,7 +209,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // REV-004: 후기 삭제
+    // REV-ADMIN-03: 후기 삭제
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("REV-ADMIN-03 후기 삭제 end-to-end")

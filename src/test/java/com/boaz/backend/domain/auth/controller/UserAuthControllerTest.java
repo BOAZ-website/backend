@@ -48,7 +48,7 @@ class UserAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-006 POST /api/v1/auth/user/logout
+    // AUTH-06 POST /api/v1/auth/user/logout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-06 POST /api/v1/auth/user/logout")
@@ -81,7 +81,7 @@ class UserAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-005 POST /api/v1/auth/user/refresh
+    // AUTH-05 POST /api/v1/auth/user/refresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-05 POST /api/v1/auth/user/refresh")

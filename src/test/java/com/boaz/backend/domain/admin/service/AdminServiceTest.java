@@ -115,7 +115,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-001: getAccounts (모든 계정 조회)
+    // ADMIN-01: getAccounts (모든 계정 조회)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-01 getAccounts")
@@ -144,7 +144,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-002: createAccount (계정 생성)
+    // ADMIN-02: createAccount (계정 생성)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-02 createAccount")
@@ -224,7 +224,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-007: getMe (내 계정 정보 조회)
+    // ADMIN-07: getMe (내 계정 정보 조회)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-07 getMe")
@@ -257,7 +257,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-003: getAccount (id별 계정 조회)
+    // ADMIN-03: getAccount (id별 계정 조회)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-03 getAccount")
@@ -310,7 +310,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-004: updateAccount (id별 계정 수정)
+    // ADMIN-04: updateAccount (id별 계정 수정)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-04 updateAccount")
@@ -598,7 +598,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-005: deleteAccount (id별 계정 삭제, soft delete)
+    // ADMIN-05: deleteAccount (id별 계정 삭제, soft delete)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-05 deleteAccount")
@@ -681,7 +681,7 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-006: resetPassword (비밀번호 초기화/변경)
+    // ADMIN-06: resetPassword (비밀번호 초기화/변경)
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-06 resetPassword")

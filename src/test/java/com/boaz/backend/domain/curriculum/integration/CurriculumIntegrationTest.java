@@ -69,7 +69,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-001: 커리큘럼 조회
+    // CUR-01: 커리큘럼 조회
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("CUR-01 커리큘럼 조회 end-to-end")
@@ -116,7 +116,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-002: 커리큘럼 등록
+    // CUR-ADMIN-01: 커리큘럼 등록
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("CUR-ADMIN-01 커리큘럼 등록 end-to-end")
@@ -213,7 +213,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-003: 커리큘럼 수정
+    // CUR-ADMIN-02: 커리큘럼 수정
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("CUR-ADMIN-02 커리큘럼 수정 end-to-end")
@@ -246,7 +246,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-004: 커리큘럼 삭제
+    // CUR-ADMIN-03: 커리큘럼 삭제
     // ══════════════════════════════════════════════
     @Nested
     @DisplayName("CUR-ADMIN-03 커리큘럼 삭제 end-to-end")

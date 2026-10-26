@@ -45,7 +45,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-024 허용된 redirect URI 쿠키 있는 경우
+    // 허용된 redirect URI 쿠키 있는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-001 허용된 redirect URI 쿠키 → {scheme}://{authority}/login?error=true 리다이렉트")
@@ -60,7 +60,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-025 redirect URI 쿠키 없는 경우
+    // redirect URI 쿠키 없는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-002 redirect URI 쿠키 없음 → defaultFailureRedirectUri로 리다이렉트")
@@ -73,7 +73,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // TC-026 비허용 redirect URI
+    // 비허용 redirect URI
     // ──────────────────────────────────────────────────────────────────────────
     @Test
     @DisplayName("TC-003 허용되지 않은 redirect URI → defaultFailureRedirectUri로 리다이렉트")

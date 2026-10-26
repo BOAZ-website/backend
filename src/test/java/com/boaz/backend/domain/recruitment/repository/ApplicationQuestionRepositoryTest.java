@@ -86,7 +86,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "공통1")).isTrue();
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "없는라벨")).isFalse();
 
-        // label 자기 자신 제외 (REC-ADMIN-008 질문 수정 중복 검증)
+        // label 자기 자신 제외 (REC-ADMIN-08 질문 수정 중복 검증)
         assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(
                 r.getId(), "공통1", savedId)).isFalse();
         assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(

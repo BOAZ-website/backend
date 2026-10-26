@@ -72,7 +72,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-001: GET /api/v1/admin/accounts
+    // ADMIN-01: GET /api/v1/admin/accounts
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-01 GET /api/v1/admin/accounts")
@@ -119,7 +119,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-002: POST /api/v1/admin/accounts
+    // ADMIN-02: POST /api/v1/admin/accounts
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-02 POST /api/v1/admin/accounts")
@@ -178,7 +178,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-007: GET /api/v1/admin/accounts/me
+    // ADMIN-07: GET /api/v1/admin/accounts/me
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-07 GET /api/v1/admin/accounts/me")
@@ -220,7 +220,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-003: GET /api/v1/admin/accounts/{id}
+    // ADMIN-03: GET /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-03 GET /api/v1/admin/accounts/{id}")
@@ -276,7 +276,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-004: PATCH /api/v1/admin/accounts/{id}
+    // ADMIN-04: PATCH /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-04 PATCH /api/v1/admin/accounts/{id}")
@@ -320,7 +320,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-005: DELETE /api/v1/admin/accounts/{id}
+    // ADMIN-05: DELETE /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-05 DELETE /api/v1/admin/accounts/{id}")
@@ -357,7 +357,7 @@ class AdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-006: PATCH /api/v1/admin/accounts/{id}/password
+    // ADMIN-06: PATCH /api/v1/admin/accounts/{id}/password
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("ADMIN-06 PATCH /api/v1/admin/accounts/{id}/password")

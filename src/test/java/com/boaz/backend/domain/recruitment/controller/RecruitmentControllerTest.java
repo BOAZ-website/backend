@@ -62,7 +62,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-001: GET /api/v1/recruitment/status
+    // REC-01: GET /api/v1/recruitment/status
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-01 GET /api/v1/recruitment/status")
@@ -105,7 +105,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-002: GET /api/v1/recruitment/{term}
+    // REC-02: GET /api/v1/recruitment/{term}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-02 GET /api/v1/recruitment/{term}")
@@ -143,7 +143,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-003: GET /api/v1/recruitment/questions
+    // REC-03: GET /api/v1/recruitment/questions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-03 GET /api/v1/recruitment/questions")
@@ -197,7 +197,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-004: POST /api/v1/recruitment/{id}/applications
+    // REC-04: POST /api/v1/recruitment/{id}/applications
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-04 POST /api/v1/recruitment/{id}/applications")
@@ -257,7 +257,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-005: POST /api/v1/recruitment/subscriptions
+    // REC-05: POST /api/v1/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-05 POST /api/v1/recruitment/subscriptions")
@@ -300,7 +300,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-006: GET /api/v1/recruitment/deadline
+    // REC-06: GET /api/v1/recruitment/deadline
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-06 GET /api/v1/recruitment/deadline")
@@ -331,7 +331,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-007: PUT /api/v1/recruitment/{id}/applications/draft
+    // REC-07: PUT /api/v1/recruitment/{id}/applications/draft
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-07 PUT /api/v1/recruitment/{id}/applications/draft")
@@ -377,7 +377,7 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-008: GET /api/v1/recruitment/{id}/applications/me
+    // REC-08: GET /api/v1/recruitment/{id}/applications/me
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REC-08 GET /api/v1/recruitment/{id}/applications/me")

@@ -67,7 +67,7 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-002: POST /api/v1/admin/reviews
+    // REV-ADMIN-01: POST /api/v1/admin/reviews
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REV-ADMIN-01 POST /api/v1/admin/reviews")
@@ -130,7 +130,7 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-003: PATCH /api/v1/admin/reviews/{reviewId}
+    // REV-ADMIN-02: PATCH /api/v1/admin/reviews/{reviewId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REV-ADMIN-02 PATCH /api/v1/admin/reviews/{reviewId}")
@@ -195,7 +195,7 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-004: DELETE /api/v1/admin/reviews/{reviewId}
+    // REV-ADMIN-03: DELETE /api/v1/admin/reviews/{reviewId}
     // ──────────────────────────────────────────────
     @Nested
     @DisplayName("REV-ADMIN-03 DELETE /api/v1/admin/reviews/{reviewId}")

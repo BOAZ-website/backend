@@ -63,7 +63,7 @@ class UserServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-004 findOrCreate
+    // AUTH-04 findOrCreate
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
     @DisplayName("AUTH-04 findOrCreate")

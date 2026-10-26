@@ -34,8 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * ARC-005 ~ ARC-013 아카이빙 등록/수정/삭제 컨트롤러 테스트.
- * 명세: TF 테스트코드 작성 (ARC-005 프로젝트 등록 ~ ARC-013 기술블로그 삭제)
+ * ARC-ADMIN 아카이빙 등록/수정/삭제 컨트롤러 테스트.
+ * 명세: TF 테스트코드 작성 (ARC-ADMIN-02 프로젝트 등록 ~ ARC-ADMIN-12 기술블로그 삭제)
  */
 @ActiveProfiles("test")
 @WebMvcTest(
@@ -81,7 +81,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-005 프로젝트 등록  POST /api/v1/admin/archiving/projects
+    // ARC-ADMIN-02 프로젝트 등록  POST /api/v1/admin/archiving/projects
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-02 POST /api/v1/admin/archiving/projects")
@@ -219,7 +219,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-006 활동사진 등록  POST /api/v1/admin/archiving/activities
+    // ARC-ADMIN-06 활동사진 등록  POST /api/v1/admin/archiving/activities
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-06 POST /api/v1/admin/archiving/activities")
@@ -337,7 +337,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-007 기술블로그 등록  POST /api/v1/admin/archiving/blogs
+    // ARC-ADMIN-10 기술블로그 등록  POST /api/v1/admin/archiving/blogs
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-10 POST /api/v1/admin/archiving/blogs")
@@ -416,7 +416,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-008 프로젝트 수정  PATCH /api/v1/admin/archiving/projects/{id}
+    // ARC-ADMIN-03 프로젝트 수정  PATCH /api/v1/admin/archiving/projects/{id}
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-03 PATCH /api/v1/admin/archiving/projects/{id}")
@@ -503,7 +503,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-009 / ARC-010 활동사진·기술블로그 수정 (category 전달 검증)
+    // ARC-ADMIN-07 / ARC-ADMIN-11 활동사진·기술블로그 수정 (category 전달 검증)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-07 / ARC-ADMIN-11 PATCH activities|blogs")
@@ -548,7 +548,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-011 프로젝트 삭제  DELETE /api/v1/admin/archiving/projects/{id}
+    // ARC-ADMIN-04 프로젝트 삭제  DELETE /api/v1/admin/archiving/projects/{id}
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-04 DELETE /api/v1/admin/archiving/projects/{id}")
@@ -617,7 +617,7 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-012 / ARC-013 활동사진·기술블로그 삭제 (category 전달 검증)
+    // ARC-ADMIN-08 / ARC-ADMIN-12 활동사진·기술블로그 삭제 (category 전달 검증)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
     @DisplayName("ARC-ADMIN-08 / ARC-ADMIN-12 DELETE activities|blogs")
