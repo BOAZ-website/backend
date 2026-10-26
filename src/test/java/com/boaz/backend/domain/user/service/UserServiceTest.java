@@ -25,7 +25,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("USER-01 내 정보 조회 서비스 단위 테스트")
+@DisplayName("사용자 서비스 단위 테스트")
 class UserServiceTest {
 
     @InjectMocks
@@ -42,25 +42,33 @@ class UserServiceTest {
         return u;
     }
 
-    @Test
-    @DisplayName("TC-001 유효한 userId 로 조회 → nickname 반환")
-    void getMyInfo() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(createUser(1L, "홍길동")));
+    // ──────────────────────────────────────────────────────────────────────────
+    // USER-01 getMyInfo
+    // ──────────────────────────────────────────────────────────────────────────
+    @Nested
+    @DisplayName("USER-01 getMyInfo")
+    class GetMyInfo {
 
-        UserInfoResponse res = userService.getMyInfo(1L);
+        @Test
+        @DisplayName("TC-001 유효한 userId 로 조회 → nickname 반환")
+        void getMyInfo() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(createUser(1L, "홍길동")));
 
-        assertThat(res.getNickname()).isEqualTo("홍길동");
-    }
+            UserInfoResponse res = userService.getMyInfo(1L);
 
-    @Test
-    @DisplayName("TC-002 존재하지 않는 userId → USER_NOT_FOUND")
-    void getMyInfoNotFound() {
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+            assertThat(res.getNickname()).isEqualTo("홍길동");
+        }
 
-        assertThatThrownBy(() -> userService.getMyInfo(999L))
-                .isInstanceOf(CustomException.class)
-                .extracting(e -> ((CustomException) e).getErrorCode())
-                .isEqualTo(ErrorCode.USER_NOT_FOUND);
+        @Test
+        @DisplayName("TC-002 존재하지 않는 userId → USER_NOT_FOUND")
+        void getMyInfoNotFound() {
+            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> userService.getMyInfo(999L))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.USER_NOT_FOUND);
+        }
     }
 
     // ──────────────────────────────────────────────────────────────────────────
