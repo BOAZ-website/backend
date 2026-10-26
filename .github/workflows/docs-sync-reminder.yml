@@ -7,8 +7,14 @@ name: Docs Sync Reminder
 
 on:
   pull_request_target:
-    types: [opened, reopened, synchronize]
+    # edited: base 를 main 에서 dev 로 바꾼 PR 도 추가 커밋 없이 알림을 받도록
+    types: [opened, reopened, synchronize, edited]
     branches: [dev]
+
+# 같은 PR 의 실행이 겹치면 둘 다 코멘트가 없다고 보고 코멘트를 두 개 남길 수 있어 순서대로 실행한다
+concurrency:
+  group: docs-sync-reminder-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
 
 permissions:
   pull-requests: write
