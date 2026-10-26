@@ -182,11 +182,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("모집 상태 조회")
+    @DisplayName("REC-01 모집 상태 조회")
     class Status {
 
         @Test
-        @DisplayName("모집 중 공고가 있으면 isActive=true, term 반환")
+        @DisplayName("TC-010 모집 중 공고가 있으면 isActive=true, term 반환")
         void active() {
             saveActiveRecruitment(27);
             em.flush();
@@ -199,7 +199,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("공고가 없으면 isActive=false, term=null")
+        @DisplayName("TC-011 공고가 없으면 isActive=false, term=null")
         void inactive() {
             RecruitmentStatusResponse res = recruitmentService.getRecruitmentStatus();
 
@@ -209,11 +209,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("사전 알림 신청")
+    @DisplayName("REC-05 사전 알림 신청")
     class Subscribe {
 
         @Test
-        @DisplayName("신규 이메일 신청 후 DB 저장 + 중복 신청 시 DUPLICATE_EMAIL")
+        @DisplayName("TC-008 신규 이메일 신청 후 DB 저장 + 중복 신청 시 DUPLICATE_EMAIL")
         void subscribeAndDuplicate() {
             SubscriptionRequest request = objectMapper.convertValue(
                     Map.of("email", "new@example.com"), SubscriptionRequest.class);
@@ -231,11 +231,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("지원서 제출 end-to-end")
+    @DisplayName("REC-04 지원서 제출 end-to-end")
     class Submit {
 
         @Test
-        @DisplayName("신규 제출 → Applicant(SUBMITTED) + 답변이 실제 DB에 저장")
+        @DisplayName("TC-032 신규 제출 → Applicant(SUBMITTED) + 답변이 실제 DB에 저장")
         void submitNew() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -256,7 +256,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("DRAFT 존재 시 제출 → 같은 레코드가 SUBMITTED 로 전환")
+        @DisplayName("TC-033 DRAFT 존재 시 제출 → 같은 레코드가 SUBMITTED 로 전환")
         void draftToSubmitted() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -281,7 +281,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("이미 SUBMITTED 상태에서 재제출 → ALREADY_SUBMITTED")
+        @DisplayName("TC-034 이미 SUBMITTED 상태에서 재제출 → ALREADY_SUBMITTED")
         void alreadySubmitted() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -303,7 +303,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TABLE 답변 → JSON 컬럼에 정상 직렬화 저장")
+        @DisplayName("TC-035 TABLE 답변 → JSON 컬럼에 정상 직렬화 저장")
         void submitWithTableAnswer() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -330,7 +330,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("복수선택 TABLE 답변 → answerJson에 배열로 직렬화 저장")
+        @DisplayName("TC-036 복수선택 TABLE 답변 → answerJson에 배열로 직렬화 저장")
         void submitWithMultiTableAnswer() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -360,7 +360,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("복수선택 TABLE 중복 원소 → dedupe 후 저장")
+        @DisplayName("TC-037 복수선택 TABLE 중복 원소 → dedupe 후 저장")
         void submitMultiTableDeduped() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -388,11 +388,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("기수별 공고 조회 end-to-end (REC-002)")
+    @DisplayName("REC-02 기수별 공고 조회 end-to-end")
     class GetRecruitment {
 
         @Test
-        @DisplayName("존재하는 term → 공고 반환 (isActive 날짜 계산)")
+        @DisplayName("TC-008 존재하는 term → 공고 반환 (isActive 날짜 계산)")
         void found() {
             saveActiveRecruitment(27);
             em.flush();
@@ -405,7 +405,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("마감된 공고 → isActive=false (404 아님)")
+        @DisplayName("TC-009 마감된 공고 → isActive=false (404 아님)")
         void closedStillReturns() {
             saveClosedRecruitment(26);
             em.flush();
@@ -417,7 +417,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("존재하지 않는 term → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-010 존재하지 않는 term → RECRUITMENT_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> recruitmentService.getRecruitment(999))
                     .isInstanceOf(CustomException.class)
@@ -426,11 +426,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("질문 목록 조회 end-to-end (REC-003)")
+    @DisplayName("REC-03 질문 목록 조회 end-to-end")
     class GetQuestions {
 
         @Test
-        @DisplayName("COMMON + 지정 트랙만 order_num 순 반환, {Track} 치환")
+        @DisplayName("TC-010 COMMON + 지정 트랙만 order_num 순 반환, {Track} 치환")
         void filteredAndOrdered() {
             Recruitment r = saveActiveRecruitment(27);
             saveQuestion(r, Category.COMMON, 1);
@@ -448,7 +448,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("모집 기간 외 → RECRUITMENT_NOT_AVAILABLE")
+        @DisplayName("TC-011 모집 기간 외 → RECRUITMENT_NOT_AVAILABLE")
         void notAvailable() {
             Recruitment r = saveClosedRecruitment(26);
             em.flush();
@@ -460,11 +460,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("마감 일시 조회 end-to-end (REC-006)")
+    @DisplayName("REC-06 마감 일시 조회 end-to-end")
     class GetDeadline {
 
         @Test
-        @DisplayName("모집 중 공고 → end_date 반환")
+        @DisplayName("TC-005 모집 중 공고 → end_date 반환")
         void found() {
             LocalDateTime now = LocalDateTime.now();
             LocalDateTime end = now.plusDays(1).withNano(0);
@@ -479,7 +479,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("활성 공고 없음 → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-006 활성 공고 없음 → RECRUITMENT_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> recruitmentService.getDeadline())
                     .isInstanceOf(CustomException.class)
@@ -488,11 +488,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("임시저장 end-to-end (REC-007)")
+    @DisplayName("REC-07 임시저장 end-to-end")
     class SaveDraft {
 
         @Test
-        @DisplayName("신규 생성 후 부분 업데이트 → 같은 레코드 유지, name 보존 / track 갱신")
+        @DisplayName("TC-016 신규 생성 후 부분 업데이트 → 같은 레코드 유지, name 보존 / track 갱신")
         void createThenPartialUpdate() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -518,7 +518,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("answers 분기: 값 교체 → null 유지 → [] 전삭제")
+        @DisplayName("TC-017 answers 분기: 값 교체 → null 유지 → [] 전삭제")
         void answersBranching() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -551,11 +551,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("내 지원서 조회 end-to-end (REC-008)")
+    @DisplayName("REC-08 내 지원서 조회 end-to-end")
     class GetMyApplication {
 
         @Test
-        @DisplayName("DRAFT + 답변 → answers 역직렬화 포함 응답 반환")
+        @DisplayName("TC-009 DRAFT + 답변 → answers 역직렬화 포함 응답 반환")
         void draftWithAnswers() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -578,7 +578,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("SUBMITTED 상태 → APPLICATION_ALREADY_SUBMITTED")
+        @DisplayName("TC-010 SUBMITTED 상태 → APPLICATION_ALREADY_SUBMITTED")
         void submittedForbidden() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -596,11 +596,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("CSV 생성 end-to-end (REC-ADMIN-001)")
+    @DisplayName("REC-ADMIN-01 CSV 생성 end-to-end")
     class DownloadApplications {
 
         @Test
-        @DisplayName("부문 3개 모두 S3 업로드 호출 (빈 부문 포함)")
+        @DisplayName("TC-033 부문 3개 모두 S3 업로드 호출 (빈 부문 포함)")
         void uploadsThreeTracks() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();
@@ -619,7 +619,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("decision=PASS → 합격자만 CSV에 포함, 키에 PASS 표기")
+        @DisplayName("TC-034 decision=PASS → 합격자만 CSV에 포함, 키에 PASS 표기")
         void passFilterOnlyIncludesPass() {
             Recruitment r = saveActiveRecruitment(27);
             saveQuestion(r, Category.COMMON, 1);
@@ -657,7 +657,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("존재하지 않는 term → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-035 존재하지 않는 term → RECRUITMENT_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> recruitmentService.downloadApplications(999, DecisionFilter.ALL))
                     .isInstanceOf(CustomException.class)
@@ -670,7 +670,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     class Admin {
 
         @Test
-        @DisplayName("마감된 공고의 지원서 전체 삭제 → eval/answer/applicant 모두 제거 (평가 존재 시 FK 위반 없음, #178)")
+        @DisplayName("REC-ADMIN-10 TC-009 마감된 공고의 지원서 전체 삭제 → eval/answer/applicant 모두 제거 (평가 존재 시 FK 위반 없음, #178)")
         void deleteApplicants() {
             Recruitment r = saveClosedRecruitment(26);
             User u = saveUser();
@@ -704,7 +704,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("모집 진행 중 공고의 지원서 삭제 시도 → RECRUITMENT_NOT_CLOSED")
+        @DisplayName("REC-ADMIN-10 TC-010 모집 진행 중 공고의 지원서 삭제 시도 → RECRUITMENT_NOT_CLOSED")
         void deleteWhileActive() {
             Recruitment r = saveActiveRecruitment(27);
             em.flush();
@@ -715,7 +715,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("구독 목록 최신순 조회 후 전체 삭제")
+        @DisplayName("TC-001 구독 목록 최신순 조회 후 전체 삭제")
         void subscriptionsLifecycle() {
             subscriptionRepository.save(com.boaz.backend.domain.recruitment.entity.Subscription.builder()
                     .email("a@example.com").build());
@@ -769,11 +769,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("모집 공고 CRUD end-to-end (REC-ADMIN-002~005)")
+    @DisplayName("REC-ADMIN-02~05 모집 공고 CRUD end-to-end")
     class AdminRecruitmentCrud {
 
         @Test
-        @DisplayName("REC-ADMIN-003 공고 등록 → 실제 DB 영속")
+        @DisplayName("REC-ADMIN-03 TC-015 공고 등록 → 실제 DB 영속")
         void createPersists() {
             LocalDateTime now = LocalDateTime.now();
             RecruitmentCreateRequest req = buildCreateReq(28, now.plusDays(1), now.plusDays(15), "https://e.com/b.pdf");
@@ -786,7 +786,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-003 동일 기수 재등록 → DUPLICATE_TERM")
+        @DisplayName("REC-ADMIN-03 TC-016 동일 기수 재등록 → DUPLICATE_TERM")
         void createDuplicateTerm() {
             saveActiveRecruitment(27);
             em.flush();
@@ -799,7 +799,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-004 start_date만 수정 → 해당 필드만 변경, 나머지 유지")
+        @DisplayName("REC-ADMIN-04 TC-012 start_date만 수정 → 해당 필드만 변경, 나머지 유지")
         void updatePartial() {
             Recruitment r = saveActiveRecruitment(27);
             Long id = r.getId();
@@ -820,7 +820,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-004 brochure_url null 명시 전송 → 삭제")
+        @DisplayName("REC-ADMIN-04 TC-013 brochure_url null 명시 전송 → 삭제")
         void updateDeleteBrochure() {
             LocalDateTime now = LocalDateTime.now();
             Recruitment r = recruitmentRepository.save(
@@ -840,7 +840,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-005 연관 데이터 없는 공고 → 삭제됨")
+        @DisplayName("REC-ADMIN-05 TC-009 연관 데이터 없는 공고 → 삭제됨")
         void deleteNoRefs() {
             Recruitment r = saveActiveRecruitment(27);
             Long id = r.getId();
@@ -855,7 +855,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-005 연관 질문 존재 → RECRUITMENT_HAS_REFERENCES")
+        @DisplayName("REC-ADMIN-05 TC-010 연관 질문 존재 → RECRUITMENT_HAS_REFERENCES")
         void deleteWithRefs() {
             Recruitment r = saveActiveRecruitment(27);
             saveQuestion(r, Category.COMMON, 1);
@@ -869,11 +869,11 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("지원서 질문 CRUD end-to-end (REC-ADMIN-006~009)")
+    @DisplayName("REC-ADMIN-06~09 지원서 질문 CRUD end-to-end")
     class AdminQuestionCrud {
 
         @Test
-        @DisplayName("REC-ADMIN-006 TEXT+TABLE 다건 등록 → limit_length/metadata 분기 영속")
+        @DisplayName("REC-ADMIN-06 TC-024 TEXT+TABLE 다건 등록 → limit_length/metadata 분기 영속")
         void createQuestionsPersist() throws Exception {
             Recruitment r = saveActiveRecruitment(27);
             em.flush();
@@ -899,7 +899,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-006 DB에 동일 label 존재 → DUPLICATE_QUESTION_LABEL")
+        @DisplayName("REC-ADMIN-06 TC-025 DB에 동일 label 존재 → DUPLICATE_QUESTION_LABEL")
         void createDuplicateLabel() {
             Recruitment r = saveActiveRecruitment(27);
             questionRepository.save(ApplicationQuestion.create(
@@ -916,7 +916,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-006 TC-011 두 번째 항목 충돌 시 앞 항목 포함 전체 미저장 (원자성)")
+        @DisplayName("REC-ADMIN-06 TC-026 두 번째 항목 충돌 시 앞 항목 포함 전체 미저장 (원자성)")
         void createPartialFailureRollsBackAll() {
             Recruitment r = saveActiveRecruitment(27);
             questionRepository.save(ApplicationQuestion.create(
@@ -941,7 +941,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-007 order_num 오름차순 반환 (is_active 무관)")
+        @DisplayName("REC-ADMIN-07 TC-010 order_num 오름차순 반환 (is_active 무관)")
         void getAdminQuestionsOrder() {
             Recruitment r = saveClosedRecruitment(26); // 마감 공고
             saveQuestion(r, Category.COMMON, 10);
@@ -955,7 +955,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-007 질문 없음 → 빈 배열 (QUESTIONS_NOT_FOUND 아님)")
+        @DisplayName("REC-ADMIN-07 TC-011 질문 없음 → 빈 배열 (QUESTIONS_NOT_FOUND 아님)")
         void getAdminQuestionsEmpty() {
             Recruitment r = saveActiveRecruitment(27);
             em.flush();
@@ -965,7 +965,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-008 TEXT→TABLE 타입 변경 → metadata 저장, limit_length 정리")
+        @DisplayName("REC-ADMIN-08 TC-013 TEXT→TABLE 타입 변경 → metadata 저장, limit_length 정리")
         void updateTypeChange() throws Exception {
             Recruitment r = saveActiveRecruitment(27);
             ApplicationQuestion q = saveQuestion(r, Category.COMMON, 1); // TEXT, limit 500
@@ -989,7 +989,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-009 답변 없는 질문 → 삭제됨")
+        @DisplayName("REC-ADMIN-09 TC-009 답변 없는 질문 → 삭제됨")
         void deleteQuestionNoAnswers() {
             Recruitment r = saveActiveRecruitment(27);
             ApplicationQuestion q = saveQuestion(r, Category.COMMON, 1);
@@ -1005,7 +1005,7 @@ class RecruitmentIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("REC-ADMIN-009 참조 답변 존재 → QUESTION_HAS_ANSWERS")
+        @DisplayName("REC-ADMIN-09 TC-010 참조 답변 존재 → QUESTION_HAS_ANSWERS")
         void deleteQuestionWithAnswers() {
             Recruitment r = saveActiveRecruitment(27);
             User u = saveUser();

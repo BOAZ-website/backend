@@ -46,7 +46,7 @@ class EffectivePermissionsTest {
     }
 
     @Test
-    @DisplayName("REVOKE 는 기본 세트에서 실제로 빠진다")
+    @DisplayName("TC-001 REVOKE 는 기본 세트에서 실제로 빠진다")
     void revokeRemovesFromBase() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
         givenOverrides(1L, override(CONTENT_WRITE, AdminPermissionOverride.Effect.REVOKE));
@@ -60,7 +60,7 @@ class EffectivePermissionsTest {
     }
 
     @Test
-    @DisplayName("GRANT 는 기본 세트에 없던 권한을 더한다")
+    @DisplayName("TC-002 GRANT 는 기본 세트에 없던 권한을 더한다")
     void grantAddsToBase() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         givenOverrides(1L, override(APPLICANT_CSV_READ, AdminPermissionOverride.Effect.GRANT));
@@ -72,7 +72,7 @@ class EffectivePermissionsTest {
     }
 
     @Test
-    @DisplayName("GRANT 와 REVOKE 가 섞여도 각각 적용된다")
+    @DisplayName("TC-003 GRANT 와 REVOKE 가 섞여도 각각 적용된다")
     void grantAndRevokeTogether() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
         givenOverrides(1L,
@@ -86,7 +86,7 @@ class EffectivePermissionsTest {
     }
 
     @Test
-    @DisplayName("기본 세트에 없는 권한을 REVOKE 해도 아무 일도 없다")
+    @DisplayName("TC-004 기본 세트에 없는 권한을 REVOKE 해도 아무 일도 없다")
     void revokeOfUnheldPermission() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         givenOverrides(1L, override(ATTENDANCE_BASE_WRITE, AdminPermissionOverride.Effect.REVOKE));
@@ -96,7 +96,7 @@ class EffectivePermissionsTest {
     }
 
     @Test
-    @DisplayName("권한 0인 조합에도 GRANT 를 얹을 수 있다 — 빈 기본 세트에서 터지지 않는다")
+    @DisplayName("TC-005 권한 0인 조합에도 GRANT 를 얹을 수 있다 — 빈 기본 세트에서 터지지 않는다")
     void grantOnEmptyBase() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.SUPER, Admin.TeamName.그룹리더);
         givenOverrides(1L, override(ADMIN_ACCOUNT_SELF_WRITE, AdminPermissionOverride.Effect.GRANT));
@@ -114,7 +114,7 @@ class EffectivePermissionsTest {
         }
 
         @Test
-        @DisplayName("계정이 몇이든 오버라이드 조회는 1회다 — 계정마다 치면 N+1 이 된다")
+        @DisplayName("TC-006 계정이 몇이든 오버라이드 조회는 1회다 — 계정마다 치면 N+1 이 된다")
         void singleOverrideQueryRegardlessOfCount() {
             List<Admin> admins = List.of(
                     admin(1L, Admin.Role.MASTER, Admin.TeamName.서비스운영팀),
@@ -130,7 +130,7 @@ class EffectivePermissionsTest {
         }
 
         @Test
-        @DisplayName("계정별 기본 세트가 그대로 나온다 — 단건 계산과 같은 값")
+        @DisplayName("TC-007 계정별 기본 세트가 그대로 나온다 — 단건 계산과 같은 값")
         void matchesSingleComputation() {
             Admin master = admin(1L, Admin.Role.MASTER, Admin.TeamName.서비스운영팀);
             Admin planner = admin(2L, Admin.Role.TEAM, Admin.TeamName.기획팀);
@@ -146,7 +146,7 @@ class EffectivePermissionsTest {
         }
 
         @Test
-        @DisplayName("오버라이드가 주인 계정에만 적용된다 — 한 번에 읽어도 섞이지 않는다")
+        @DisplayName("TC-008 오버라이드가 주인 계정에만 적용된다 — 한 번에 읽어도 섞이지 않는다")
         void overrideAppliesToItsOwnerOnly() {
             Admin granted = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
             Admin untouched = admin(2L, Admin.Role.TEAM, Admin.TeamName.기획팀);
@@ -163,7 +163,7 @@ class EffectivePermissionsTest {
         }
 
         @Test
-        @DisplayName("빈 목록이면 조회하지 않는다")
+        @DisplayName("TC-009 빈 목록이면 조회하지 않는다")
         void emptyInputSkipsQuery() {
             assertThat(effectivePermissions.of(List.of())).isEmpty();
 

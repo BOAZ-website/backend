@@ -48,7 +48,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     // TC-024 허용된 redirect URI 쿠키 있는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
-    @DisplayName("TC-024 허용된 redirect URI 쿠키 → {scheme}://{authority}/login?error=true 리다이렉트")
+    @DisplayName("TC-001 허용된 redirect URI 쿠키 → {scheme}://{authority}/login?error=true 리다이렉트")
     void allowed_redirect_uri_redirects_to_login_error() throws Exception {
         MockHttpServletRequest request = requestWithRedirectCookie(ALLOWED_REDIRECT);
         MockHttpServletResponse response = new MockHttpServletResponse();
@@ -63,7 +63,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     // TC-025 redirect URI 쿠키 없는 경우
     // ──────────────────────────────────────────────────────────────────────────
     @Test
-    @DisplayName("TC-025 redirect URI 쿠키 없음 → defaultFailureRedirectUri로 리다이렉트")
+    @DisplayName("TC-002 redirect URI 쿠키 없음 → defaultFailureRedirectUri로 리다이렉트")
     void no_cookie_uses_default_failure_redirect() throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -76,7 +76,7 @@ class OAuth2AuthenticationFailureHandlerTest {
     // TC-026 비허용 redirect URI
     // ──────────────────────────────────────────────────────────────────────────
     @Test
-    @DisplayName("TC-026 허용되지 않은 redirect URI → defaultFailureRedirectUri로 리다이렉트")
+    @DisplayName("TC-003 허용되지 않은 redirect URI → defaultFailureRedirectUri로 리다이렉트")
     void disallowed_redirect_uri_uses_default_failure() throws Exception {
         MockHttpServletRequest request = requestWithRedirectCookie("http://evil.com/callback");
         MockHttpServletResponse response = new MockHttpServletResponse();

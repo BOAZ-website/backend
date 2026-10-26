@@ -65,11 +65,11 @@ class ReviewIntegrationTest extends TestcontainersBase {
     // REV-001: 후기 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("후기 조회 end-to-end (REV-001)")
+    @DisplayName("REV-01 후기 조회 end-to-end")
     class GetReviews {
 
         @Test
-        @DisplayName("TC-001 파라미터 없음 → term 내림차순 전체 반환")
+        @DisplayName("TC-015 파라미터 없음 → term 내림차순 전체 반환")
         void allReviews() {
             saveReview(Track.ANALYSIS, 24);
             saveReview(Track.ENGINEERING, 26);
@@ -84,7 +84,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-002 track=ANALYSIS 필터 → 해당 트랙만 반환")
+        @DisplayName("TC-016 track=ANALYSIS 필터 → 해당 트랙만 반환")
         void byTrack() {
             saveReview(Track.ANALYSIS, 26);
             saveReview(Track.ENGINEERING, 26);
@@ -96,7 +96,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-003 term=26 필터 → 26기만 반환")
+        @DisplayName("TC-017 term=26 필터 → 26기만 반환")
         void byTerm() {
             saveReview(Track.ANALYSIS, 26);
             saveReview(Track.ENGINEERING, 26);
@@ -109,7 +109,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-004 track+term 동시 필터 → 교집합 반환")
+        @DisplayName("TC-018 track+term 동시 필터 → 교집합 반환")
         void byTrackAndTerm() {
             saveReview(Track.ANALYSIS, 26);
             saveReview(Track.ENGINEERING, 26);
@@ -123,7 +123,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-005 track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-019 track=ALL → INVALID_TRACK_SELECTION")
         void trackAll() {
             assertThatThrownBy(() -> reviewService.getReviews(Track.ALL, null))
                     .isInstanceOf(CustomException.class)
@@ -131,7 +131,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-006 결과 없을 때 → 빈 배열")
+        @DisplayName("TC-020 결과 없을 때 → 빈 배열")
         void emptyResult() {
             List<ReviewResponse> result = reviewService.getReviews(null, 99);
 
@@ -143,7 +143,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     // REV-002: 후기 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("후기 등록 end-to-end (REV-002)")
+    @DisplayName("REV-ADMIN-01 후기 등록 end-to-end")
     class CreateReview {
 
         @Test
@@ -170,7 +170,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     // REV-003: 후기 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("후기 수정 end-to-end (REV-003)")
+    @DisplayName("REV-ADMIN-02 후기 수정 end-to-end")
     class UpdateReview {
 
         @Test
@@ -212,11 +212,11 @@ class ReviewIntegrationTest extends TestcontainersBase {
     // REV-004: 후기 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("후기 삭제 end-to-end (REV-004)")
+    @DisplayName("REV-ADMIN-03 후기 삭제 end-to-end")
     class DeleteReview {
 
         @Test
-        @DisplayName("TC-012 삭제 성공 → DB에서 제거됨")
+        @DisplayName("TC-006 삭제 성공 → DB에서 제거됨")
         void success() {
             Review saved = saveReview(Track.ANALYSIS, 26);
 
@@ -226,7 +226,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-013 존재하지 않는 reviewId → REVIEW_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 reviewId → REVIEW_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> reviewService.deleteReview(999L))
                     .isInstanceOf(CustomException.class)
@@ -242,7 +242,7 @@ class ReviewIntegrationTest extends TestcontainersBase {
     class Lifecycle {
 
         @Test
-        @DisplayName("등록 → 필터 조회 → 수정 → 삭제 흐름이 DB와 일치")
+        @DisplayName("TC-001 등록 → 필터 조회 → 수정 → 삭제 흐름이 DB와 일치")
         void fullLifecycle() {
             ReviewResponse created = reviewService.createReview(
                     makeCreateRequest(Track.ENGINEERING, 26));

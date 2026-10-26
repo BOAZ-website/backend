@@ -175,7 +175,7 @@ class RecruitmentAdminPermissionGridTest {
     }
 
     @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("리크루팅 관리 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 12개")
+    @DisplayName("TC-001 리크루팅 관리 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 12개")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));

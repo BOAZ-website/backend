@@ -72,11 +72,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 전체 지원서 조회 ──────────────────────────────────
     @Nested
-    @DisplayName("GET /{recruitmentId}/applicants")
+    @DisplayName("REC-ADMIN-13 GET /{recruitmentId}/applicants")
     class GetApplicants {
 
         @Test
-        @DisplayName("[정상] 200 + data 배열")
+        @DisplayName("TC-007 [정상] 200 + data 배열")
         void success() throws Exception {
             given(recruitmentService.getApplicants(eq(3L), any(), any())).willReturn(List.of());
 
@@ -87,7 +87,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 → 401")
+        @DisplayName("TC-008 [Security] 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/3/applicants"))
                     .andExpect(status().isUnauthorized())
@@ -95,7 +95,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한 → 403")
+        @DisplayName("TC-009 [Security] User 권한 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/3/applicants").with(authentication(userAuth())))
                     .andExpect(status().isForbidden())
@@ -103,7 +103,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 공고 → 404")
+        @DisplayName("TC-010 [예외] 존재하지 않는 공고 → 404")
         void notFound() throws Exception {
             given(recruitmentService.getApplicants(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -116,11 +116,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 전체 지원서 및 평가 조회 ──────────────────────────
     @Nested
-    @DisplayName("GET /{recruitmentId}/applicants/evaluations")
+    @DisplayName("REC-ADMIN-14 GET /{recruitmentId}/applicants/evaluations")
     class GetApplicantEvaluations {
 
         @Test
-        @DisplayName("[정상] 200 + data 배열")
+        @DisplayName("TC-004 [정상] 200 + data 배열")
         void success() throws Exception {
             given(recruitmentService.getApplicantEvaluations(eq(3L), any(), any())).willReturn(List.of());
 
@@ -132,11 +132,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 최종 평가 수정 ────────────────────────────────────
     @Nested
-    @DisplayName("PATCH /applicants/{applicantId}/final-decision")
+    @DisplayName("REC-ADMIN-18 PATCH /applicants/{applicantId}/final-decision")
     class UpdateFinalDecision {
 
         @Test
-        @DisplayName("[정상] 200")
+        @DisplayName("TC-005 [정상] 200")
         void success() throws Exception {
             given(recruitmentService.updateFinalDecision(eq(101L), any())).willReturn(null);
 
@@ -149,7 +149,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[검증] final_decision 누락 → 400")
+        @DisplayName("TC-006 [검증] final_decision 누락 → 400")
         void missingField() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/recruitment/applicants/101/final-decision")
                             .with(authentication(adminAuth()))
@@ -160,7 +160,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자(서비스 throw) → 404")
+        @DisplayName("TC-007 [예외] 존재하지 않는 지원자(서비스 throw) → 404")
         void applicantNotFound() throws Exception {
             // 최종 합불 서비스는 더 이상 ACCESS_DENIED 를 던지지 않는다 — 인가는 2층(격자 테스트)에서 본다
             given(recruitmentService.updateFinalDecision(eq(101L), any()))
@@ -177,11 +177,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 지원서별 평가 조회 ────────────────────────────────
     @Nested
-    @DisplayName("GET /applicants/{applicantId}/evaluations")
+    @DisplayName("REC-ADMIN-15 GET /applicants/{applicantId}/evaluations")
     class GetApplicantEvaluators {
 
         @Test
-        @DisplayName("[정상] 200 + applicant_id + evaluations")
+        @DisplayName("TC-005 [정상] 200 + applicant_id + evaluations")
         void success() throws Exception {
             given(recruitmentService.getApplicantEvaluators(eq(101L), any(), any()))
                     .willReturn(ApplicantEvaluatorsResponse.of(101L, List.of()));
@@ -193,7 +193,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → 404")
+        @DisplayName("TC-006 [예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
             given(recruitmentService.getApplicantEvaluators(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
@@ -206,11 +206,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 지원서별 면접 질문 조회 ──────────────────────────
     @Nested
-    @DisplayName("GET /applicants/{applicantId}/interview-questions")
+    @DisplayName("REC-ADMIN-19 GET /applicants/{applicantId}/interview-questions")
     class GetApplicantInterviewQuestions {
 
         @Test
-        @DisplayName("[정상] 200 + applicant_id + interview_questions 배열")
+        @DisplayName("TC-005 [정상] 200 + applicant_id + interview_questions 배열")
         void success() throws Exception {
             given(recruitmentService.getApplicantInterviewQuestions(eq(101L), any(), any()))
                     .willReturn(ApplicantInterviewQuestionsResponse.of(101L, List.of()));
@@ -223,7 +223,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → 404")
+        @DisplayName("TC-006 [예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
             given(recruitmentService.getApplicantInterviewQuestions(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
@@ -237,11 +237,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 지원서 답변 조회 ──────────────────────────────────
     @Nested
-    @DisplayName("GET /applicants/{applicantId}/answers")
+    @DisplayName("REC-ADMIN-20 GET /applicants/{applicantId}/answers")
     class GetApplicantAnswers {
 
         @Test
-        @DisplayName("[정상] 200 + applicant_id + answers 배열")
+        @DisplayName("TC-008 [정상] 200 + applicant_id + answers 배열")
         void success() throws Exception {
             given(recruitmentService.getApplicantAnswers(eq(101L), any(), any()))
                     .willReturn(ApplicantAnswersResponse.of(101L, List.of()));
@@ -253,7 +253,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → 404")
+        @DisplayName("TC-009 [예외] 존재하지 않는 지원자 → 404")
         void notFound() throws Exception {
             given(recruitmentService.getApplicantAnswers(eq(999L), any(), any()))
                     .willThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
@@ -264,7 +264,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 → 401")
+        @DisplayName("TC-010 [Security] 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/applicants/101/answers"))
                     .andExpect(status().isUnauthorized())
@@ -274,11 +274,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 개인 평가 조회 ────────────────────────────────────
     @Nested
-    @DisplayName("GET /applicants/{applicantId}/evaluations/me")
+    @DisplayName("REC-ADMIN-16 GET /applicants/{applicantId}/evaluations/me")
     class GetMyEvaluation {
 
         @Test
-        @DisplayName("[정상] 평가 있음 → 200 + data")
+        @DisplayName("TC-006 [정상] 평가 있음 → 200 + data")
         void found() throws Exception {
             MyEvaluationResponse res = myEval();
             given(recruitmentService.getMyEvaluation(eq(101L), any(), any())).willReturn(res);
@@ -290,7 +290,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[정상] 평가 없음 → 200 + data null")
+        @DisplayName("TC-007 [정상] 평가 없음 → 200 + data null")
         void none() throws Exception {
             given(recruitmentService.getMyEvaluation(eq(101L), any(), any())).willReturn(null);
 
@@ -302,11 +302,11 @@ class ApplicantEvaluationAdminControllerTest {
 
     // ── 개인 평가 저장 ────────────────────────────────────
     @Nested
-    @DisplayName("PUT /applicants/{applicantId}/evaluations/me")
+    @DisplayName("REC-ADMIN-17 PUT /applicants/{applicantId}/evaluations/me")
     class SaveMyEvaluation {
 
         @Test
-        @DisplayName("[정상] 200")
+        @DisplayName("TC-009 [정상] 200")
         void success() throws Exception {
             MyEvaluationResponse res = myEval();
             given(recruitmentService.saveMyEvaluation(eq(101L), any(), any(), any())).willReturn(res);
@@ -320,7 +320,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[검증] decision 누락 → 400")
+        @DisplayName("TC-010 [검증] decision 누락 → 400")
         void missingDecision() throws Exception {
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
                             .with(authentication(adminAuth()))
@@ -331,7 +331,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[검증] score 범위 초과(11) → 400")
+        @DisplayName("TC-011 [검증] score 범위 초과(11) → 400")
         void scoreOutOfRange() throws Exception {
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
                             .with(authentication(adminAuth()))
@@ -342,7 +342,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[검증] score 범위 미달(0) → 400 (@Min(1), @Max(10)과 비대칭으로 미검증이었던 갭)")
+        @DisplayName("TC-012 [검증] score 범위 미달(0) → 400 (@Min(1), @Max(10)과 비대칭으로 미검증이었던 갭)")
         void scoreBelowMinimum() throws Exception {
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
                             .with(authentication(adminAuth()))
@@ -353,7 +353,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[검증] score 음수(-1) → 400 (@Min(1))")
+        @DisplayName("TC-013 [검증] score 음수(-1) → 400 (@Min(1))")
         void scoreNegative() throws Exception {
             mockMvc.perform(put("/api/v1/admin/recruitment/applicants/101/evaluations/me")
                             .with(authentication(adminAuth()))
@@ -364,7 +364,7 @@ class ApplicantEvaluationAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[권한] 타 부문(서비스 throw) → 403")
+        @DisplayName("TC-014 [권한] 타 부문(서비스 throw) → 403")
         void trackMismatch() throws Exception {
             given(recruitmentService.saveMyEvaluation(eq(101L), any(), any(), any()))
                     .willThrow(new CustomException(ErrorCode.ACCESS_DENIED));

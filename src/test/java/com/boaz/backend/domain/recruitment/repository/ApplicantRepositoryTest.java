@@ -65,7 +65,7 @@ class ApplicantRepositoryTest extends TestcontainersBase {
     class FindByRecruitmentIdAndUserId {
 
         @Test
-        @DisplayName("(recruitmentId, userId) 조합 일치 시 반환, 불일치 시 empty")
+        @DisplayName("TC-001 (recruitmentId, userId) 조합 일치 시 반환, 불일치 시 empty")
         void match() {
             Recruitment r = persistRecruitment(27);
             User u = persistUser("p1");
@@ -81,7 +81,7 @@ class ApplicantRepositoryTest extends TestcontainersBase {
     class FindSubmittedByTrack {
 
         @Test
-        @DisplayName("decision=null → 지정 트랙 SUBMITTED 전체, submitted_at 오름차순, user JOIN FETCH")
+        @DisplayName("TC-002 decision=null → 지정 트랙 SUBMITTED 전체, submitted_at 오름차순, user JOIN FETCH")
         void submittedOrdered() {
             Recruitment r = persistRecruitment(27);
             LocalDateTime base = LocalDateTime.now();
@@ -109,7 +109,7 @@ class ApplicantRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("decision=PASS → 해당 트랙의 final_decision=PASS 지원자만 반환")
+        @DisplayName("TC-003 decision=PASS → 해당 트랙의 final_decision=PASS 지원자만 반환")
         void filterByPassDecision() {
             Recruitment r = persistRecruitment(27);
             LocalDateTime base = LocalDateTime.now();
@@ -144,7 +144,7 @@ class ApplicantRepositoryTest extends TestcontainersBase {
     class ExistsAndDelete {
 
         @Test
-        @DisplayName("공고 연관 지원자 존재 여부 및 공고 단위 삭제")
+        @DisplayName("TC-004 공고 연관 지원자 존재 여부 및 공고 단위 삭제")
         void existsAndDelete() {
             Recruitment r = persistRecruitment(27);
             persistApplicant(r, persistUser("p1"), Track.ENGINEERING, Applicant.ApplicantStatus.DRAFT, null);
@@ -164,7 +164,7 @@ class ApplicantRepositoryTest extends TestcontainersBase {
     class FindByUserIdAndStatus {
 
         @Test
-        @DisplayName("userId + status 로 조회 (recruitment JOIN FETCH)")
+        @DisplayName("TC-005 userId + status 로 조회 (recruitment JOIN FETCH)")
         void byUserAndStatus() {
             Recruitment r = persistRecruitment(27);
             User u = persistUser("p1");

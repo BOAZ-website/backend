@@ -29,7 +29,7 @@ class SubscriptionRepositoryTest extends TestcontainersBase {
     @Autowired TestEntityManager em;
 
     @Test
-    @DisplayName("existsByEmail / unique 제약 위반")
+    @DisplayName("TC-001 existsByEmail / unique 제약 위반")
     void existsAndUnique() {
         subscriptionRepository.saveAndFlush(Subscription.builder().email("a@example.com").build());
 
@@ -43,7 +43,7 @@ class SubscriptionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findAllByOrderByCreatedAtDesc: created_at 내림차순(최신순)")
+    @DisplayName("TC-002 findAllByOrderByCreatedAtDesc: created_at 내림차순(최신순)")
     void orderByCreatedAtDesc() {
         Subscription s1 = subscriptionRepository.saveAndFlush(Subscription.builder().email("old@example.com").build());
         Subscription s2 = subscriptionRepository.saveAndFlush(Subscription.builder().email("mid@example.com").build());
@@ -63,7 +63,7 @@ class SubscriptionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("deleteAll: 전체 삭제")
+    @DisplayName("TC-003 deleteAll: 전체 삭제")
     void deleteAll() {
         subscriptionRepository.saveAndFlush(Subscription.builder().email("a@example.com").build());
         subscriptionRepository.saveAndFlush(Subscription.builder().email("b@example.com").build());

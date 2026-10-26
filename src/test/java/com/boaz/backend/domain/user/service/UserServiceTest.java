@@ -66,7 +66,7 @@ class UserServiceTest {
     // AUTH-004 findOrCreate
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-004 findOrCreate")
+    @DisplayName("AUTH-04 findOrCreate")
     class FindOrCreate {
 
         private OAuth2UserInfo mockUserInfo(String provider, String providerId, String nickname) {

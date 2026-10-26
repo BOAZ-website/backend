@@ -200,7 +200,7 @@ class ContentPermissionGridTest {
     }
 
     @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("콘텐츠 API 2층 격자: 기본 세트 주체 8종 × 엔드포인트 18개")
+    @DisplayName("TC-001 콘텐츠 API 2층 격자: 기본 세트 주체 8종 × 엔드포인트 18개")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));

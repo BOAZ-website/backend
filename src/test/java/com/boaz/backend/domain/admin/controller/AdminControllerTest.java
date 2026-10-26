@@ -75,11 +75,11 @@ class AdminControllerTest {
     // ADMIN-001: GET /api/v1/admin/accounts
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-001 GET /api/v1/admin/accounts")
+    @DisplayName("ADMIN-01 GET /api/v1/admin/accounts")
     class GetAccounts {
 
         @Test
-        @DisplayName("TC-004 SUPER 정상 조회 → 200 + 목록")
+        @DisplayName("TC-003 SUPER 정상 조회 → 200 + 목록")
         void success() throws Exception {
             when(adminService.getAccounts())
                     .thenReturn(List.of(AdminAccountResponse.from(admin(1L, Admin.Role.SUPER)),
@@ -92,7 +92,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 서비스 ACCESS_DENIED → 403")
+        @DisplayName("TC-004 서비스 ACCESS_DENIED → 403")
         void teamForbidden() throws Exception {
             when(adminService.getAccounts()).thenThrow(new CustomException(ErrorCode.ACCESS_DENIED));
 
@@ -110,7 +110,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403 ACCESS_DENIED")
+        @DisplayName("TC-006 [Security] User 권한으로 접근 → 403 ACCESS_DENIED")
         void forbidden() throws Exception {
             mockMvc.perform(get("/api/v1/admin/accounts").with(authentication(userAuth())))
                     .andExpect(status().isForbidden())
@@ -122,11 +122,11 @@ class AdminControllerTest {
     // ADMIN-002: POST /api/v1/admin/accounts
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-002 POST /api/v1/admin/accounts")
+    @DisplayName("ADMIN-02 POST /api/v1/admin/accounts")
     class CreateAccount {
 
         @Test
-        @DisplayName("TC-005 정상 생성 → 201 + id")
+        @DisplayName("TC-006 정상 생성 → 201 + id")
         void success() throws Exception {
             when(adminService.createAccount(any(), any())).thenReturn(new AdminIdResponse(13L));
 
@@ -140,7 +140,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-006 비밀번호 규칙 위반(@Pattern) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-007 비밀번호 규칙 위반(@Pattern) → 400 INVALID_INPUT_VALUE")
         void invalidPassword() throws Exception {
             String body = CREATE_BODY.replace("Boaz1234!", "1234");
 
@@ -153,7 +153,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-003 username 중복 → 409 DUPLICATE_USERNAME")
+        @DisplayName("TC-008 username 중복 → 409 DUPLICATE_USERNAME")
         void duplicateUsername() throws Exception {
             when(adminService.createAccount(any(), any()))
                     .thenThrow(new CustomException(ErrorCode.DUPLICATE_USERNAME));
@@ -167,7 +167,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-007 미인증 → 401 TOKEN_NOT_FOUND")
+        @DisplayName("TC-009 미인증 → 401 TOKEN_NOT_FOUND")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/accounts")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -181,7 +181,7 @@ class AdminControllerTest {
     // ADMIN-007: GET /api/v1/admin/accounts/me
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-007 GET /api/v1/admin/accounts/me")
+    @DisplayName("ADMIN-07 GET /api/v1/admin/accounts/me")
     class GetMe {
 
         @Test
@@ -200,7 +200,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TEAM 도 호출 가능 → 200")
+        @DisplayName("TC-004 TEAM 도 호출 가능 → 200")
         void teamAllowed() throws Exception {
             when(adminService.getMe(any()))
                     .thenReturn(AdminMeResponse.builder().id(5L).teamName("기획팀").name("홍길동").build());
@@ -211,7 +211,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 미인증 → 401 TOKEN_NOT_FOUND")
+        @DisplayName("TC-005 미인증 → 401 TOKEN_NOT_FOUND")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/accounts/me"))
                     .andExpect(status().isUnauthorized())
@@ -223,11 +223,11 @@ class AdminControllerTest {
     // ADMIN-003: GET /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-003 GET /api/v1/admin/accounts/{id}")
+    @DisplayName("ADMIN-03 GET /api/v1/admin/accounts/{id}")
     class GetAccount {
 
         @Test
-        @DisplayName("정상 조회 → 200")
+        @DisplayName("TC-005 정상 조회 → 200")
         void success() throws Exception {
             when(adminService.getAccount(eq(2L), any(), any()))
                     .thenReturn(AdminAccountResponse.from(admin(2L, Admin.Role.TEAM)));
@@ -238,7 +238,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005 id 타입 불일치 → 400 INVALID_PARAMETER_TYPE")
+        @DisplayName("TC-006 id 타입 불일치 → 400 INVALID_PARAMETER_TYPE")
         void typeMismatch() throws Exception {
             mockMvc.perform(get("/api/v1/admin/accounts/abc").with(authentication(adminAuth())))
                     .andExpect(status().isBadRequest())
@@ -246,7 +246,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-004 존재하지 않는 계정 → 404 ADMIN_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 계정 → 404 ADMIN_NOT_FOUND")
         void notFound() throws Exception {
             when(adminService.getAccount(eq(999L), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.ADMIN_NOT_FOUND));
@@ -257,7 +257,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 ScopeGuard 거부(서비스 ACCESS_DENIED) → 403")
+        @DisplayName("TC-008 ScopeGuard 거부(서비스 ACCESS_DENIED) → 403")
         void teamOther() throws Exception {
             when(adminService.getAccount(eq(2L), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.ACCESS_DENIED));
@@ -268,7 +268,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 미인증 → 401")
+        @DisplayName("TC-009 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/accounts/2"))
                     .andExpect(status().isUnauthorized());
@@ -279,11 +279,11 @@ class AdminControllerTest {
     // ADMIN-004: PATCH /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-004 PATCH /api/v1/admin/accounts/{id}")
+    @DisplayName("ADMIN-04 PATCH /api/v1/admin/accounts/{id}")
     class UpdateAccount {
 
         @Test
-        @DisplayName("TC-009 정상 수정 → 200 + id")
+        @DisplayName("TC-019 정상 수정 → 200 + id")
         void success() throws Exception {
             when(adminService.updateAccount(eq(2L), any(), any(), any())).thenReturn(new AdminIdResponse(2L));
 
@@ -296,7 +296,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 본인 권한 키(role·teamName) 변경 → 403 CANNOT_MODIFY_OWN_ROLE")
+        @DisplayName("TC-020 본인 권한 키(role·teamName) 변경 → 403 CANNOT_MODIFY_OWN_ROLE")
         void cannotModifyOwnRole() throws Exception {
             when(adminService.updateAccount(eq(1L), any(), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.CANNOT_MODIFY_OWN_ROLE));
@@ -310,7 +310,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-008 미인증 → 401")
+        @DisplayName("TC-021 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/accounts/2")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -323,7 +323,7 @@ class AdminControllerTest {
     // ADMIN-005: DELETE /api/v1/admin/accounts/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-005 DELETE /api/v1/admin/accounts/{id}")
+    @DisplayName("ADMIN-05 DELETE /api/v1/admin/accounts/{id}")
     class DeleteAccount {
 
         @Test
@@ -338,7 +338,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 마지막 계정 관리자 삭제 → 400 LAST_ACCOUNT_MANAGER")
+        @DisplayName("TC-007 마지막 계정 관리자 삭제 → 400 LAST_ACCOUNT_MANAGER")
         void lastSuper() throws Exception {
             doThrow(new CustomException(ErrorCode.LAST_ACCOUNT_MANAGER))
                     .when(adminService).deleteAccount(1L);
@@ -349,7 +349,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-005 미인증 → 401")
+        @DisplayName("TC-008 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/accounts/2"))
                     .andExpect(status().isUnauthorized());
@@ -360,11 +360,11 @@ class AdminControllerTest {
     // ADMIN-006: PATCH /api/v1/admin/accounts/{id}/password
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-006 PATCH /api/v1/admin/accounts/{id}/password")
+    @DisplayName("ADMIN-06 PATCH /api/v1/admin/accounts/{id}/password")
     class ResetPassword {
 
         @Test
-        @DisplayName("TC-008 정상 변경 → 200 + data null")
+        @DisplayName("TC-007 정상 변경 → 200 + data null")
         void success() throws Exception {
             doNothing().when(adminService).resetPassword(eq(2L), any(), any(), any());
 
@@ -377,7 +377,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-007 newPassword 규칙 위반(@Pattern) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-008 newPassword 규칙 위반(@Pattern) → 400 INVALID_INPUT_VALUE")
         void invalidNewPassword() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/accounts/2/password")
                             .with(authentication(adminAuth()))
@@ -388,7 +388,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-003 본인 변경 currentPassword 불일치 → 401 INVALID_CURRENT_PASSWORD")
+        @DisplayName("TC-009 본인 변경 currentPassword 불일치 → 401 INVALID_CURRENT_PASSWORD")
         void invalidCurrentPassword() throws Exception {
             doThrow(new CustomException(ErrorCode.INVALID_CURRENT_PASSWORD))
                     .when(adminService).resetPassword(eq(1L), any(), any(), any());
@@ -402,7 +402,7 @@ class AdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-007 미인증 → 401")
+        @DisplayName("TC-010 미인증 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/accounts/2/password")
                             .contentType(MediaType.APPLICATION_JSON)

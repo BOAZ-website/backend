@@ -66,7 +66,7 @@ class ReviewServiceTest {
     // REV-001: 후기 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REV-001 후기 조회")
+    @DisplayName("REV-01 후기 조회")
     class GetReviews {
 
         @Test
@@ -147,11 +147,11 @@ class ReviewServiceTest {
     // REV-002: 후기 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REV-002 후기 등록")
+    @DisplayName("REV-ADMIN-01 후기 등록")
     class CreateReview {
 
         @Test
-        @DisplayName("TC-007 후기 등록 성공 → 저장 후 응답 반환")
+        @DisplayName("TC-001 후기 등록 성공 → 저장 후 응답 반환")
         void success() {
             when(reviewRepository.save(any())).thenAnswer(inv -> {
                 Review r = inv.getArgument(0);
@@ -167,7 +167,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 track=ALL → INVALID_TRACK_SELECTION, 저장 안 함")
+        @DisplayName("TC-002 track=ALL → INVALID_TRACK_SELECTION, 저장 안 함")
         void trackAll() {
             assertThatThrownBy(() -> reviewService.createReview(makeCreateRequest(Track.ALL)))
                     .isInstanceOf(CustomException.class)
@@ -182,11 +182,11 @@ class ReviewServiceTest {
     // REV-003: 후기 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REV-003 후기 수정")
+    @DisplayName("REV-ADMIN-02 후기 수정")
     class UpdateReview {
 
         @Test
-        @DisplayName("TC-009 content만 부분 수정 → name·track·term·imageUrl 기존 값 유지")
+        @DisplayName("TC-001 content만 부분 수정 → name·track·term·imageUrl 기존 값 유지")
         void partialUpdate() {
             Review review = makeReview(1L, Track.ANALYSIS, 26);
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
@@ -201,7 +201,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 존재하지 않는 reviewId → REVIEW_NOT_FOUND")
+        @DisplayName("TC-002 존재하지 않는 reviewId → REVIEW_NOT_FOUND")
         void notFound() {
             when(reviewRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -213,7 +213,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 track=ALL로 수정 시도 → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-003 track=ALL로 수정 시도 → INVALID_TRACK_SELECTION")
         void trackAll() {
             Review review = makeReview(1L, Track.ANALYSIS, 26);
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
@@ -226,7 +226,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("track=null로 수정 시 validateNotAll 미호출 → 기존 track 유지")
+        @DisplayName("TC-004 track=null로 수정 시 validateNotAll 미호출 → 기존 track 유지")
         void trackNullNoValidation() {
             Review review = makeReview(1L, Track.ANALYSIS, 26);
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
@@ -242,11 +242,11 @@ class ReviewServiceTest {
     // REV-004: 후기 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REV-004 후기 삭제")
+    @DisplayName("REV-ADMIN-03 후기 삭제")
     class DeleteReview {
 
         @Test
-        @DisplayName("TC-012 삭제 성공 → repository.delete 호출")
+        @DisplayName("TC-001 삭제 성공 → repository.delete 호출")
         void success() {
             Review review = makeReview(1L, Track.ANALYSIS, 26);
             when(reviewRepository.findById(1L)).thenReturn(Optional.of(review));
@@ -257,7 +257,7 @@ class ReviewServiceTest {
         }
 
         @Test
-        @DisplayName("TC-013 존재하지 않는 reviewId → REVIEW_NOT_FOUND, 삭제 안 함")
+        @DisplayName("TC-002 존재하지 않는 reviewId → REVIEW_NOT_FOUND, 삭제 안 함")
         void notFound() {
             when(reviewRepository.findById(999L)).thenReturn(Optional.empty());
 

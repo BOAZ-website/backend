@@ -46,11 +46,11 @@ class ArchiveControllerTest {
     // ARC-001 GET /api/v1/archiving/projects
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-001 GET /api/v1/archiving/projects")
+    @DisplayName("ARC-01 GET /api/v1/archiving/projects")
     class GetProjects {
 
         @Test
-        @DisplayName("TC-012 인증 없이 기본 파라미터 → 200 OK")
+        @DisplayName("TC-021 인증 없이 기본 파라미터 → 200 OK")
         void getProjects_200() throws Exception {
             when(archiveService.searchArchives(any(), any(), any(), any(), anyInt(), anyInt()))
                     .thenReturn(mockPageResponse(1, 3));
@@ -67,11 +67,11 @@ class ArchiveControllerTest {
     // ARC-002 GET /api/v1/archiving/activities
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-002 GET /api/v1/archiving/activities")
+    @DisplayName("ARC-02 GET /api/v1/archiving/activities")
     class GetActivities {
 
         @Test
-        @DisplayName("TC-011 인증 없이 기본 파라미터 → 200 OK")
+        @DisplayName("TC-020 인증 없이 기본 파라미터 → 200 OK")
         void getActivities_200() throws Exception {
             when(archiveService.searchArchives(any(), any(), any(), any(), anyInt(), anyInt()))
                     .thenReturn(mockPageResponse(1, 3));
@@ -88,11 +88,11 @@ class ArchiveControllerTest {
     // ARC-003 GET /api/v1/archiving/blogs
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-003 GET /api/v1/archiving/blogs")
+    @DisplayName("ARC-03 GET /api/v1/archiving/blogs")
     class GetBlogs {
 
         @Test
-        @DisplayName("TC-012 인증 없이 기본 파라미터 → 200 OK")
+        @DisplayName("TC-021 인증 없이 기본 파라미터 → 200 OK")
         void getBlogs_200() throws Exception {
             when(archiveService.searchArchives(any(), any(), any(), any(), anyInt(), anyInt()))
                     .thenReturn(mockPageResponse(1, 3));
@@ -109,11 +109,11 @@ class ArchiveControllerTest {
     // ARC-004 GET /api/v1/archiving/terms
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-004 GET /api/v1/archiving/terms")
+    @DisplayName("ARC-04 GET /api/v1/archiving/terms")
     class GetTerms {
 
         @Test
-        @DisplayName("TC-005 인증 없이 조회 → 200 OK + value/label 검증")
+        @DisplayName("TC-010 인증 없이 조회 → 200 OK + value/label 검증")
         void getTerms_200() throws Exception {
             when(archiveService.getTerms())
                     .thenReturn(ArchiveTermsResponse.from(List.of(26, 0)));

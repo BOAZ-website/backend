@@ -49,7 +49,7 @@ class ArchiveServiceTest {
     // ARC-001 프로젝트 아카이빙 조회
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-001 프로젝트 아카이빙 조회")
+    @DisplayName("ARC-01 프로젝트 아카이빙 조회")
     class ProjectSearch {
 
         @Nested
@@ -192,7 +192,7 @@ class ArchiveServiceTest {
     // ARC-002 활동사진 아카이빙 조회
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-002 활동사진 아카이빙 조회")
+    @DisplayName("ARC-02 활동사진 아카이빙 조회")
     class ActivitySearch {
 
         @Nested
@@ -324,7 +324,7 @@ class ArchiveServiceTest {
     // ARC-003 기술블로그 아카이빙 조회
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-003 기술블로그 아카이빙 조회")
+    @DisplayName("ARC-03 기술블로그 아카이빙 조회")
     class BlogSearch {
 
         @Nested
@@ -475,7 +475,7 @@ class ArchiveServiceTest {
     // ARC-004 기수 목록 조회
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("ARC-004 기수 목록 조회")
+    @DisplayName("ARC-04 기수 목록 조회")
     class GetTermsTest {
 
         @Nested

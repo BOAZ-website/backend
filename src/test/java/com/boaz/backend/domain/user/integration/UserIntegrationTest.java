@@ -75,11 +75,11 @@ class UserIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("내 정보 조회 end-to-end (USER-001)")
+    @DisplayName("USER-01 내 정보 조회 end-to-end")
     class GetMyInfo {
 
         @Test
-        @DisplayName("저장된 유저 → nickname 반환")
+        @DisplayName("TC-005 저장된 유저 → nickname 반환")
         void found() {
             User u = saveUser("홍길동");
             em.flush();
@@ -91,7 +91,7 @@ class UserIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("존재하지 않는 userId → USER_NOT_FOUND")
+        @DisplayName("TC-006 존재하지 않는 userId → USER_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> userService.getMyInfo(999L))
                     .isInstanceOf(CustomException.class)
@@ -100,11 +100,11 @@ class UserIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("합격자 승격 end-to-end (USER-ADMIN-001)")
+    @DisplayName("USER-ADMIN-01 합격자 승격 end-to-end")
     class BulkPromote {
 
         @Test
-        @DisplayName("SUBMITTED 지원서 보유 → MEMBER 전환 + 개인정보가 실제 DB에 영속")
+        @DisplayName("TC-016 SUBMITTED 지원서 보유 → MEMBER 전환 + 개인정보가 실제 DB에 영속")
         void promotePersists() {
             User u = saveUser("닉네임");
             Recruitment r = recruitmentRepository.save(Recruitment.create(27,
@@ -136,7 +136,7 @@ class UserIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("finalDecision=FAIL 지원서 → APPLICANT_NOT_PASSED, DB 상 MEMBER 로 바뀌지 않음")
+        @DisplayName("TC-017 finalDecision=FAIL 지원서 → APPLICANT_NOT_PASSED, DB 상 MEMBER 로 바뀌지 않음")
         void failNotPromoted() {
             User u = saveUser("닉네임");
             Recruitment r = recruitmentRepository.save(Recruitment.create(27,
@@ -157,7 +157,7 @@ class UserIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("SUBMITTED 지원서 없음 → APPLICATION_NOT_FOUND, 승격 안 됨")
+        @DisplayName("TC-018 SUBMITTED 지원서 없음 → APPLICATION_NOT_FOUND, 승격 안 됨")
         void noApplication() {
             User u = saveUser("닉네임");
             em.flush();

@@ -58,7 +58,7 @@ class AdminRepositoryTest extends TestcontainersBase {
     class FindByUsername {
 
         @Test
-        @DisplayName("활성 계정만 username 으로 조회, soft delete 된 username 은 empty")
+        @DisplayName("TC-001 활성 계정만 username 으로 조회, soft delete 된 username 은 empty")
         void onlyActive() {
             persistAdmin("active", Admin.Role.TEAM, Track.ANALYSIS, "활성", Admin.TeamName.기획팀);
             persistDeletedAdmin("deleted", Admin.Role.TEAM, Track.ANALYSIS, "삭제됨", Admin.TeamName.기획팀);
@@ -74,7 +74,7 @@ class AdminRepositoryTest extends TestcontainersBase {
     class ExistsByUsername {
 
         @Test
-        @DisplayName("활성 username 은 true, soft delete 된 username 은 false (재사용 가능)")
+        @DisplayName("TC-002 활성 username 은 true, soft delete 된 username 은 false (재사용 가능)")
         void softDeleteReusable() {
             persistAdmin("active", Admin.Role.TEAM, Track.ANALYSIS, "활성", Admin.TeamName.기획팀);
             persistDeletedAdmin("recycled", Admin.Role.TEAM, Track.ANALYSIS, "삭제됨", Admin.TeamName.기획팀);
@@ -91,7 +91,7 @@ class AdminRepositoryTest extends TestcontainersBase {
     class FindAllOrdered {
 
         @Test
-        @DisplayName("created_at 오름차순 + soft delete 제외")
+        @DisplayName("TC-003 created_at 오름차순 + soft delete 제외")
         void orderedExcludingDeleted() {
             Admin a1 = persistAdmin("a1", Admin.Role.SUPER, Track.ANALYSIS, "first", Admin.TeamName.대표진);
             Admin a2 = persistAdmin("a2", Admin.Role.TEAM, Track.ANALYSIS, "second", Admin.TeamName.기획팀);
@@ -113,7 +113,7 @@ class AdminRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("활성 계정 없음 → 빈 리스트")
+        @DisplayName("TC-004 활성 계정 없음 → 빈 리스트")
         void empty() {
             assertThat(adminRepository.findAllByDeletedAtIsNullOrderByCreatedAtAsc()).isEmpty();
         }
@@ -124,7 +124,7 @@ class AdminRepositoryTest extends TestcontainersBase {
     class FindById {
 
         @Test
-        @DisplayName("활성 계정은 반환, soft delete 된 계정은 empty")
+        @DisplayName("TC-005 활성 계정은 반환, soft delete 된 계정은 empty")
         void onlyActive() {
             Admin active = persistAdmin("active", Admin.Role.TEAM, Track.ANALYSIS, "활성", Admin.TeamName.기획팀);
             Admin deleted = persistDeletedAdmin("deleted", Admin.Role.TEAM, Track.ANALYSIS, "삭제됨", Admin.TeamName.기획팀);
@@ -140,7 +140,7 @@ class AdminRepositoryTest extends TestcontainersBase {
     class FindByTrack {
 
         @Test
-        @DisplayName("해당 부문 활성 평가자만 이름 오름차순")
+        @DisplayName("TC-006 해당 부문 활성 평가자만 이름 오름차순")
         void byTrackOrdered() {
             persistAdmin("e1", Admin.Role.TEAM, Track.ENGINEERING, "나", Admin.TeamName.기획팀);
             persistAdmin("e2", Admin.Role.TEAM, Track.ENGINEERING, "가", Admin.TeamName.기획팀);

@@ -49,7 +49,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@DisplayName("ADMIN-005 deleteAccount 동시성 — 락아웃 가드")
+@DisplayName("ADMIN-05 deleteAccount 동시성 — 락아웃 가드")
 class AdminLockoutConcurrencyTest extends TestcontainersBase {
 
     /** 첫 번째 트랜잭션이 커밋을 미루고 붙잡고 있는 시간. 두 번째가 판정까지 들어올 여유면 된다. */
@@ -84,7 +84,7 @@ class AdminLockoutConcurrencyTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("TC-006 두 보유자가 동시에 서로를 지우면 한쪽만 성공한다 — 남는 보유자 1명")
+    @DisplayName("TC-012 두 보유자가 동시에 서로를 지우면 한쪽만 성공한다 — 남는 보유자 1명")
     void concurrentMutualDeleteKeepsOneManager() throws Exception {
         CountDownLatch firstDeletedNotCommitted = new CountDownLatch(1);
         ExecutorService pool = Executors.newFixedThreadPool(2);

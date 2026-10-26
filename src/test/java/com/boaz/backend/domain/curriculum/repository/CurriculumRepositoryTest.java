@@ -36,7 +36,7 @@ class CurriculumRepositoryTest extends TestcontainersBase {
     class TrackUniqueConstraint {
 
         @Test
-        @DisplayName("동일 track 두 번째 저장 시 DataIntegrityViolationException 발생")
+        @DisplayName("TC-001 동일 track 두 번째 저장 시 DataIntegrityViolationException 발생")
         void duplicateTrackViolatesConstraint() {
             persistCurriculum(Track.ANALYSIS);
 
@@ -48,7 +48,7 @@ class CurriculumRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("서로 다른 track 은 정상 저장")
+        @DisplayName("TC-002 서로 다른 track 은 정상 저장")
         void differentTracksAllowed() {
             persistCurriculum(Track.ANALYSIS);
             persistCurriculum(Track.ENGINEERING);

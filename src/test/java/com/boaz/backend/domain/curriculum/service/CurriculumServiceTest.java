@@ -72,7 +72,7 @@ class CurriculumServiceTest {
     // CUR-001: 커리큘럼 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("CUR-001 커리큘럼 조회")
+    @DisplayName("CUR-01 커리큘럼 조회")
     class GetCurriculums {
 
         @Test
@@ -124,11 +124,11 @@ class CurriculumServiceTest {
     // CUR-002: 커리큘럼 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("CUR-002 커리큘럼 등록")
+    @DisplayName("CUR-ADMIN-01 커리큘럼 등록")
     class CreateCurriculum {
 
         @Test
-        @DisplayName("TC-005 등록 성공 → step 오름차순 정렬 후 저장")
+        @DisplayName("TC-001 등록 성공 → step 오름차순 정렬 후 저장")
         void successWithStepSorting() {
             when(curriculumRepository.existsByTrack(Track.ANALYSIS)).thenReturn(false);
             when(curriculumRepository.save(any())).thenAnswer(inv -> {
@@ -154,7 +154,7 @@ class CurriculumServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 track=ALL → INVALID_TRACK_SELECTION, 저장 안 함")
+        @DisplayName("TC-002 track=ALL → INVALID_TRACK_SELECTION, 저장 안 함")
         void trackAll() {
             assertThatThrownBy(() -> curriculumService.createCurriculum(
                     makeCreateRequest(Track.ALL, List.of(makeStep(1, "제목", "설명")))))
@@ -166,7 +166,7 @@ class CurriculumServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 동일 track 중복 등록 → DUPLICATE_TRACK, 저장 안 함")
+        @DisplayName("TC-003 동일 track 중복 등록 → DUPLICATE_TRACK, 저장 안 함")
         void duplicateTrack() {
             when(curriculumRepository.existsByTrack(Track.ANALYSIS)).thenReturn(true);
 
@@ -180,7 +180,7 @@ class CurriculumServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 동시 요청으로 existsByTrack 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_TRACK")
+        @DisplayName("TC-004 동시 요청으로 existsByTrack 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_TRACK")
         void raceConditionCaughtByDbConstraint() {
             when(curriculumRepository.existsByTrack(Track.ANALYSIS)).thenReturn(false);
             when(curriculumRepository.save(any()))
@@ -198,11 +198,11 @@ class CurriculumServiceTest {
     // CUR-003: 커리큘럼 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("CUR-003 커리큘럼 수정")
+    @DisplayName("CUR-ADMIN-02 커리큘럼 수정")
     class UpdateCurriculum {
 
         @Test
-        @DisplayName("TC-008 단계 전체 교체 성공 → track 유지")
+        @DisplayName("TC-001 단계 전체 교체 성공 → track 유지")
         void success() {
             Curriculum c = makeCurriculum(1L, Track.ANALYSIS);
             when(curriculumRepository.findById(1L)).thenReturn(Optional.of(c));
@@ -216,7 +216,7 @@ class CurriculumServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
+        @DisplayName("TC-002 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
         void notFound() {
             when(curriculumRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -232,11 +232,11 @@ class CurriculumServiceTest {
     // CUR-004: 커리큘럼 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("CUR-004 커리큘럼 삭제")
+    @DisplayName("CUR-ADMIN-03 커리큘럼 삭제")
     class DeleteCurriculum {
 
         @Test
-        @DisplayName("TC-010 삭제 성공 → repository.delete 호출")
+        @DisplayName("TC-001 삭제 성공 → repository.delete 호출")
         void success() {
             Curriculum c = makeCurriculum(1L, Track.ANALYSIS);
             when(curriculumRepository.findById(1L)).thenReturn(Optional.of(c));
@@ -247,7 +247,7 @@ class CurriculumServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND, 삭제 안 함")
+        @DisplayName("TC-002 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND, 삭제 안 함")
         void notFound() {
             when(curriculumRepository.findById(999L)).thenReturn(Optional.empty());
 

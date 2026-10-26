@@ -66,7 +66,7 @@ class UserAdminPermissionGridTest {
     }
 
     @ParameterizedTest(name = "{0} → {3}")
-    @DisplayName("합격자 승격 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0)")
+    @DisplayName("TC-001 합격자 승격 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0)")
     @MethodSource("grid")
     void grid(String label, Admin.Role role, Admin.TeamName team, boolean allowed) throws Exception {
         var result = mockMvc.perform(patch("/api/v1/admin/users/promote")

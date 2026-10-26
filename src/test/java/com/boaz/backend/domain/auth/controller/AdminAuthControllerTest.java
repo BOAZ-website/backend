@@ -51,11 +51,11 @@ class AdminAuthControllerTest {
     // AUTH-001 POST /api/v1/auth/admin/login
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-001 POST /api/v1/auth/admin/login")
+    @DisplayName("AUTH-01 POST /api/v1/auth/admin/login")
     class Login {
 
         @Test
-        @DisplayName("TC-001 정상 로그인 → 200 + Access Token 반환 + Refresh Token 쿠키 설정")
+        @DisplayName("TC-006 정상 로그인 → 200 + Access Token 반환 + Refresh Token 쿠키 설정")
         void login_success() throws Exception {
             when(authService.adminLogin(any())).thenReturn(new LoginResponse("access-token", "refresh-token"));
             doNothing().when(cookieProvider).addAdminRefreshTokenCookie(any(), any());
@@ -71,7 +71,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 아이디/비밀번호 불일치 → 401 INVALID_CREDENTIALS")
+        @DisplayName("TC-007 아이디/비밀번호 불일치 → 401 INVALID_CREDENTIALS")
         void login_invalid_credentials() throws Exception {
             when(authService.adminLogin(any())).thenThrow(new CustomException(ErrorCode.INVALID_CREDENTIALS));
 
@@ -85,7 +85,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-003 username 누락 → 400 (@Valid)")
+        @DisplayName("TC-008 username 누락 → 400 (@Valid)")
         void login_missing_username() throws Exception {
             mockMvc.perform(post("/api/v1/auth/admin/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -96,7 +96,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 password 누락 → 400 (@Valid)")
+        @DisplayName("TC-009 password 누락 → 400 (@Valid)")
         void login_missing_password() throws Exception {
             mockMvc.perform(post("/api/v1/auth/admin/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -111,11 +111,11 @@ class AdminAuthControllerTest {
     // AUTH-002 POST /api/v1/auth/admin/refresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-002 POST /api/v1/auth/admin/refresh")
+    @DisplayName("AUTH-02 POST /api/v1/auth/admin/refresh")
     class Refresh {
 
         @Test
-        @DisplayName("TC-001 유효한 쿠키 → 200 + 새 Access Token 반환")
+        @DisplayName("TC-008 유효한 쿠키 → 200 + 새 Access Token 반환")
         void refresh_success() throws Exception {
             when(authService.adminRefresh("valid-refresh-token"))
                     .thenReturn(new TokenRefreshResponse("new-access-token"));
@@ -128,7 +128,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 쿠키 없이 요청 → 401 TOKEN_NOT_FOUND (서비스 레이어에서 거부)")
+        @DisplayName("TC-009 쿠키 없이 요청 → 401 TOKEN_NOT_FOUND (서비스 레이어에서 거부)")
         void refresh_no_cookie() throws Exception {
             when(authService.adminRefresh(null))
                     .thenThrow(new CustomException(ErrorCode.TOKEN_NOT_FOUND));
@@ -139,7 +139,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-003 만료된 Refresh Token → 401 EXPIRED_TOKEN")
+        @DisplayName("TC-010 만료된 Refresh Token → 401 EXPIRED_TOKEN")
         void refresh_expired_token() throws Exception {
             when(authService.adminRefresh("expired-refresh-token"))
                     .thenThrow(new CustomException(ErrorCode.EXPIRED_TOKEN));
@@ -155,11 +155,11 @@ class AdminAuthControllerTest {
     // AUTH-003 POST /api/v1/auth/admin/logout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-003 POST /api/v1/auth/admin/logout")
+    @DisplayName("AUTH-03 POST /api/v1/auth/admin/logout")
     class Logout {
 
         @Test
-        @DisplayName("TC-001 유효한 Access Token → 200 OK + 쿠키 만료 처리")
+        @DisplayName("TC-003 유효한 Access Token → 200 OK + 쿠키 만료 처리")
         void logout_success() throws Exception {
             doNothing().when(authService).adminLogout(1L);
             doNothing().when(cookieProvider).expireAdminRefreshTokenCookie(any());
@@ -175,7 +175,7 @@ class AdminAuthControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 인증 없이 접근 → 401")
+        @DisplayName("TC-004 인증 없이 접근 → 401")
         void logout_unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/auth/admin/logout"))
                     .andExpect(status().isUnauthorized());

@@ -51,11 +51,11 @@ class CurriculumControllerTest {
     // CUR-001: GET /api/v1/curriculums
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("CUR-001 GET /api/v1/curriculums")
+    @DisplayName("CUR-01 GET /api/v1/curriculums")
     class GetCurriculums {
 
         @Test
-        @DisplayName("TC-001 track 미입력 → 200 + 전체 목록")
+        @DisplayName("TC-005 track 미입력 → 200 + 전체 목록")
         void allTracks() throws Exception {
             when(curriculumService.getCurriculums(isNull())).thenReturn(List.of(
                     makeCurriculumResponse(1L, Track.ANALYSIS),
@@ -69,7 +69,7 @@ class CurriculumControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 track=ANALYSIS → 200 + 해당 트랙만 반환")
+        @DisplayName("TC-006 track=ANALYSIS → 200 + 해당 트랙만 반환")
         void specificTrack() throws Exception {
             when(curriculumService.getCurriculums(Track.ANALYSIS))
                     .thenReturn(List.of(makeCurriculumResponse(1L, Track.ANALYSIS)));
@@ -82,7 +82,7 @@ class CurriculumControllerTest {
         }
 
         @Test
-        @DisplayName("TC-003 track=ALL → 400 INVALID_TRACK_SELECTION")
+        @DisplayName("TC-007 track=ALL → 400 INVALID_TRACK_SELECTION")
         void trackAll() throws Exception {
             when(curriculumService.getCurriculums(Track.ALL))
                     .thenThrow(new CustomException(ErrorCode.INVALID_TRACK_SELECTION));
@@ -94,7 +94,7 @@ class CurriculumControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 해당 track 데이터 없을 때 → 200 + 빈 배열")
+        @DisplayName("TC-008 해당 track 데이터 없을 때 → 200 + 빈 배열")
         void noData() throws Exception {
             when(curriculumService.getCurriculums(Track.ENGINEERING)).thenReturn(List.of());
 
@@ -105,7 +105,7 @@ class CurriculumControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 인증 없이 접근 가능 (공개 API)")
+        @DisplayName("TC-009 [Security] 인증 없이 접근 가능 (공개 API)")
         void publicApi() throws Exception {
             when(curriculumService.getCurriculums(any())).thenReturn(List.of());
 
@@ -114,7 +114,7 @@ class CurriculumControllerTest {
         }
 
         @Test
-        @DisplayName("curriculum_steps 필드명 확인 → snake_case")
+        @DisplayName("TC-010 curriculum_steps 필드명 확인 → snake_case")
         void curriculumStepsFieldName() throws Exception {
             when(curriculumService.getCurriculums(isNull()))
                     .thenReturn(List.of(makeCurriculumResponse(1L, Track.ANALYSIS)));

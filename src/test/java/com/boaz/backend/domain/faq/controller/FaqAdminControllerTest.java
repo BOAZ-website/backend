@@ -68,11 +68,11 @@ class FaqAdminControllerTest {
     // FAQ-002: POST /api/v1/admin/faqs
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("FAQ-002 POST /api/v1/admin/faqs")
+    @DisplayName("FAQ-ADMIN-01 POST /api/v1/admin/faqs")
     class CreateFaq {
 
         @Test
-        @DisplayName("TC-003 FAQ 등록 성공 → 201 Created")
+        @DisplayName("TC-005 FAQ 등록 성공 → 201 Created")
         void success() throws Exception {
             when(faqService.createFaq(any())).thenReturn(makeFaqResponse(1L, Faq.Category.RECRUITMENT, 1));
 
@@ -87,7 +87,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 동일 카테고리 내 orderNum 중복 → 409 DUPLICATE_ORDER_NUM")
+        @DisplayName("TC-006 동일 카테고리 내 orderNum 중복 → 409 DUPLICATE_ORDER_NUM")
         void duplicateOrderNum() throws Exception {
             when(faqService.createFaq(any()))
                     .thenThrow(new CustomException(ErrorCode.DUPLICATE_ORDER_NUM));
@@ -101,7 +101,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("필수 필드 누락 (question 없음) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-007 필수 필드 누락 (question 없음) → 400 INVALID_INPUT_VALUE")
         void missingRequiredField() throws Exception {
             String body = objectMapper.createObjectNode()
                     .put("answer", "답변")
@@ -117,7 +117,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-008 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/faqs")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -130,11 +130,11 @@ class FaqAdminControllerTest {
     // FAQ-003: PATCH /api/v1/admin/faqs/{faqId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("FAQ-003 PATCH /api/v1/admin/faqs/{faqId}")
+    @DisplayName("FAQ-ADMIN-02 PATCH /api/v1/admin/faqs/{faqId}")
     class UpdateFaq {
 
         @Test
-        @DisplayName("TC-005 부분 수정 성공 → 200 OK")
+        @DisplayName("TC-006 부분 수정 성공 → 200 OK")
         void success() throws Exception {
             when(faqService.updateFaq(eq(1L), any())).thenReturn(makeFaqResponse(1L, Faq.Category.RECRUITMENT, 1));
 
@@ -183,7 +183,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-009 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/faqs/1")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -196,11 +196,11 @@ class FaqAdminControllerTest {
     // FAQ-004: DELETE /api/v1/admin/faqs/{faqId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("FAQ-004 DELETE /api/v1/admin/faqs/{faqId}")
+    @DisplayName("FAQ-ADMIN-03 DELETE /api/v1/admin/faqs/{faqId}")
     class DeleteFaq {
 
         @Test
-        @DisplayName("TC-009 FAQ 삭제 성공 → 200 OK")
+        @DisplayName("TC-003 FAQ 삭제 성공 → 200 OK")
         void success() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/faqs/1")
                             .with(authentication(adminAuth())))
@@ -209,7 +209,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010 존재하지 않는 faqId → 404 FAQ_NOT_FOUND")
+        @DisplayName("TC-004 존재하지 않는 faqId → 404 FAQ_NOT_FOUND")
         void notFound() throws Exception {
             org.mockito.Mockito.doThrow(new CustomException(ErrorCode.FAQ_NOT_FOUND))
                     .when(faqService).deleteFaq(999L);
@@ -221,7 +221,7 @@ class FaqAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-005 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/faqs/1"))
                     .andExpect(status().isUnauthorized());

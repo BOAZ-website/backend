@@ -133,7 +133,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
                 "/api/v1/recruitment/26",
                 "/actuator/health"
         })
-        @DisplayName("공개 GET 경로는 토큰 없이 게이트를 통과한다")
+        @DisplayName("TC-005 공개 GET 경로는 토큰 없이 게이트를 통과한다")
         void public_get_paths_pass_gate(String path) throws Exception {
             mockMvc.perform(get(path))
                     .andExpect(result -> assertThat(result.getResponse().getStatus())
@@ -142,7 +142,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("POST /api/v1/recruitment/subscriptions 는 토큰 없이 게이트를 통과한다")
+        @DisplayName("TC-006 POST /api/v1/recruitment/subscriptions 는 토큰 없이 게이트를 통과한다")
         void public_subscription_post_passes_gate() throws Exception {
             mockMvc.perform(post("/api/v1/recruitment/subscriptions")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -151,7 +151,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("POST /api/v1/auth/admin/login 은 토큰 없이 게이트를 통과한다")
+        @DisplayName("TC-007 POST /api/v1/auth/admin/login 은 토큰 없이 게이트를 통과한다")
         void public_login_passes_gate() throws Exception {
             mockMvc.perform(post("/api/v1/auth/admin/login")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -165,7 +165,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
          */
         @ParameterizedTest(name = "POST {0} → 게이트 통과")
         @ValueSource(strings = {"/api/v1/auth/admin/refresh", "/api/v1/auth/user/refresh"})
-        @DisplayName("공개 refresh 경로는 토큰 없이 게이트를 통과한다")
+        @DisplayName("TC-008 공개 refresh 경로는 토큰 없이 게이트를 통과한다")
         void public_refresh_paths_pass_gate(String path) throws Exception {
             String cookieName = path.contains("admin") ? "admin_refresh_token" : "user_refresh_token";
 
@@ -175,7 +175,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("화이트리스트에 없는 경로는 미인증이면 401 TOKEN_NOT_FOUND")
+        @DisplayName("TC-009 화이트리스트에 없는 경로는 미인증이면 401 TOKEN_NOT_FOUND")
         void unmapped_path_blocked_without_token() throws Exception {
             mockMvc.perform(get("/api/v1/not-a-registered-path"))
                     .andExpect(status().isUnauthorized())
@@ -183,7 +183,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("화이트리스트에 없는 경로는 인증해도 403 ACCESS_DENIED — denyAll 이 실제로 막는다")
+        @DisplayName("TC-010 화이트리스트에 없는 경로는 인증해도 403 ACCESS_DENIED — denyAll 이 실제로 막는다")
         void unmapped_path_blocked_with_token() throws Exception {
             saveAdmin("denyall_admin", "Boaz1234!", Admin.Role.TEAM);
             String accessToken = loginAndGetAccessToken("denyall_admin", "Boaz1234!");
@@ -195,7 +195,7 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("공개 경로의 도메인 에러 응답이 403으로 덮이지 않는다")
+        @DisplayName("TC-011 공개 경로의 도메인 에러 응답이 403으로 덮이지 않는다")
         void domain_error_not_masked_by_gate() throws Exception {
             mockMvc.perform(get("/api/v1/recruitment/9999"))
                     .andExpect(status().isNotFound())

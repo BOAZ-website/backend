@@ -101,7 +101,7 @@ class CsvServiceTest {
     class FinalDecisionColumn {
 
         @Test
-        @DisplayName("헤더에 '최종 평가' 컬럼이 '전화번호' 다음에 포함")
+        @DisplayName("TC-001 헤더에 '최종 평가' 컬럼이 '전화번호' 다음에 포함")
         void headerContainsFinalDecision() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -118,7 +118,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("final_decision=PASS → '합격', FAIL → '불합격' 한글 출력")
+        @DisplayName("TC-002 final_decision=PASS → '합격', FAIL → '불합격' 한글 출력")
         void decisionRenderedInKorean() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant pass = makeApplicant(r);
@@ -132,7 +132,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("기본값(PENDING) → '미정' 출력")
+        @DisplayName("TC-003 기본값(PENDING) → '미정' 출력")
         void defaultPendingRendered() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r); // 기본 final_decision = PENDING
@@ -163,7 +163,7 @@ class CsvServiceTest {
     class TextAnswer {
 
         @Test
-        @DisplayName("TEXT 답변은 그대로 출력")
+        @DisplayName("TC-004 TEXT 답변은 그대로 출력")
         void textPassThrough() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -179,7 +179,7 @@ class CsvServiceTest {
     class SingleSelectTable {
 
         @Test
-        @DisplayName("단일선택 TABLE → '키: 값' 형태로 출력")
+        @DisplayName("TC-005 단일선택 TABLE → '키: 값' 형태로 출력")
         void singleSelectFormat() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -191,7 +191,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("단일선택 TABLE 복수 행 → 줄바꿈으로 구분")
+        @DisplayName("TC-006 단일선택 TABLE 복수 행 → 줄바꿈으로 구분")
         void multiRowSingleSelect() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -212,7 +212,7 @@ class CsvServiceTest {
     class MultiSelectTable {
 
         @Test
-        @DisplayName("복수선택 배열 값 → '키: 값1, 값2' 형태로 join 출력")
+        @DisplayName("TC-007 복수선택 배열 값 → '키: 값1, 값2' 형태로 join 출력")
         void multiSelectJoinFormat() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -226,7 +226,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("복수선택 빈 배열 행 → '키: ' 형태로 출력")
+        @DisplayName("TC-008 복수선택 빈 배열 행 → '키: ' 형태로 출력")
         void emptyArrayRow() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -239,7 +239,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("복수선택 단일 원소 → 쉼표 없이 출력")
+        @DisplayName("TC-009 복수선택 단일 원소 → 쉼표 없이 출력")
         void singleElementNoComma() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -251,7 +251,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("행(key)이 '='로 시작하면 CSV 인젝션 sanitize 적용")
+        @DisplayName("TC-010 행(key)이 '='로 시작하면 CSV 인젝션 sanitize 적용")
         void csvInjectionSanitizedAfterJoin() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -273,7 +273,7 @@ class CsvServiceTest {
     class BaseColumnCsvInjection {
 
         @Test
-        @DisplayName("name이 '='로 시작 → sanitize 적용되어 앞에 ' 추가")
+        @DisplayName("TC-011 name이 '='로 시작 → sanitize 적용되어 앞에 ' 추가")
         void nameStartingWithEquals() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "=HYPERLINK(\"http://evil.com\")", "한국대", "컴공");
@@ -286,7 +286,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("university가 '+'로 시작 → sanitize 적용")
+        @DisplayName("TC-012 university가 '+'로 시작 → sanitize 적용")
         void universityStartingWithPlus() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "홍길동", "+1+1", "컴공");
@@ -299,7 +299,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("major가 '-'로 시작 → sanitize 적용")
+        @DisplayName("TC-013 major가 '-'로 시작 → sanitize 적용")
         void majorStartingWithMinus() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "홍길동", "한국대", "-2+3");
@@ -312,7 +312,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("major가 '@'로 시작 → sanitize 적용")
+        @DisplayName("TC-014 major가 '@'로 시작 → sanitize 적용")
         void majorStartingWithAt() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "홍길동", "한국대", "@SUM(1,1)");
@@ -325,7 +325,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("정상 값(트리거 문자로 시작하지 않음)은 sanitize 미적용")
+        @DisplayName("TC-015 정상 값(트리거 문자로 시작하지 않음)은 sanitize 미적용")
         void normalValueNotSanitized() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "홍길동", "한국대", "컴퓨터공학과");
@@ -342,7 +342,7 @@ class CsvServiceTest {
     class EmptyApplicantList {
 
         @Test
-        @DisplayName("지원자 없음 → 헤더만 출력, 데이터 행 없음")
+        @DisplayName("TC-016 지원자 없음 → 헤더만 출력, 데이터 행 없음")
         void headerOnly() throws IOException {
             Recruitment r = makeRecruitment();
             ApplicationQuestion q = makeQuestion(r, ApplicationQuestion.Type.TEXT, "TEXT1", null);
@@ -362,7 +362,7 @@ class CsvServiceTest {
     class QuoteEscaping {
 
         @Test
-        @DisplayName("name에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
+        @DisplayName("TC-017 name에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
         void quoteInNameIsDoubled() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r, "홍\"길동\"", "한국대", "컴공");
@@ -374,7 +374,7 @@ class CsvServiceTest {
         }
 
         @Test
-        @DisplayName("TEXT 답변에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
+        @DisplayName("TC-018 TEXT 답변에 큰따옴표 포함 → 중복 따옴표로 이스케이프됨")
         void quoteInAnswerIsDoubled() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);
@@ -390,7 +390,7 @@ class CsvServiceTest {
     class TextAnswerWithNewline {
 
         @Test
-        @DisplayName("TEXT 답변에 개행 포함 → 따옴표로 감싸져 하나의 셀로 유지됨")
+        @DisplayName("TC-019 TEXT 답변에 개행 포함 → 따옴표로 감싸져 하나의 셀로 유지됨")
         void newlineKeptWithinQuotedCell() throws IOException {
             Recruitment r = makeRecruitment();
             Applicant a = makeApplicant(r);

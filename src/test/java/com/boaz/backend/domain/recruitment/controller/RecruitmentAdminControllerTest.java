@@ -78,11 +78,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-001: POST /api/v1/admin/recruitment/applications/download
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-001 POST /api/v1/admin/recruitment/applications/download")
+    @DisplayName("REC-ADMIN-01 POST /api/v1/admin/recruitment/applications/download")
     class DownloadApplications {
 
         @Test
-        @DisplayName("정상 요청(decision 미지정) → 200, 기본값 ALL 전달")
+        @DisplayName("TC-026 정상 요청(decision 미지정) → 200, 기본값 ALL 전달")
         void success() throws Exception {
             doNothing().when(recruitmentService).downloadApplications(eq(27), any());
 
@@ -96,7 +96,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("decision=PASS 지정 → 200, PASS 필터 전달")
+        @DisplayName("TC-027 decision=PASS 지정 → 200, PASS 필터 전달")
         void successWithPassFilter() throws Exception {
             doNothing().when(recruitmentService).downloadApplications(eq(27), any());
 
@@ -110,7 +110,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("decision 값이 ENUM 범위 밖 → 400")
+        @DisplayName("TC-028 decision 값이 ENUM 범위 밖 → 400")
         void invalidDecision() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .with(authentication(adminAuth()))
@@ -120,7 +120,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-004 미인증 요청 → 401")
+        @DisplayName("TC-029 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .param("term", "27"))
@@ -129,7 +129,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-004 User 권한으로 접근 → 403")
+        @DisplayName("TC-030 User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/applications/download")
                             .with(authentication(userAuth()))
@@ -139,7 +139,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 존재하지 않는 term → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-031 존재하지 않는 term → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             doThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND))
                     .when(recruitmentService).downloadApplications(eq(999), any());
@@ -152,7 +152,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 S3 업로드 실패 → 500 S3_UPLOAD_FAILED")
+        @DisplayName("TC-032 S3 업로드 실패 → 500 S3_UPLOAD_FAILED")
         void s3Failed() throws Exception {
             doThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED))
                     .when(recruitmentService).downloadApplications(eq(27), any());
@@ -169,11 +169,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-010: DELETE /api/v1/admin/recruitment/{id}/applicants
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-010 DELETE /api/v1/admin/recruitment/{id}/applicants")
+    @DisplayName("REC-ADMIN-10 DELETE /api/v1/admin/recruitment/{id}/applicants")
     class DeleteApplicants {
 
         @Test
-        @DisplayName("TC-001 정상 삭제 → 200")
+        @DisplayName("TC-005 정상 삭제 → 200")
         void success() throws Exception {
             doNothing().when(recruitmentService).deleteApplicants(1L);
 
@@ -184,14 +184,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005 미인증 요청 → 401")
+        @DisplayName("TC-006 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/1/applicants"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("EX-004 User 권한으로 접근 → 403")
+        @DisplayName("TC-007 User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/1/applicants")
                             .with(authentication(userAuth())))
@@ -199,7 +199,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 모집 진행 중 → 400 RECRUITMENT_NOT_CLOSED")
+        @DisplayName("TC-008 모집 진행 중 → 400 RECRUITMENT_NOT_CLOSED")
         void notClosed() throws Exception {
             doThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_CLOSED))
                     .when(recruitmentService).deleteApplicants(1L);
@@ -215,11 +215,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-011: GET /api/v1/admin/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-011 GET /api/v1/admin/recruitment/subscriptions")
+    @DisplayName("REC-ADMIN-11 GET /api/v1/admin/recruitment/subscriptions")
     class GetSubscriptions {
 
         @Test
-        @DisplayName("TC-001 데이터 있을 때 → 200 + 목록 반환")
+        @DisplayName("TC-003 데이터 있을 때 → 200 + 목록 반환")
         void withData() throws Exception {
             List<SubscriptionResponse> list = List.of(buildSubscriptionResponse(2L, "b@example.com"),
                     buildSubscriptionResponse(1L, "a@example.com"));
@@ -232,7 +232,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 데이터 없을 때 → 200 + 빈 배열")
+        @DisplayName("TC-004 데이터 없을 때 → 200 + 빈 배열")
         void empty() throws Exception {
             when(recruitmentService.getAllSubscriptions()).thenReturn(Collections.emptyList());
 
@@ -244,14 +244,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-005 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/subscriptions"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-006 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/subscriptions")
                             .with(authentication(userAuth())))
@@ -263,7 +263,7 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-012: DELETE /api/v1/admin/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-012 DELETE /api/v1/admin/recruitment/subscriptions")
+    @DisplayName("REC-ADMIN-12 DELETE /api/v1/admin/recruitment/subscriptions")
     class DeleteAllSubscriptions {
 
         @Test
@@ -278,14 +278,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-004 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/subscriptions"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-005 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/subscriptions")
                             .with(authentication(userAuth())))
@@ -378,7 +378,7 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-002: GET /api/v1/admin/recruitment
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-002 GET /api/v1/admin/recruitment")
+    @DisplayName("REC-ADMIN-02 GET /api/v1/admin/recruitment")
     class GetAllRecruitments {
 
         @Test
@@ -417,11 +417,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-003: POST /api/v1/admin/recruitment
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-003 POST /api/v1/admin/recruitment")
+    @DisplayName("REC-ADMIN-03 POST /api/v1/admin/recruitment")
     class CreateRecruitment {
 
         @Test
-        @DisplayName("TC-006 정상 등록 → 201 + recruitment_id")
+        @DisplayName("TC-007 정상 등록 → 201 + recruitment_id")
         void success() throws Exception {
             when(recruitmentService.createRecruitment(any())).thenReturn(RecruitmentIdResponse.of(13L));
 
@@ -435,7 +435,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005 필수 필드(term) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        @DisplayName("TC-008 필수 필드(term) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
         void missingField() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .with(authentication(adminAuth()))
@@ -446,7 +446,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005b 필수 필드(start_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        @DisplayName("TC-009 필수 필드(start_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
         void missingStartDate() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .with(authentication(adminAuth()))
@@ -457,7 +457,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005c 필수 필드(end_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        @DisplayName("TC-010 필수 필드(end_date) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
         void missingEndDate() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .with(authentication(adminAuth()))
@@ -468,7 +468,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-005d 필수 필드(schedule) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
+        @DisplayName("TC-011 필수 필드(schedule) 누락 → 400 INVALID_INPUT_VALUE (@Valid)")
         void missingSchedule() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .with(authentication(adminAuth()))
@@ -479,7 +479,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-003 중복 기수 → 409 DUPLICATE_TERM")
+        @DisplayName("TC-012 중복 기수 → 409 DUPLICATE_TERM")
         void duplicateTerm() throws Exception {
             when(recruitmentService.createRecruitment(any()))
                     .thenThrow(new CustomException(ErrorCode.DUPLICATE_TERM));
@@ -493,7 +493,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-007 미인증 요청 → 401")
+        @DisplayName("TC-013 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -502,7 +502,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-014 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment")
                             .with(authentication(userAuth()))
@@ -516,11 +516,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-004: PATCH /api/v1/admin/recruitment/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-004 PATCH /api/v1/admin/recruitment/{id}")
+    @DisplayName("REC-ADMIN-04 PATCH /api/v1/admin/recruitment/{id}")
     class UpdateRecruitment {
 
         @Test
-        @DisplayName("TC-007 정상 수정 → 200 + recruitment_id")
+        @DisplayName("TC-008 정상 수정 → 200 + recruitment_id")
         void success() throws Exception {
             when(recruitmentService.updateRecruitment(eq(12L), any())).thenReturn(RecruitmentIdResponse.of(12L));
 
@@ -533,7 +533,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-003 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-009 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.updateRecruitment(eq(999L), any()))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -547,7 +547,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-010 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/recruitment/12")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -556,7 +556,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-011 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/recruitment/12")
                             .with(authentication(userAuth()))
@@ -570,7 +570,7 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-005: DELETE /api/v1/admin/recruitment/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-005 DELETE /api/v1/admin/recruitment/{id}")
+    @DisplayName("REC-ADMIN-05 DELETE /api/v1/admin/recruitment/{id}")
     class DeleteRecruitment {
 
         @Test
@@ -585,7 +585,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 연관 데이터 존재 → 400 RECRUITMENT_HAS_REFERENCES")
+        @DisplayName("TC-006 연관 데이터 존재 → 400 RECRUITMENT_HAS_REFERENCES")
         void hasReferences() throws Exception {
             doThrow(new CustomException(ErrorCode.RECRUITMENT_HAS_REFERENCES))
                     .when(recruitmentService).deleteRecruitment(12L);
@@ -597,14 +597,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-007 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/12"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-008 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/12")
                             .with(authentication(userAuth())))
@@ -616,11 +616,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-006: POST /api/v1/admin/recruitment/questions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-006 POST /api/v1/admin/recruitment/questions")
+    @DisplayName("REC-ADMIN-06 POST /api/v1/admin/recruitment/questions")
     class CreateQuestions {
 
         @Test
-        @DisplayName("TC-001 정상 등록 → 201 + ids")
+        @DisplayName("TC-012 정상 등록 → 201 + ids")
         void success() throws Exception {
             when(recruitmentService.createQuestions(any())).thenReturn(QuestionIdsResponse.of(List.of(1L, 2L)));
 
@@ -633,7 +633,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 questions 빈 배열 → 400 INVALID_INPUT_VALUE (@NotEmpty)")
+        @DisplayName("TC-013 questions 빈 배열 → 400 INVALID_INPUT_VALUE (@NotEmpty)")
         void emptyQuestions() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -644,7 +644,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009b item의 order_num 0 → 400 INVALID_INPUT_VALUE (@Valid cascade @Positive)")
+        @DisplayName("TC-014 item의 order_num 0 → 400 INVALID_INPUT_VALUE (@Valid cascade @Positive)")
         void itemOrderNumNotPositive() throws Exception {
             Map<String, Object> item = new HashMap<>();
             item.put("label", "공통1");
@@ -667,7 +667,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009c item의 label 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
+        @DisplayName("TC-015 item의 label 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
         void itemLabelMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -678,7 +678,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009d item의 category 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        @DisplayName("TC-016 item의 category 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
         void itemCategoryMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -689,7 +689,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009e item의 type 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        @DisplayName("TC-017 item의 type 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
         void itemTypeMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -700,7 +700,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009f item의 content 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
+        @DisplayName("TC-018 item의 content 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotBlank)")
         void itemContentMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -711,7 +711,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009g item의 is_required 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
+        @DisplayName("TC-019 item의 is_required 누락 → 400 INVALID_INPUT_VALUE (@Valid cascade @NotNull)")
         void itemIsRequiredMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -722,7 +722,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009h recruitment_id 누락 → 400 INVALID_INPUT_VALUE (@NotNull)")
+        @DisplayName("TC-020 recruitment_id 누락 → 400 INVALID_INPUT_VALUE (@NotNull)")
         void recruitmentIdMissing() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(adminAuth()))
@@ -733,7 +733,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-005 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-021 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.createQuestions(any()))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -747,7 +747,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-022 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -756,7 +756,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-023 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(post("/api/v1/admin/recruitment/questions")
                             .with(authentication(userAuth()))
@@ -770,7 +770,7 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-007: GET /api/v1/admin/recruitment/{recruitmentId}/questions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-007 GET /api/v1/admin/recruitment/{recruitmentId}/questions")
+    @DisplayName("REC-ADMIN-07 GET /api/v1/admin/recruitment/{recruitmentId}/questions")
     class GetAdminQuestions {
 
         @Test
@@ -787,7 +787,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 공고 → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.getAdminQuestions(999L))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -799,14 +799,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-008 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/12/questions"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-009 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(get("/api/v1/admin/recruitment/12/questions")
                             .with(authentication(userAuth())))
@@ -818,11 +818,11 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-008: PATCH /api/v1/admin/recruitment/questions/{questionId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-008 PATCH /api/v1/admin/recruitment/questions/{questionId}")
+    @DisplayName("REC-ADMIN-08 PATCH /api/v1/admin/recruitment/questions/{questionId}")
     class UpdateQuestion {
 
         @Test
-        @DisplayName("TC-008 정상 수정 → 200 + question_id")
+        @DisplayName("TC-009 정상 수정 → 200 + question_id")
         void success() throws Exception {
             when(recruitmentService.updateQuestion(eq(1L), any())).thenReturn(QuestionIdResponse.of(1L));
 
@@ -835,7 +835,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-003 존재하지 않는 질문 → 404 QUESTIONS_NOT_FOUND")
+        @DisplayName("TC-010 존재하지 않는 질문 → 404 QUESTIONS_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.updateQuestion(eq(999L), any()))
                     .thenThrow(new CustomException(ErrorCode.QUESTIONS_NOT_FOUND));
@@ -849,7 +849,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-011 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/recruitment/questions/1")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -858,7 +858,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-012 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/recruitment/questions/1")
                             .with(authentication(userAuth()))
@@ -872,7 +872,7 @@ class RecruitmentAdminControllerTest {
     // REC-ADMIN-009: DELETE /api/v1/admin/recruitment/questions/{questionId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-ADMIN-009 DELETE /api/v1/admin/recruitment/questions/{questionId}")
+    @DisplayName("REC-ADMIN-09 DELETE /api/v1/admin/recruitment/questions/{questionId}")
     class DeleteQuestion {
 
         @Test
@@ -887,7 +887,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 참조 답변 존재 → 400 QUESTION_HAS_ANSWERS")
+        @DisplayName("TC-005 참조 답변 존재 → 400 QUESTION_HAS_ANSWERS")
         void hasAnswers() throws Exception {
             doThrow(new CustomException(ErrorCode.QUESTION_HAS_ANSWERS))
                     .when(recruitmentService).deleteQuestion(1L);
@@ -899,7 +899,7 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 존재하지 않는 질문 → 404 QUESTIONS_NOT_FOUND")
+        @DisplayName("TC-006 존재하지 않는 질문 → 404 QUESTIONS_NOT_FOUND")
         void notFound() throws Exception {
             doThrow(new CustomException(ErrorCode.QUESTIONS_NOT_FOUND))
                     .when(recruitmentService).deleteQuestion(999L);
@@ -911,14 +911,14 @@ class RecruitmentAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-007 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/questions/1"))
                     .andExpect(status().isUnauthorized());
         }
 
         @Test
-        @DisplayName("[Security] User 권한으로 접근 → 403")
+        @DisplayName("TC-008 [Security] User 권한으로 접근 → 403")
         void forbidden() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/recruitment/questions/1")
                             .with(authentication(userAuth())))

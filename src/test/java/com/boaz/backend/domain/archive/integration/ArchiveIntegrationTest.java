@@ -41,7 +41,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     // ARC-001 프로젝트 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("프로젝트 조회 end-to-end (ARC-001)")
+    @DisplayName("ARC-01 프로젝트 조회 end-to-end")
     class ProjectSearch {
 
         @Nested
@@ -49,7 +49,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class KeywordSearch {
 
             @Test
-            @DisplayName("TC-I-001 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
+            @DisplayName("TC-022 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
             void partial_match() {
                 save(26, Category.PROJECT, "실시간 추천 시스템 구축", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "이상 탐지 모델 개발", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -62,7 +62,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-002 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
+            @DisplayName("TC-023 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
             void case_insensitive() {
                 save(26, Category.PROJECT, "BOAZ Project", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "이상 탐지", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -75,7 +75,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-003 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
+            @DisplayName("TC-024 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
             void space_insensitive() {
                 save(26, Category.PROJECT, "딥러닝프로젝트", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "이상탐지", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -88,7 +88,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-004 keyword=\"\" → LIKE '%%' → 전체 반환")
+            @DisplayName("TC-025 keyword=\"\" → LIKE '%%' → 전체 반환")
             void empty_string_returns_all() {
                 save(26, Category.PROJECT, "프로젝트A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "프로젝트B", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -106,7 +106,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class Sorting {
 
             @Test
-            @DisplayName("TC-I-005 contentDate=null → 맨 뒤 정렬")
+            @DisplayName("TC-026 contentDate=null → 맨 뒤 정렬")
             void null_date_last() {
                 save(26, Category.PROJECT, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "B", Track.ENGINEERING, null);
@@ -121,7 +121,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-006 contentDate 최신순 DESC 정렬")
+            @DisplayName("TC-027 contentDate 최신순 DESC 정렬")
             void date_desc() {
                 save(26, Category.PROJECT, "A", Track.ENGINEERING, LocalDate.of(2025, 5, 1));
                 save(26, Category.PROJECT, "B", Track.ENGINEERING, LocalDate.of(2026, 3, 1));
@@ -136,7 +136,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-007 contentDate 동일할 경우, title ASC tie-break")
+            @DisplayName("TC-028 contentDate 동일할 경우, title ASC tie-break")
             void same_date_title_asc() {
                 LocalDate sameDate = LocalDate.of(2026, 1, 1);
                 save(26, Category.PROJECT, "나다라", Track.ENGINEERING, sameDate);
@@ -157,7 +157,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class FilterTotalSize {
 
             @Test
-            @DisplayName("TC-I-008 track 필터 적용 시 totalSize = 필터된 개수")
+            @DisplayName("TC-029 track 필터 적용 시 totalSize = 필터된 개수")
             void track_filter_total_size() {
                 save(26, Category.PROJECT, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "B", Track.ENGINEERING, LocalDate.of(2026, 1, 2));
@@ -171,7 +171,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-009 keyword 필터 적용 시 totalSize = 매칭된 개수")
+            @DisplayName("TC-030 keyword 필터 적용 시 totalSize = 매칭된 개수")
             void keyword_filter_total_size() {
                 save(26, Category.PROJECT, "추천 시스템", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.PROJECT, "이상 탐지", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -190,7 +190,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     // ARC-002 활동사진 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("활동사진 조회 end-to-end (ARC-002)")
+    @DisplayName("ARC-02 활동사진 조회 end-to-end")
     class ActivitySearch {
 
         @Nested
@@ -198,7 +198,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class KeywordSearch {
 
             @Test
-            @DisplayName("TC-I-001 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
+            @DisplayName("TC-021 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
             void partial_match() {
                 save(26, Category.ACTIVITY, "26기 워크샵 활동", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "MT 후기", Track.ALL, LocalDate.of(2026, 1, 2));
@@ -211,7 +211,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-002 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
+            @DisplayName("TC-022 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
             void case_insensitive() {
                 save(26, Category.ACTIVITY, "BOAZ MT 2025", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "워크샵", Track.ALL, LocalDate.of(2026, 1, 2));
@@ -224,7 +224,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-003 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
+            @DisplayName("TC-023 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
             void space_insensitive() {
                 save(26, Category.ACTIVITY, "종강파티활동", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "MT후기", Track.ALL, LocalDate.of(2026, 1, 2));
@@ -237,7 +237,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-004 keyword=\"\" → LIKE '%%' → 전체 반환")
+            @DisplayName("TC-024 keyword=\"\" → LIKE '%%' → 전체 반환")
             void empty_string_returns_all() {
                 save(26, Category.ACTIVITY, "활동A", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "활동B", Track.ALL, LocalDate.of(2026, 1, 2));
@@ -255,7 +255,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class Sorting {
 
             @Test
-            @DisplayName("TC-I-005 contentDate=null → 맨 뒤 정렬")
+            @DisplayName("TC-025 contentDate=null → 맨 뒤 정렬")
             void null_date_last() {
                 save(26, Category.ACTIVITY, "A", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "B", Track.ALL, null);
@@ -270,7 +270,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-006 contentDate 최신순 DESC 정렬")
+            @DisplayName("TC-026 contentDate 최신순 DESC 정렬")
             void date_desc() {
                 save(26, Category.ACTIVITY, "A", Track.ALL, LocalDate.of(2025, 5, 1));
                 save(26, Category.ACTIVITY, "B", Track.ALL, LocalDate.of(2026, 3, 1));
@@ -285,7 +285,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-007 contentDate 동일할 경우, title ASC tie-break")
+            @DisplayName("TC-027 contentDate 동일할 경우, title ASC tie-break")
             void same_date_title_asc() {
                 LocalDate sameDate = LocalDate.of(2026, 1, 1);
                 save(26, Category.ACTIVITY, "나다라", Track.ALL, sameDate);
@@ -306,7 +306,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class FilterTotalSize {
 
             @Test
-            @DisplayName("TC-I-008 term 필터 적용 시 totalSize = 필터된 개수")
+            @DisplayName("TC-028 term 필터 적용 시 totalSize = 필터된 개수")
             void term_filter_total_size() {
                 save(25, Category.ACTIVITY, "A", Track.ALL, LocalDate.of(2025, 1, 1));
                 save(25, Category.ACTIVITY, "B", Track.ALL, LocalDate.of(2025, 1, 2));
@@ -320,7 +320,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-009 keyword 필터 적용 시 totalSize = 매칭된 개수")
+            @DisplayName("TC-029 keyword 필터 적용 시 totalSize = 매칭된 개수")
             void keyword_filter_total_size() {
                 save(26, Category.ACTIVITY, "워크샵 후기", Track.ALL, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "MT 일정", Track.ALL, LocalDate.of(2026, 1, 2));
@@ -339,7 +339,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     // ARC-003 기술블로그 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("기술블로그 조회 end-to-end (ARC-003)")
+    @DisplayName("ARC-03 기술블로그 조회 end-to-end")
     class BlogSearch {
 
         @Nested
@@ -347,7 +347,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class KeywordSearch {
 
             @Test
-            @DisplayName("TC-I-001 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
+            @DisplayName("TC-022 keyword 부분 일치 → 제목 중간에 검색어 포함 시 히트")
             void partial_match() {
                 save(26, Category.BLOG, "Transformer 모델 구현기", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "데이터 전처리 가이드", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -360,7 +360,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-002 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
+            @DisplayName("TC-023 keyword 대소문자 무시 → 영문 대소문자 관계 없이 히트")
             void case_insensitive() {
                 save(26, Category.BLOG, "Transformer 분석", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "데이터 전처리", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -373,7 +373,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-003 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
+            @DisplayName("TC-024 keyword 공백 무시 → 검색어의 공백 제거 후 매칭")
             void space_insensitive() {
                 save(26, Category.BLOG, "딥러닝모델최적화", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "데이터전처리", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -386,7 +386,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-004 keyword=\"\" → LIKE '%%' → 전체 반환")
+            @DisplayName("TC-025 keyword=\"\" → LIKE '%%' → 전체 반환")
             void empty_string_returns_all() {
                 save(26, Category.BLOG, "블로그A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "블로그B", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -404,7 +404,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class Sorting {
 
             @Test
-            @DisplayName("TC-I-005 contentDate=null → 맨 뒤 정렬")
+            @DisplayName("TC-026 contentDate=null → 맨 뒤 정렬")
             void null_date_last() {
                 save(26, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "B", Track.ENGINEERING, null);
@@ -419,7 +419,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-006 contentDate 최신순 DESC 정렬")
+            @DisplayName("TC-027 contentDate 최신순 DESC 정렬")
             void date_desc() {
                 save(26, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2025, 5, 1));
                 save(26, Category.BLOG, "B", Track.ENGINEERING, LocalDate.of(2026, 3, 1));
@@ -434,7 +434,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-007 contentDate 동일할 경우, title ASC tie-break")
+            @DisplayName("TC-028 contentDate 동일할 경우, title ASC tie-break")
             void same_date_title_asc() {
                 LocalDate sameDate = LocalDate.of(2026, 1, 1);
                 save(26, Category.BLOG, "나다라", Track.ENGINEERING, sameDate);
@@ -455,7 +455,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class FilterTotalSize {
 
             @Test
-            @DisplayName("TC-I-008 track 필터 적용 시 totalSize = 필터된 개수")
+            @DisplayName("TC-029 track 필터 적용 시 totalSize = 필터된 개수")
             void track_filter_total_size() {
                 save(26, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "B", Track.ENGINEERING, LocalDate.of(2026, 1, 2));
@@ -469,7 +469,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-009 keyword 필터 적용 시 totalSize = 매칭된 개수")
+            @DisplayName("TC-030 keyword 필터 적용 시 totalSize = 매칭된 개수")
             void keyword_filter_total_size() {
                 save(26, Category.BLOG, "Transformer 구현기", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "데이터 전처리", Track.ANALYSIS, LocalDate.of(2026, 1, 2));
@@ -488,7 +488,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
     // ARC-004 기수 조회 end-to-end
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("기수 조회 end-to-end (ARC-004)")
+    @DisplayName("ARC-04 기수 조회 end-to-end")
     class GetTerms {
 
         @Nested
@@ -496,7 +496,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class Distinct {
 
             @Test
-            @DisplayName("TC-I-001 같은 term인 데이터가 여러 개인 경우, 한 번만 반환")
+            @DisplayName("TC-011 같은 term인 데이터가 여러 개인 경우, 한 번만 반환")
             void dedup_same_term() {
                 save(26, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.BLOG, "B", Track.ENGINEERING, LocalDate.of(2026, 1, 2));
@@ -510,7 +510,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-002 여러 category에 같은 term이 있는 경우, 한 번만 반환")
+            @DisplayName("TC-012 여러 category에 같은 term이 있는 경우, 한 번만 반환")
             void dedup_across_categories() {
                 save(26, Category.PROJECT, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(26, Category.ACTIVITY, "B", Track.ALL, LocalDate.of(2026, 1, 1));
@@ -530,7 +530,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class Sorting {
 
             @Test
-            @DisplayName("TC-I-003 term DESC 정렬 → 최신 기수 먼저")
+            @DisplayName("TC-013 term DESC 정렬 → 최신 기수 먼저")
             void term_desc() {
                 save(24, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2024, 1, 1));
                 save(26, Category.BLOG, "B", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
@@ -544,7 +544,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
             }
 
             @Test
-            @DisplayName("TC-I-004 term=0인 경우, 맨 뒤 정렬")
+            @DisplayName("TC-014 term=0인 경우, 맨 뒤 정렬")
             void term_zero_last() {
                 save(26, Category.BLOG, "A", Track.ENGINEERING, LocalDate.of(2026, 1, 1));
                 save(0, Category.BLOG, "B", Track.ENGINEERING, null);
@@ -564,7 +564,7 @@ class ArchiveIntegrationTest extends TestcontainersBase {
         class EmptyResult {
 
             @Test
-            @DisplayName("TC-I-005 DB가 비어있는 경우, 빈 목록 반환")
+            @DisplayName("TC-015 DB가 비어있는 경우, 빈 목록 반환")
             void empty_db() {
                 ArchiveTermsResponse response = archiveService.getTerms();
 

@@ -35,7 +35,7 @@ class FaqRepositoryTest extends TestcontainersBase {
     class CategoryOrderNumUniqueConstraint {
 
         @Test
-        @DisplayName("동일 category+orderNum 두 번째 저장 시 DataIntegrityViolationException 발생")
+        @DisplayName("TC-001 동일 category+orderNum 두 번째 저장 시 DataIntegrityViolationException 발생")
         void duplicateCategoryOrderNumViolatesConstraint() {
             persistFaq(Faq.Category.RECRUITMENT, 1);
 
@@ -46,7 +46,7 @@ class FaqRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("동일 orderNum 이라도 category 가 다르면 정상 저장")
+        @DisplayName("TC-002 동일 orderNum 이라도 category 가 다르면 정상 저장")
         void sameOrderNumDifferentCategoryAllowed() {
             persistFaq(Faq.Category.RECRUITMENT, 1);
             persistFaq(Faq.Category.ACTIVITY, 1);
