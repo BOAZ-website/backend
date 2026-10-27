@@ -167,7 +167,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("지원서 평가 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 8개")
+    @DisplayName("TC-001 지원서 평가 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 8개")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));
@@ -184,7 +184,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("[정상] 컨트롤러는 AdminUserDetails 의 유효 권한을 그대로 서비스에 넘긴다 (3층 판정 재료)")
+    @DisplayName("TC-002 [정상] 컨트롤러는 AdminUserDetails 의 유효 권한을 그대로 서비스에 넘긴다 (3층 판정 재료)")
     void passesPermissionsToService() throws Exception {
         // 오버라이드가 섞인 주체 — 기본 세트가 아니라 넘긴 집합이 그대로 서비스까지 가야 한다
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
@@ -203,7 +203,7 @@ class ApplicantEvaluationPermissionGridTest {
     // ── 최종 합불 CUD — FINAL_DECISION_WRITE 하나로만 갈린다 (평가 부문 권한과 무관) ──
 
     @Test
-    @DisplayName("[인가실패] 평가 권한(본인·전 부문)을 다 가져도 FINAL_DECISION_WRITE 가 없으면 최종 합불 수정 → 403")
+    @DisplayName("TC-003 [인가실패] 평가 권한(본인·전 부문)을 다 가져도 FINAL_DECISION_WRITE 가 없으면 최종 합불 수정 → 403")
     void finalDecisionRequiresFinalDecisionWriteOnly() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
         Set<Permission> evaluationOnly = Set.of(
@@ -219,7 +219,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("[정상] 기본값에 없는 운영진이라도 FINAL_DECISION_WRITE 만 GRANT 되면 최종 합불 수정 통과")
+    @DisplayName("TC-004 [정상] 기본값에 없는 운영진이라도 FINAL_DECISION_WRITE 만 GRANT 되면 최종 합불 수정 통과")
     void finalDecisionCustomGrant() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         Set<Permission> grantedOnly = Set.of(Permission.FINAL_DECISION_WRITE);
@@ -232,7 +232,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("[인가실패] 대표진 기본 세트에서 FINAL_DECISION_WRITE 만 REVOKE → 최종 합불 수정 403")
+    @DisplayName("TC-005 [인가실패] 대표진 기본 세트에서 FINAL_DECISION_WRITE 만 REVOKE → 최종 합불 수정 403")
     void finalDecisionCustomRevoke() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진);
         Set<Permission> revoked = Set.of(
@@ -247,7 +247,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("[인가실패] 평가 권한은 있어도 최종 합불 조회 권한이 없으면 평가 대시보드 → 403")
+    @DisplayName("TC-006 [인가실패] 평가 권한은 있어도 최종 합불 조회 권한이 없으면 평가 대시보드 → 403")
     void dashboardRequiresFinalDecisionRead() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         Set<Permission> revoked = Set.of(Permission.EVALUATION_OWN_TRACK_WRITE);   // FINAL_DECISION_READ 회수

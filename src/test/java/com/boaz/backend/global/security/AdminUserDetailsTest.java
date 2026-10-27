@@ -24,7 +24,7 @@ class AdminUserDetailsTest {
     }
 
     @Test
-    @DisplayName("permission 은 ROLE_ 접두사 없이 authority 로 나간다")
+    @DisplayName("TC-001 permission 은 ROLE_ 접두사 없이 authority 로 나간다")
     void permissionsHaveNoRolePrefix() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
         AdminUserDetails details = new AdminUserDetails(admin, Set.of(Permission.CONTENT_WRITE));
@@ -34,7 +34,7 @@ class AdminUserDetailsTest {
     }
 
     @Test
-    @DisplayName("기존 ROLE_<role> authority 는 그대로 유지된다")
+    @DisplayName("TC-002 기존 ROLE_<role> authority 는 그대로 유지된다")
     void roleAuthorityKept() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.MASTER, Admin.TeamName.서비스운영팀);
         AdminUserDetails details = new AdminUserDetails(admin, Set.of());
@@ -43,7 +43,7 @@ class AdminUserDetailsTest {
     }
 
     @Test
-    @DisplayName("기본 세트가 전부 authority 로 실린다")
+    @DisplayName("TC-003 기본 세트가 전부 authority 로 실린다")
     void allPermissionsExposed() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.운영지원팀);
         Set<Permission> permissions = DefaultPermissions.of(admin.getRole(), admin.getTeamName());
@@ -56,7 +56,7 @@ class AdminUserDetailsTest {
     }
 
     @Test
-    @DisplayName("소프트 삭제된 계정은 비활성이다")
+    @DisplayName("TC-004 소프트 삭제된 계정은 비활성이다")
     void deletedAdminDisabled() {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         assertThat(new AdminUserDetails(admin, Set.of()).isEnabled()).isTrue();

@@ -131,11 +131,11 @@ class RecruitmentEvaluationServiceTest {
     // ── 1. 전체 지원서 조회 (지원자 대시보드) ──────────────
 
     @Nested
-    @DisplayName("getApplicants")
+    @DisplayName("REC-ADMIN-13 getApplicants")
     class GetApplicants {
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유(차기 대표진) → 전 부문(DRAFT 포함) 반환")
+        @DisplayName("TC-001 [정상] 전 부문 평가 권한 보유(차기 대표진) → 전 부문(DRAFT 포함) 반환")
         void nextRepresentativeSeesAll() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -150,7 +150,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유(현재 대표진) → 본인 track만 반환")
+        @DisplayName("TC-002 [범위] 본인 부문 평가 권한만 보유(현재 대표진) → 본인 track만 반환")
         void currentRepresentativeOwnTrackOnly() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -167,7 +167,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유(운영진) → 본인 track만 반환, track 없는 DRAFT 제외")
+        @DisplayName("TC-003 [범위] 본인 부문 평가 권한만 보유(운영진) → 본인 track만 반환, track 없는 DRAFT 제외")
         void nonRepresentativeOwnTrackOnly() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -184,7 +184,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-004 [예외] 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
         void recruitmentNotFound() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(999L)).willReturn(false);
@@ -196,7 +196,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] role과 무관 — 차기대표진이라도 전 부문 평가 권한이 없으면 본인 track만 반환")
+        @DisplayName("TC-005 [범위] role과 무관 — 차기대표진이라도 전 부문 평가 권한이 없으면 본인 track만 반환")
         void nextRepresentativeWithoutAllTrackOwnOnly() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -211,7 +211,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] role과 무관 — 전 부문 평가 권한을 부여받은 운영진은 전 부문(track 없는 DRAFT 포함) 반환")
+        @DisplayName("TC-006 [정상] role과 무관 — 전 부문 평가 권한을 부여받은 운영진은 전 부문(track 없는 DRAFT 포함) 반환")
         void grantedAllTrackSeesAll() {
             Admin granted = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -230,11 +230,11 @@ class RecruitmentEvaluationServiceTest {
     // ── 2. 전체 지원서 및 평가 조회 (평가 대시보드, 서버 집계) ──
 
     @Nested
-    @DisplayName("getApplicantEvaluations")
+    @DisplayName("REC-ADMIN-14 getApplicantEvaluations")
     class GetApplicantEvaluations {
 
         @Test
-        @DisplayName("[정상] PASS/HOLD/FAIL 개수 + 총점(null·PENDING 제외) 집계, final_decision 반영")
+        @DisplayName("TC-001 [정상] PASS/HOLD/FAIL 개수 + 총점(null·PENDING 제외) 집계, final_decision 반영")
         void aggregate() {
             Admin ev1 = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Admin ev2 = admin(2L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
@@ -276,7 +276,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 평가가 없는 지원자는 개수·총점 0")
+        @DisplayName("TC-002 [정상] 평가가 없는 지원자는 개수·총점 0")
         void noEval() {
             Applicant a1 = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
 
@@ -295,7 +295,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 → 타 부문 지원서 제외 / 전 부문 권한 보유 → 전부 포함")
+        @DisplayName("TC-003 [범위] 본인 부문 평가 권한만 보유 → 타 부문 지원서 제외 / 전 부문 권한 보유 → 전부 포함")
         void trackFilter() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.운영지원팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -317,7 +317,7 @@ class RecruitmentEvaluationServiceTest {
     // 서비스는 주체·권한을 받지 않으며, 서류 평가용 부문 범위(checkTrack)를 적용하지 않는다.
 
     @Nested
-    @DisplayName("updateFinalDecision")
+    @DisplayName("REC-ADMIN-18 updateFinalDecision")
     class UpdateFinalDecision {
 
         private FinalDecisionUpdateRequest req(EvaluationDecision d) {
@@ -327,7 +327,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 같은 track 지원자 → 최종 평가 변경, 부문 판정(checkTrack) 없음")
+        @DisplayName("TC-001 [정상] 같은 track 지원자 → 최종 평가 변경, 부문 판정(checkTrack) 없음")
         void ownTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
@@ -340,7 +340,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 타 track 지원자 → 최종 평가 변경 (전 부문 평가 권한과 무관), checkTrack 없음")
+        @DisplayName("TC-002 [정상] 타 track 지원자 → 최종 평가 변경 (전 부문 평가 권한과 무관), checkTrack 없음")
         void crossTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             given(applicantRepository.findById(101L)).willReturn(Optional.of(a));
@@ -353,7 +353,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] DRAFT 지원서 → INVALID_INPUT_VALUE")
+        @DisplayName("TC-003 [예외] DRAFT 지원서 → INVALID_INPUT_VALUE")
         void draftRejected() {
             given(applicantRepository.findById(101L))
                     .willReturn(Optional.of(applicant(101L, Applicant.ApplicantStatus.DRAFT, null)));
@@ -364,7 +364,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-004 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
 
@@ -377,11 +377,11 @@ class RecruitmentEvaluationServiceTest {
     // ── 4. 지원서별 평가 조회 ─────────────────────────────
 
     @Nested
-    @DisplayName("getApplicantEvaluators")
+    @DisplayName("REC-ADMIN-15 getApplicantEvaluators")
     class GetApplicantEvaluators {
 
         @Test
-        @DisplayName("[정상] 부문 평가자 전체 반환, 미평가자는 decision/score/memo null")
+        @DisplayName("TC-001 [정상] 부문 평가자 전체 반환, 미평가자는 decision/score/memo null")
         void mergeWithUnevaluated() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
             Admin ev1 = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
@@ -408,7 +408,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, 평가자 풀 조회 안 함")
+        @DisplayName("TC-002 [범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, 평가자 풀 조회 안 함")
         void currentRepresentativeCrossTrackDenied() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin rep = admin(5L, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ENGINEERING);
@@ -422,7 +422,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 조회 가능")
+        @DisplayName("TC-003 [정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 조회 가능")
         void nextRepresentativeCrossTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
@@ -438,7 +438,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-004 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
@@ -452,11 +452,11 @@ class RecruitmentEvaluationServiceTest {
     // ── 5. 개인 평가 조회 ─────────────────────────────────
 
     @Nested
-    @DisplayName("getMyEvaluation")
+    @DisplayName("REC-ADMIN-16 getMyEvaluation")
     class GetMyEvaluation {
 
         @Test
-        @DisplayName("[정상] 본인 평가 존재 → 단건 반환")
+        @DisplayName("TC-001 [정상] 본인 평가 존재 → 단건 반환")
         void found() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
@@ -472,7 +472,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 본인 평가 없음 → null")
+        @DisplayName("TC-002 [정상] 본인 평가 없음 → null")
         void none() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -483,7 +483,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 개인 평가 조회 → ACCESS_DENIED")
+        @DisplayName("TC-003 [범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 개인 평가 조회 → ACCESS_DENIED")
         void crossTrackDenied() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -496,7 +496,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-004 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
@@ -508,11 +508,11 @@ class RecruitmentEvaluationServiceTest {
     }
 
     @Nested
-    @DisplayName("getMyEvaluation — 전 부문 권한")
+    @DisplayName("REC-ADMIN-16 getMyEvaluation — 전 부문 권한")
     class GetMyEvaluationAllTrack {
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 개인 평가 조회 가능")
+        @DisplayName("TC-005 [정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 개인 평가 조회 가능")
         void allTrackCrossTrack() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -527,7 +527,7 @@ class RecruitmentEvaluationServiceTest {
     // ── 6. 개인 평가 저장 (upsert) ────────────────────────
 
     @Nested
-    @DisplayName("saveMyEvaluation")
+    @DisplayName("REC-ADMIN-17 saveMyEvaluation")
     class SaveMyEvaluation {
 
         private EvaluationSaveRequest req(EvaluationDecision d, Integer score, String memo, String interviewQuestion) {
@@ -540,7 +540,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 본인 부문 지원자 → upsert(면접질문 포함) 호출 후 저장값 반환")
+        @DisplayName("TC-001 [정상] 본인 부문 지원자 → upsert(면접질문 포함) 호출 후 저장값 반환")
         void success() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
@@ -561,7 +561,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 평가 가능")
+        @DisplayName("TC-002 [정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 평가 가능")
         void nextRepresentativeCrossTrack() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
@@ -577,7 +577,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, upsert 미호출")
+        @DisplayName("TC-003 [범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, upsert 미호출")
         void trackMismatch() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             given(applicantRepository.findById(101L))
@@ -591,7 +591,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] DRAFT 지원서 → INVALID_INPUT_VALUE")
+        @DisplayName("TC-004 [예외] DRAFT 지원서 → INVALID_INPUT_VALUE")
         void draftRejected() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -604,7 +604,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-005 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
@@ -617,7 +617,7 @@ class RecruitmentEvaluationServiceTest {
     }
 
     @Nested
-    @DisplayName("saveMyEvaluation — role과 무관한 부문 판정")
+    @DisplayName("REC-ADMIN-17 saveMyEvaluation — role과 무관한 부문 판정")
     class SaveMyEvaluationRoleIndependent {
 
         private EvaluationSaveRequest req() {
@@ -628,7 +628,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 차기대표진이라도 전 부문 평가 권한이 없으면 타 부문 → ACCESS_DENIED, upsert 미호출")
+        @DisplayName("TC-006 [범위] 차기대표진이라도 전 부문 평가 권한이 없으면 타 부문 → ACCESS_DENIED, upsert 미호출")
         void nextRepresentativeWithoutAllTrackDenied() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -641,7 +641,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한을 부여받은 운영진은 타 부문 지원자 평가 가능")
+        @DisplayName("TC-007 [정상] 전 부문 평가 권한을 부여받은 운영진은 타 부문 지원자 평가 가능")
         void grantedAllTrackCrossTrack() {
             Admin granted = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
@@ -655,7 +655,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] DRAFT 지원서는 부문 판정 전에 INVALID_INPUT_VALUE")
+        @DisplayName("TC-008 [예외] DRAFT 지원서는 부문 판정 전에 INVALID_INPUT_VALUE")
         void draftBeforeScope() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -671,11 +671,11 @@ class RecruitmentEvaluationServiceTest {
     // ── 7. 지원서 답변 조회 ───────────────────────────────
 
     @Nested
-    @DisplayName("getApplicantAnswers")
+    @DisplayName("REC-ADMIN-20 getApplicantAnswers")
     class GetApplicantAnswers {
 
         @Test
-        @DisplayName("[정상] 문항 정보 + 답변(TEXT/TABLE) 순서대로 반환, {Track} 치환")
+        @DisplayName("TC-001 [정상] 문항 정보 + 답변(TEXT/TABLE) 순서대로 반환, {Track} 치환")
         void success() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
@@ -705,7 +705,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 답변 없음 → 빈 배열")
+        @DisplayName("TC-002 [정상] 답변 없음 → 빈 배열")
         void empty() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             given(applicantRepository.findById(101L))
@@ -719,7 +719,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + 타 부문 지원서 답변 조회 → ACCESS_DENIED")
+        @DisplayName("TC-003 [범위] 본인 부문 평가 권한만 보유 + 타 부문 지원서 답변 조회 → ACCESS_DENIED")
         void crossTrackDenied() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -732,7 +732,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + 타 부문 지원서 답변 → 조회 가능")
+        @DisplayName("TC-004 [정상] 전 부문 평가 권한 보유 + 타 부문 지원서 답변 → 조회 가능")
         void nextRepresentativeCrossTrack() {
             Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -746,7 +746,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-005 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
@@ -759,11 +759,11 @@ class RecruitmentEvaluationServiceTest {
     }
 
     @Nested
-    @DisplayName("getApplicantAnswers — track 없는 DRAFT 경계")
+    @DisplayName("REC-ADMIN-20 getApplicantAnswers — track 없는 DRAFT 경계")
     class GetApplicantAnswersNullTrack {
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + track 없는 DRAFT → ACCESS_DENIED")
+        @DisplayName("TC-006 [범위] 본인 부문 평가 권한만 보유 + track 없는 DRAFT → ACCESS_DENIED")
         void ownTrackNullTrackDenied() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -776,7 +776,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + track 없는 DRAFT → 조회 가능")
+        @DisplayName("TC-007 [정상] 전 부문 평가 권한 보유 + track 없는 DRAFT → 조회 가능")
         void allTrackNullTrackAllowed() {
             Admin rep = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
             given(applicantRepository.findById(101L))
@@ -790,7 +790,7 @@ class RecruitmentEvaluationServiceTest {
     // ── 8. 지원서별 면접 질문 조회 ────────────────────────
 
     @Nested
-    @DisplayName("getApplicantInterviewQuestions")
+    @DisplayName("REC-ADMIN-19 getApplicantInterviewQuestions")
     class GetApplicantInterviewQuestions {
 
         private ApplicantEval evalWithQuestion(Applicant a, Admin admin, String interviewQuestion) {
@@ -800,7 +800,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 부문 평가자 전체 반환, 미작성자는 interview_question null")
+        @DisplayName("TC-001 [정상] 부문 평가자 전체 반환, 미작성자는 interview_question null")
         void mergeWithUnwritten() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
             Admin ev1 = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
@@ -826,7 +826,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, 평가자 풀 조회 안 함")
+        @DisplayName("TC-002 [범위] 본인 부문 평가 권한만 보유 + 타 부문 지원자 → ACCESS_DENIED, 평가자 풀 조회 안 함")
         void crossTrackDenied() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
@@ -840,7 +840,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 조회 가능")
+        @DisplayName("TC-003 [정상] 전 부문 평가 권한 보유 + 타 부문 지원자 → 조회 가능")
         void nextRepresentativeCrossTrack() {
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ANALYSIS);
             Admin rep = admin(9L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ENGINEERING);
@@ -856,7 +856,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
+        @DisplayName("TC-004 [예외] 존재하지 않는 지원자 → APPLICATION_NOT_FOUND")
         void notFound() {
             Admin viewer = admin(5L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(applicantRepository.findById(999L)).willReturn(Optional.empty());
@@ -905,7 +905,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[포함] 본인 부문 평가 권한 + 같은 track")
+        @DisplayName("TC-001 [포함] 본인 부문 평가 권한 + 같은 track")
         void ownSameTrackIncluded() {
             Admin own = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             stub(List.of(own), Map.of(1L, OWN_TRACK), List.of());
@@ -914,7 +914,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] 본인 부문 평가 권한 + 다른 track + 미작성")
+        @DisplayName("TC-002 [제외] 본인 부문 평가 권한 + 다른 track + 미작성")
         void ownOtherTrackExcluded() {
             Admin own = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             stub(List.of(own), Map.of(1L, OWN_TRACK), List.of());
@@ -923,7 +923,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[포함] 전 부문 평가 권한 + 다른 track — role/teamName 무관 (커스텀 GRANT 운영진)")
+        @DisplayName("TC-003 [포함] 전 부문 평가 권한 + 다른 track — role/teamName 무관 (커스텀 GRANT 운영진)")
         void allOtherTrackIncluded() {
             Admin custom = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS);
             stub(List.of(custom), Map.of(1L, ALL_ONLY), List.of());
@@ -932,7 +932,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[포함] 전 부문 평가 권한만 보유(OWN 없음) + 같은 track + 미작성 — ALL 은 본인 부문을 포함한다")
+        @DisplayName("TC-004 [포함] 전 부문 평가 권한만 보유(OWN 없음) + 같은 track + 미작성 — ALL 은 본인 부문을 포함한다")
         void allOnlySameTrackIncluded() {
             Admin allOnly = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             stub(List.of(allOnly), Map.of(1L, ALL_ONLY), List.of());
@@ -941,7 +941,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] 평가 권한 없음 + 미작성")
+        @DisplayName("TC-005 [제외] 평가 권한 없음 + 미작성")
         void noPermissionUnwrittenExcluded() {
             Admin none = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ENGINEERING);
             stub(List.of(none), Map.of(1L, NONE), List.of());
@@ -950,7 +950,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[포함] 평가 권한 없음 + 기존 평가 작성 — 권한이 회수돼도 기존 평가는 사라지지 않는다")
+        @DisplayName("TC-006 [포함] 평가 권한 없음 + 기존 평가 작성 — 권한이 회수돼도 기존 평가는 사라지지 않는다")
         void noPermissionButAuthorIncluded() {
             Admin author = admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀, Track.ANALYSIS);
             stub(List.of(author), Map.of(1L, NONE),
@@ -966,7 +966,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[중복 제거] 현재 평가 가능자이면서 기존 작성자 → adminId 기준 1명")
+        @DisplayName("TC-007 [중복 제거] 현재 평가 가능자이면서 기존 작성자 → adminId 기준 1명")
         void evaluatorAndAuthorDeduplicated() {
             Admin both = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             stub(List.of(both), Map.of(1L, OWN_TRACK),
@@ -976,7 +976,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] MASTER · 같은 track · 평가 권한 없음 · 미작성")
+        @DisplayName("TC-008 [제외] MASTER · 같은 track · 평가 권한 없음 · 미작성")
         void masterWithoutPermissionExcluded() {
             Admin master = admin(1L, Admin.Role.MASTER, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             stub(List.of(master), Map.of(1L, NONE), List.of());
@@ -985,7 +985,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] HOST · 같은 track · 평가 권한 없음 · 미작성")
+        @DisplayName("TC-009 [제외] HOST · 같은 track · 평가 권한 없음 · 미작성")
         void hostWithoutPermissionExcluded() {
             Admin host = admin(1L, Admin.Role.HOST, Admin.TeamName.그룹리더, Track.ENGINEERING);
             stub(List.of(host), Map.of(1L, NONE), List.of());
@@ -994,7 +994,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] 기본값은 본인 부문 평가지만 OWN REVOKE 된 계정 · 같은 track · 미작성")
+        @DisplayName("TC-010 [제외] 기본값은 본인 부문 평가지만 OWN REVOKE 된 계정 · 같은 track · 미작성")
         void ownRevokedExcluded() {
             // 서비스운영팀 TEAM 의 기본 세트에는 EVALUATION_OWN_TRACK_WRITE 가 있다. REVOKE 반영 결과를 유효 권한으로 준다.
             Admin revoked = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
@@ -1004,7 +1004,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[포함] soft delete 된 기존 작성자 — 과거 평가 기록으로 보존, 평가 내용도 그대로")
+        @DisplayName("TC-011 [포함] soft delete 된 기존 작성자 — 과거 평가 기록으로 보존, 평가 내용도 그대로")
         void softDeletedAuthorKept() {
             Admin deleted = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             deleted.softDelete();
@@ -1023,7 +1023,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[제외] soft delete 된 미작성 계정 — 과거 평가 권한이 있었어도 live 조회에 없으면 새로 노출되지 않는다")
+        @DisplayName("TC-012 [제외] soft delete 된 미작성 계정 — 과거 평가 권한이 있었어도 live 조회에 없으면 새로 노출되지 않는다")
         void softDeletedUnwrittenExcluded() {
             Admin live = admin(2L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             // 삭제된 같은 track OWN 계정(id 1)은 live 조회에도, 평가 행에도 없다
@@ -1034,7 +1034,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[중복 제거] 같은 계정이 live 평가 가능자·과거 작성자 양쪽으로 들어와도 adminId 기준 1번")
+        @DisplayName("TC-013 [중복 제거] 같은 계정이 live 평가 가능자·과거 작성자 양쪽으로 들어와도 adminId 기준 1번")
         void authorInBothPathsOnce() {
             Admin both = admin(1L, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
             stub(List.of(both), Map.of(1L, ALL_TRACK),
@@ -1044,7 +1044,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정렬] live 조회 순서·작성자 합류와 무관하게 이름 오름차순")
+        @DisplayName("TC-014 [정렬] live 조회 순서·작성자 합류와 무관하게 이름 오름차순")
         void sortedByName() {
             Admin c = named(admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING), "다");
             Admin a = named(admin(2L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ANALYSIS), "가");
@@ -1057,7 +1057,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[쿼리] 여러 계정 권한은 of(Collection) 1회로 계산 — of(Admin) 반복 호출 없음")
+        @DisplayName("TC-015 [쿼리] 여러 계정 권한은 of(Collection) 1회로 계산 — of(Admin) 반복 호출 없음")
         void batchPermissionLookup() {
             Admin a1 = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Admin a2 = admin(2L, Admin.Role.TEAM, Admin.TeamName.운영지원팀, Track.ENGINEERING);
@@ -1081,7 +1081,7 @@ class RecruitmentEvaluationServiceTest {
         private final Set<Permission> ALL_ONLY = Set.of(Permission.EVALUATION_ALL_TRACK_WRITE);
 
         @Test
-        @DisplayName("[정상] getApplicants — 본인 track·타 track 지원서 모두 반환")
+        @DisplayName("TC-016 [정상] getApplicants — 본인 track·타 track 지원서 모두 반환")
         void getApplicantsSeesOwnAndOtherTracks() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -1097,7 +1097,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] getApplicantEvaluations — 본인 track·타 track 지원서 모두 반환")
+        @DisplayName("TC-017 [정상] getApplicantEvaluations — 본인 track·타 track 지원서 모두 반환")
         void getApplicantEvaluationsSeesOwnAndOtherTracks() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             given(recruitmentRepository.existsById(1L)).willReturn(true);
@@ -1112,7 +1112,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 같은 track 지원자 개인 평가 저장 — upsert 호출")
+        @DisplayName("TC-018 [정상] 같은 track 지원자 개인 평가 저장 — upsert 호출")
         void saveMyEvaluationSameTrack() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);
@@ -1131,7 +1131,7 @@ class RecruitmentEvaluationServiceTest {
         }
 
         @Test
-        @DisplayName("[정상] 같은 track 지원자 개인 평가 조회 — 접근 가능")
+        @DisplayName("TC-019 [정상] 같은 track 지원자 개인 평가 조회 — 접근 가능")
         void getMyEvaluationSameTrack() {
             Admin me = admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
             Applicant a = applicant(101L, Applicant.ApplicantStatus.SUBMITTED, Track.ENGINEERING);

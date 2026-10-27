@@ -43,14 +43,14 @@ class FaqControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // FAQ-001: GET /api/v1/archiving/faqs
+    // FAQ-01: GET /api/v1/archiving/faqs
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("FAQ-001 GET /api/v1/archiving/faqs")
+    @DisplayName("FAQ-01 GET /api/v1/archiving/faqs")
     class GetFaqs {
 
         @Test
-        @DisplayName("TC-001 정상 조회 → 200 + orderNum 오름차순 목록")
+        @DisplayName("TC-003 정상 조회 → 200 + orderNum 오름차순 목록")
         void success() throws Exception {
             when(faqService.getFaqs(Faq.Category.RECRUITMENT))
                     .thenReturn(List.of(
@@ -70,7 +70,7 @@ class FaqControllerTest {
         }
 
         @Test
-        @DisplayName("TC-002 해당 카테고리 데이터 없을 때 → 200 + 빈 배열")
+        @DisplayName("TC-004 해당 카테고리 데이터 없을 때 → 200 + 빈 배열")
         void emptyResult() throws Exception {
             when(faqService.getFaqs(Faq.Category.ETC)).thenReturn(List.of());
 
@@ -82,7 +82,7 @@ class FaqControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 인증 없이 접근 가능 (공개 API)")
+        @DisplayName("TC-005 [Security] 인증 없이 접근 가능 (공개 API)")
         void publicApi() throws Exception {
             when(faqService.getFaqs(any())).thenReturn(List.of());
 
@@ -92,14 +92,14 @@ class FaqControllerTest {
         }
 
         @Test
-        @DisplayName("category 파라미터 누락 → 400")
+        @DisplayName("TC-006 category 파라미터 누락 → 400")
         void missingCategory() throws Exception {
             mockMvc.perform(get("/api/v1/archiving/faqs"))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
-        @DisplayName("존재하지 않는 category 값 입력 → 400")
+        @DisplayName("TC-007 존재하지 않는 category 값 입력 → 400")
         void invalidCategory() throws Exception {
             mockMvc.perform(get("/api/v1/archiving/faqs")
                             .param("category", "INVALID"))

@@ -41,6 +41,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("USER-ADMIN-01 합격자 승격 서비스 단위 테스트")
 class UserAdminServiceTest {
 
     @InjectMocks

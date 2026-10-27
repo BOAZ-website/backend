@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
 @Import(TestSecurityConfig.class)
+@DisplayName("USER-01 내 정보 조회 컨트롤러 테스트")
 class UserControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -43,7 +44,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("TC-006 정상 조회 → 200 + nickname")
+    @DisplayName("TC-003 정상 조회 → 200 + nickname")
     void success() throws Exception {
         when(userService.getMyInfo(1L)).thenReturn(UserInfoResponse.builder().nickname("홍길동").build());
 
@@ -54,7 +55,7 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("TC-003 미인증 요청 → 401 TOKEN_NOT_FOUND")
+    @DisplayName("TC-004 미인증 요청 → 401 TOKEN_NOT_FOUND")
     void unauthorized() throws Exception {
         mockMvc.perform(get("/api/v1/users/me"))
                 .andExpect(status().isUnauthorized())

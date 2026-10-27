@@ -68,7 +68,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findByApplicantIdWithQuestion: 문항 순서(orderNum)대로 + question 페치 조인")
+    @DisplayName("TC-001 findByApplicantIdWithQuestion: 문항 순서(orderNum)대로 + question 페치 조인")
     void findByApplicantIdWithQuestion() {
         Recruitment r = persistRecruitment(27);
         ApplicationQuestion q1 = persistQuestion(r, 1);
@@ -92,7 +92,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findByApplicantIdWithQuestion: 답변 없으면 빈 리스트")
+    @DisplayName("TC-002 findByApplicantIdWithQuestion: 답변 없으면 빈 리스트")
     void findByApplicantIdWithQuestionEmpty() {
         Recruitment r = persistRecruitment(27);
         Applicant a = persistApplicant(r);
@@ -103,7 +103,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("existsByQuestionId / findByApplicantIds")
+    @DisplayName("TC-003 existsByQuestionId / findByApplicantIds")
     void existsAndFind() {
         Recruitment r = persistRecruitment(27);
         ApplicationQuestion q1 = persistQuestion(r, 1);
@@ -121,7 +121,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("deleteByApplicantId: 해당 지원자 답변만 벌크 삭제")
+    @DisplayName("TC-004 deleteByApplicantId: 해당 지원자 답변만 벌크 삭제")
     void deleteByApplicantId() {
         Recruitment r = persistRecruitment(27);
         ApplicationQuestion q = persistQuestion(r, 1);
@@ -140,7 +140,7 @@ class ApplicantAnswerRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("deleteByRecruitmentId: 서브쿼리로 공고 단위 답변 벌크 삭제")
+    @DisplayName("TC-005 deleteByRecruitmentId: 서브쿼리로 공고 단위 답변 벌크 삭제")
     void deleteByRecruitmentId() {
         Recruitment rA = persistRecruitment(27);
         Recruitment rB = persistRecruitment(26);

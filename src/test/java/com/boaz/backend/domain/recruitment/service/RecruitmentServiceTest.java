@@ -206,10 +206,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-001: 모집 중 여부 조회
+    // REC-01: 모집 중 여부 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-001 모집 중 여부 조회")
+    @DisplayName("REC-01 모집 중 여부 조회")
     class GetRecruitmentStatus {
 
         @Test
@@ -281,10 +281,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-002: 기수별 모집 공고 조회
+    // REC-02: 기수별 모집 공고 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-002 기수별 모집 공고 조회")
+    @DisplayName("REC-02 기수별 모집 공고 조회")
     class GetRecruitment {
 
         @Test
@@ -338,10 +338,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-003: 지원서 질문 목록 조회
+    // REC-03: 지원서 질문 목록 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-003 지원서 질문 목록 조회")
+    @DisplayName("REC-03 지원서 질문 목록 조회")
     class GetQuestions {
 
         @Test
@@ -414,10 +414,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-004: 지원서 제출
+    // REC-04: 지원서 제출
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-004 지원서 제출")
+    @DisplayName("REC-04 지원서 제출")
     class SubmitApplication {
 
         private Recruitment activeRecruitment;
@@ -518,7 +518,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006a 전화번호 형식 오류(하이픈 포함) → INVALID_PHONE_FORMAT")
+        @DisplayName("TC-006 전화번호 형식 오류(하이픈 포함) → INVALID_PHONE_FORMAT")
         void invalidPhoneHyphen() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -534,7 +534,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006b 전화번호 형식 오류(9자리 이하) → INVALID_PHONE_FORMAT")
+        @DisplayName("TC-007 전화번호 형식 오류(9자리 이하) → INVALID_PHONE_FORMAT")
         void invalidPhoneTooShort() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -550,7 +550,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 생년월일 형식 오류 → INVALID_BIRTH_DATE_FORMAT")
+        @DisplayName("TC-008 생년월일 형식 오류 → INVALID_BIRTH_DATE_FORMAT")
         void invalidBirthDate() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -566,7 +566,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 필수 질문 답변 누락 → ANSWER_REQUIRED")
+        @DisplayName("TC-009 필수 질문 답변 누락 → ANSWER_REQUIRED")
         void missingRequired() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -585,7 +585,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 유효하지 않은 questionId → INVALID_INPUT_VALUE")
+        @DisplayName("TC-010 유효하지 않은 questionId → INVALID_INPUT_VALUE")
         void invalidQuestionId() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -604,7 +604,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 중복 questionId → INVALID_INPUT_VALUE")
+        @DisplayName("TC-011 중복 questionId → INVALID_INPUT_VALUE")
         void duplicateQuestionId() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -622,7 +622,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011a TEXT 질문(is_required=false)에 객체 답변 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-012 TEXT 질문(is_required=false)에 객체 답변 → INVALID_ANSWER_TYPE")
         void invalidAnswerType() throws Exception {
             ApplicationQuestion optional = createTextQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -645,7 +645,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011e 필수 질문에 answer=null → ANSWER_REQUIRED (questionId는 존재하나 answer 필드 자체가 null)")
+        @DisplayName("TC-013 필수 질문에 answer=null → ANSWER_REQUIRED (questionId는 존재하나 answer 필드 자체가 null)")
         void nullAnswerOnRequiredQuestion() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -663,7 +663,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011f 선택 질문에 answer=null → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-014 선택 질문에 answer=null → INVALID_ANSWER_TYPE")
         void nullAnswerOnOptionalQuestion() {
             ApplicationQuestion optional = createTextQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -684,7 +684,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011b TABLE 질문(is_required=false)에 텍스트 답변 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-015 TABLE 질문(is_required=false)에 텍스트 답변 → INVALID_ANSWER_TYPE")
         void tableQuestionWithTextAnswer() {
             ApplicationQuestion tableQ = createTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -706,7 +706,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011d 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-016 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
         void singleTableWithArrayValue() throws Exception {
             ApplicationQuestion tableQ = createTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -729,7 +729,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 복수선택 TABLE 정상 제출 → 배열로 저장")
+        @DisplayName("TC-017 복수선택 TABLE 정상 제출 → 배열로 저장")
         void multiTableNormalSubmit() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, true);
@@ -755,7 +755,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012b 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-018 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
         void answerJsonSerializationFailure() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, true);
@@ -779,7 +779,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-013 복수선택 TABLE 필수 질문 + 모든 행 빈 배열 → ANSWER_REQUIRED")
+        @DisplayName("TC-019 복수선택 TABLE 필수 질문 + 모든 행 빈 배열 → ANSWER_REQUIRED")
         void multiTableAllEmptyRequired() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, true);
@@ -802,7 +802,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-014 복수선택 TABLE 값이 배열 아님(문자열) → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-020 복수선택 TABLE 값이 배열 아님(문자열) → INVALID_ANSWER_TYPE")
         void multiTableValueNotArray() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -825,7 +825,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-015 복수선택 TABLE 배열 원소가 string 아님 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-021 복수선택 TABLE 배열 원소가 string 아님 → INVALID_ANSWER_TYPE")
         void multiTableElementNotString() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, false);
@@ -848,7 +848,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-016 복수선택 TABLE 중복 원소 → dedupe 후 저장")
+        @DisplayName("TC-022 복수선택 TABLE 중복 원소 → dedupe 후 저장")
         void multiTableDedupeOnSave() throws Exception {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, true);
@@ -884,7 +884,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-013b 복수선택 필수 질문 + 빈 객체 {} → ANSWER_REQUIRED")
+        @DisplayName("TC-023 복수선택 필수 질문 + 빈 객체 {} → ANSWER_REQUIRED")
         void multiTableEmptyObjectRequired() {
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, activeRecruitment,
                     ApplicationQuestion.Category.COMMON, 2, true);
@@ -906,7 +906,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011c track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-024 track=ALL → INVALID_TRACK_SELECTION")
         void submitWithTrackAll() {
             when(userRepository.findById(1L)).thenReturn(Optional.of(user));
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(activeRecruitment));
@@ -923,10 +923,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-005: 모집 사전 알림 신청
+    // REC-05: 모집 사전 알림 신청
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-005 모집 사전 알림 신청")
+    @DisplayName("REC-05 모집 사전 알림 신청")
     class Subscribe {
 
         @Test
@@ -988,10 +988,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-006: 모집 마감 일시 조회
+    // REC-06: 모집 마감 일시 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-006 모집 마감 일시 조회")
+    @DisplayName("REC-06 모집 마감 일시 조회")
     class GetDeadline {
 
         @Test
@@ -1018,10 +1018,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-007: 지원서 임시저장
+    // REC-07: 지원서 임시저장
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-007 지원서 임시저장")
+    @DisplayName("REC-07 지원서 임시저장")
     class SaveDraft {
 
         private Recruitment active;
@@ -1206,7 +1206,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009b 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-010 답변 JSON 직렬화 실패 → INTERNAL_SERVER_ERROR")
         void answerJsonSerializationFailure() throws Exception {
             Applicant draft = createDraftApplicant(active, user);
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, active,
@@ -1231,7 +1231,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 복수선택 TABLE에 문자열 값 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-011 복수선택 TABLE에 문자열 값 → INVALID_ANSWER_TYPE")
         void multiTableStringValueInDraft() throws Exception {
             Applicant draft = createDraftApplicant(active, user);
             ApplicationQuestion multiQ = createMultiTableQuestion(2L, active,
@@ -1254,7 +1254,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
+        @DisplayName("TC-012 단일선택 TABLE에 배열 값 → INVALID_ANSWER_TYPE")
         void singleTableArrayValueInDraft() throws Exception {
             Applicant draft = createDraftApplicant(active, user);
             ApplicationQuestion tableQ = createTableQuestion(2L, active,
@@ -1278,10 +1278,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-008: 내 지원서 조회
+    // REC-08: 내 지원서 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-008 내 지원서 조회")
+    @DisplayName("REC-08 내 지원서 조회")
     class GetMyApplication {
 
         private Recruitment active;
@@ -1364,7 +1364,7 @@ class RecruitmentServiceTest {
     // 질문 생성/수정 — validateQuestionType
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("질문 생성 — metadata 검증")
+    @DisplayName("REC-ADMIN-06 질문 생성 — metadata 검증")
     class QuestionMetadataValidation {
 
         private com.boaz.backend.domain.recruitment.dto.request.QuestionItemRequest buildTableItem(
@@ -1391,7 +1391,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TABLE metadata의 multiple이 boolean string이면 INVALID_INPUT_VALUE")
+        @DisplayName("TC-001 TABLE metadata의 multiple이 boolean string이면 INVALID_INPUT_VALUE")
         void multipleAsStringRejected() throws Exception {
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(createActiveRecruitment()));
 
@@ -1404,7 +1404,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TABLE metadata의 multiple이 boolean이면 정상 생성")
+        @DisplayName("TC-002 TABLE metadata의 multiple이 boolean이면 정상 생성")
         void multipleAsBooleanAllowed() throws Exception {
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(createActiveRecruitment()));
             when(applicationQuestionRepository.save(any())).thenAnswer(inv -> {
@@ -1422,14 +1422,14 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-001: 지원서 CSV 파일 생성
+    // REC-ADMIN-01: 지원서 CSV 파일 생성
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-001 지원서 CSV 파일 생성")
+    @DisplayName("REC-ADMIN-01 지원서 CSV 파일 생성")
     class DownloadApplications {
 
         @Test
-        @DisplayName("TC-001 지원자 있는 공고 → 부문별 CSV 3개 S3 업로드")
+        @DisplayName("TC-020 지원자 있는 공고 → 부문별 CSV 3개 S3 업로드")
         void uploadThreeCsvFiles() throws Exception {
             Recruitment r = createActiveRecruitment();
             User u = createUser(1L);
@@ -1453,7 +1453,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 지원자 없는 공고 → 헤더만 있는 빈 CSV 3개 (예외 없음)")
+        @DisplayName("TC-021 지원자 없는 공고 → 헤더만 있는 빈 CSV 3개 (예외 없음)")
         void emptyApplicants() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
@@ -1469,7 +1469,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 존재하지 않는 term → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-022 존재하지 않는 term → RECRUITMENT_NOT_FOUND")
         void notFound() {
             when(recruitmentRepository.findByTerm(999)).thenReturn(Optional.empty());
 
@@ -1480,7 +1480,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003b csvService.generateCsv() IOException 발생 → INTERNAL_SERVER_ERROR, S3 업로드 안 함")
+        @DisplayName("TC-023 csvService.generateCsv() IOException 발생 → INTERNAL_SERVER_ERROR, S3 업로드 안 함")
         void csvGenerationIOException() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
@@ -1499,7 +1499,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 decision=PASS → 합격 필터로 조회하고 S3 키에 PASS 표기")
+        @DisplayName("TC-024 decision=PASS → 합격 필터로 조회하고 S3 키에 PASS 표기")
         void passFilter() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
@@ -1522,7 +1522,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-013 decision=ALL → final_decision 필터 null(전체) 전달")
+        @DisplayName("TC-025 decision=ALL → final_decision 필터 null(전체) 전달")
         void allFilterPassesNull() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findByTerm(27)).thenReturn(Optional.of(r));
@@ -1541,10 +1541,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-010: 지원서 전체 삭제
+    // REC-ADMIN-10: 지원서 전체 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-010 지원서 전체 삭제")
+    @DisplayName("REC-ADMIN-10 지원서 전체 삭제")
     class DeleteApplicants {
 
         @Test
@@ -1599,10 +1599,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-011: 사전 알림 신청 전체 조회
+    // REC-ADMIN-11: 사전 알림 신청 전체 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-011 모든 모집 사전 알림 신청 조회")
+    @DisplayName("REC-ADMIN-11 모든 모집 사전 알림 신청 조회")
     class GetAllSubscriptions {
 
         @Test
@@ -1630,10 +1630,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-012: 사전 알림 신청 전체 삭제
+    // REC-ADMIN-12: 사전 알림 신청 전체 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-012 모든 모집 사전 알림 신청 삭제")
+    @DisplayName("REC-ADMIN-12 모든 모집 사전 알림 신청 삭제")
     class DeleteAllSubscriptions {
 
         @Test
@@ -1653,10 +1653,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-008: 모집 마감 경계 (#163 마지막 초 처리)
+    // REC-04: 모집 마감 경계 (#163 마지막 초 처리)
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-008 모집 마감 경계 (마지막 초 처리)")
+    @DisplayName("REC-04 모집 마감 경계 (마지막 초 처리)")
     class DeadlineBoundary {
 
         private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
@@ -1691,7 +1691,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-001 마감 초의 끝자락(23:59:59.999) 제출 → 접수 (튕기지 않음)")
+        @DisplayName("TC-025 마감 초의 끝자락(23:59:59.999) 제출 → 접수 (튕기지 않음)")
         void submitAtLastSecondMillis() {
             fixClockAt(endDate.plusNanos(999_000_000)); // 2026-06-24 23:59:59.999
             stubHappyPathSubmit(recruitmentEndingAt(endDate));
@@ -1703,7 +1703,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 마감 정각(23:59:59.000) 제출 → 접수")
+        @DisplayName("TC-026 마감 정각(23:59:59.000) 제출 → 접수")
         void submitExactlyAtEnd() {
             fixClockAt(endDate); // 2026-06-24 23:59:59.000
             stubHappyPathSubmit(recruitmentEndingAt(endDate));
@@ -1715,7 +1715,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 다음날 자정(06-25 00:00:00) 제출 → RECRUITMENT_CLOSED")
+        @DisplayName("TC-027 다음날 자정(06-25 00:00:00) 제출 → RECRUITMENT_CLOSED")
         void submitAtNextMidnight() {
             fixClockAt(endDate.toLocalDate().plusDays(1).atStartOfDay()); // 2026-06-25 00:00:00
             User user = createUser(1L);
@@ -1769,10 +1769,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-002: 모든 모집 공고 조회
+    // REC-ADMIN-02: 모든 모집 공고 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-002 모든 모집 공고 조회")
+    @DisplayName("REC-ADMIN-02 모든 모집 공고 조회")
     class GetAllRecruitments {
 
         @Test
@@ -1819,10 +1819,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-003: 모집 공고 등록
+    // REC-ADMIN-03: 모집 공고 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-003 모집 공고 등록")
+    @DisplayName("REC-ADMIN-03 모집 공고 등록")
     class CreateRecruitment {
 
         @Test
@@ -1880,7 +1880,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003b schedule JSON 직렬화 실패 → INTERNAL_SERVER_ERROR, 저장 안 함")
+        @DisplayName("TC-004 schedule JSON 직렬화 실패 → INTERNAL_SERVER_ERROR, 저장 안 함")
         void scheduleSerializationFailure() throws Exception {
             RecruitmentCreateRequest req = buildCreateRecruitmentReq(
                     28, LocalDateTime.now().plusDays(1), LocalDateTime.now().plusDays(15), null);
@@ -1895,7 +1895,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 end_date == start_date → INVALID_INPUT_VALUE")
+        @DisplayName("TC-005 end_date == start_date → INVALID_INPUT_VALUE")
         void endNotAfterStart() {
             LocalDateTime same = LocalDateTime.now().plusDays(1);
             RecruitmentCreateRequest req = buildCreateRecruitmentReq(28, same, same, null);
@@ -1909,7 +1909,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004b end_date < start_date → INVALID_INPUT_VALUE")
+        @DisplayName("TC-006 end_date < start_date → INVALID_INPUT_VALUE")
         void endBeforeStart() {
             LocalDateTime start = LocalDateTime.now().plusDays(15);
             LocalDateTime end = LocalDateTime.now().plusDays(1); // end < start
@@ -1925,10 +1925,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-004: 모집 공고 수정
+    // REC-ADMIN-04: 모집 공고 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-004 모집 공고 수정")
+    @DisplayName("REC-ADMIN-04 모집 공고 수정")
     class UpdateRecruitment {
 
         @Test
@@ -1976,7 +1976,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003b brochure_url 미전송(undefined) → 기존 값 유지")
+        @DisplayName("TC-004 brochure_url 미전송(undefined) → 기존 값 유지")
         void brochureUndefinedKept() {
             Recruitment r = createActiveRecruitment(); // brochure 존재
             String original = r.getBrochureUrl();
@@ -1991,7 +1991,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-005 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
         void notFound() {
             when(recruitmentRepository.findById(999L)).thenReturn(Optional.empty());
             RecruitmentUpdateRequest req = new RecruitmentUpdateRequest();
@@ -2003,7 +2003,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 다른 공고와 term 중복 → DUPLICATE_TERM")
+        @DisplayName("TC-006 다른 공고와 term 중복 → DUPLICATE_TERM")
         void duplicateTerm() {
             Recruitment r = createActiveRecruitment(); // id 1
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2018,7 +2018,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 end_date만 수정했는데 기존 start_date보다 이전 → INVALID_INPUT_VALUE")
+        @DisplayName("TC-007 end_date만 수정했는데 기존 start_date보다 이전 → INVALID_INPUT_VALUE")
         void endBeforeExistingStart() {
             Recruitment r = createActiveRecruitment(); // start = now-1d
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2033,10 +2033,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-005: 모집 공고 삭제
+    // REC-ADMIN-05: 모집 공고 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-005 모집 공고 삭제")
+    @DisplayName("REC-ADMIN-05 모집 공고 삭제")
     class DeleteRecruitment {
 
         @Test
@@ -2094,14 +2094,14 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-006: 지원서 질문 등록
+    // REC-ADMIN-06: 지원서 질문 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-006 지원서 질문 등록")
+    @DisplayName("REC-ADMIN-06 지원서 질문 등록")
     class CreateQuestions {
 
         @Test
-        @DisplayName("TC-001 TEXT+TABLE 다건 등록 → ids 반환")
+        @DisplayName("TC-003 TEXT+TABLE 다건 등록 → ids 반환")
         void createMixedSuccess() throws Exception {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2129,7 +2129,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 다른 category면 동일 order_num 허용")
+        @DisplayName("TC-004 다른 category면 동일 order_num 허용")
         void sameOrderDifferentCategory() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2154,7 +2154,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-005 존재하지 않는 공고 → RECRUITMENT_NOT_FOUND")
         void notFound() {
             when(recruitmentRepository.findById(999L)).thenReturn(Optional.empty());
             QuestionsCreateRequest req = buildQuestionsCreateReq(999L,
@@ -2168,7 +2168,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 요청 내 label 중복 → DUPLICATE_QUESTION_LABEL")
+        @DisplayName("TC-006 요청 내 label 중복 → DUPLICATE_QUESTION_LABEL")
         void inRequestDuplicateLabel() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2186,7 +2186,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 요청 내 동일 category order_num 중복 → DUPLICATE_QUESTION_ORDER")
+        @DisplayName("TC-007 요청 내 동일 category order_num 중복 → DUPLICATE_QUESTION_ORDER")
         void inRequestDuplicateOrder() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2203,7 +2203,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 DB에 동일 label 존재 → DUPLICATE_QUESTION_LABEL")
+        @DisplayName("TC-008 DB에 동일 label 존재 → DUPLICATE_QUESTION_LABEL")
         void dbDuplicateLabel() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2220,7 +2220,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006b DB에 동일 category order_num 존재 → DUPLICATE_QUESTION_ORDER")
+        @DisplayName("TC-009 DB에 동일 category order_num 존재 → DUPLICATE_QUESTION_ORDER")
         void dbDuplicateOrder() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2239,7 +2239,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 TEXT인데 limit_length 누락 → MISSING_PARAMETER")
+        @DisplayName("TC-010 TEXT인데 limit_length 누락 → MISSING_PARAMETER")
         void textMissingLimitLength() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2254,7 +2254,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007b TABLE인데 metadata 누락 → MISSING_PARAMETER")
+        @DisplayName("TC-011 TABLE인데 metadata 누락 → MISSING_PARAMETER")
         void tableMissingMetadata() {
             Recruitment r = createActiveRecruitment();
             when(recruitmentRepository.findById(1L)).thenReturn(Optional.of(r));
@@ -2271,10 +2271,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-007: 지원서 질문 목록 조회 (어드민)
+    // REC-ADMIN-07: 지원서 질문 목록 조회 (어드민)
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-007 지원서 질문 목록 조회 (어드민)")
+    @DisplayName("REC-ADMIN-07 지원서 질문 목록 조회 (어드민)")
     class GetAdminQuestions {
 
         @Test
@@ -2347,10 +2347,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-008: 지원서 질문 수정
+    // REC-ADMIN-08: 지원서 질문 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-008 지원서 질문 수정")
+    @DisplayName("REC-ADMIN-08 지원서 질문 수정")
     class UpdateQuestion {
 
         @Test
@@ -2462,7 +2462,7 @@ class RecruitmentServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007b metadata 미전송(undefined) → 기존 값 유지")
+        @DisplayName("TC-008 metadata 미전송(undefined) → 기존 값 유지")
         void metadataUndefinedKept() {
             Recruitment r = createActiveRecruitment();
             ApplicationQuestion q = createTableQuestion(1L, r, ApplicationQuestion.Category.ENGINEERING, 1, true);
@@ -2479,10 +2479,10 @@ class RecruitmentServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // REC-ADMIN-009: 지원서 질문 삭제
+    // REC-ADMIN-09: 지원서 질문 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("REC-ADMIN-009 지원서 질문 삭제")
+    @DisplayName("REC-ADMIN-09 지원서 질문 삭제")
     class DeleteQuestion {
 
         @Test

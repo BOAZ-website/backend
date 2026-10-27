@@ -62,7 +62,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
     class Upsert {
 
         @Test
-        @DisplayName("기존 행 없음 → INSERT")
+        @DisplayName("TC-001 기존 행 없음 → INSERT")
         void insert() {
             Recruitment r = persistRecruitment(27);
             Applicant a = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -80,7 +80,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("기존 행 있음 → UPDATE (행 추가 없음)")
+        @DisplayName("TC-002 기존 행 있음 → UPDATE (행 추가 없음)")
         void update() {
             Recruitment r = persistRecruitment(27);
             Applicant a = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -99,7 +99,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("같은 키 반복 호출 → 유니크 위반 없이 멱등(행 1개)")
+        @DisplayName("TC-003 같은 키 반복 호출 → 유니크 위반 없이 멱등(행 1개)")
         void idempotent() {
             Recruitment r = persistRecruitment(27);
             Applicant a = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -113,7 +113,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("score null 저장 가능")
+        @DisplayName("TC-004 score null 저장 가능")
         void nullScore() {
             Recruitment r = persistRecruitment(27);
             Applicant a = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -135,7 +135,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
     class Queries {
 
         @Test
-        @DisplayName("findByApplicantIdWithAdmin — 한 지원자의 평가 + admin JOIN FETCH")
+        @DisplayName("TC-005 findByApplicantIdWithAdmin — 한 지원자의 평가 + admin JOIN FETCH")
         void byApplicantWithAdmin() {
             Recruitment r = persistRecruitment(27);
             Applicant a = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -152,7 +152,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("findByRecruitmentId — 공고 내 모든 평가 (집계용)")
+        @DisplayName("TC-006 findByRecruitmentId — 공고 내 모든 평가 (집계용)")
         void byRecruitment() {
             Recruitment r = persistRecruitment(27);
             Applicant a1 = persistApplicant(r, persistUser("p1"), Track.ENGINEERING);
@@ -168,7 +168,7 @@ class ApplicantEvalRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("deleteByRecruitmentId — 공고 내 평가만 벌크 삭제 (다른 공고 평가는 유지)")
+        @DisplayName("TC-007 deleteByRecruitmentId — 공고 내 평가만 벌크 삭제 (다른 공고 평가는 유지)")
         void deleteByRecruitmentId() {
             Recruitment target = persistRecruitment(27);
             Recruitment other = persistRecruitment(28);

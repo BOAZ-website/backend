@@ -77,10 +77,10 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-002: POST /api/v1/admin/curriculums
+    // CUR-ADMIN-01: POST /api/v1/admin/curriculums
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("CUR-002 POST /api/v1/admin/curriculums")
+    @DisplayName("CUR-ADMIN-01 POST /api/v1/admin/curriculums")
     class CreateCurriculum {
 
         @Test
@@ -127,7 +127,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("curriculum_steps 누락 → 400")
+        @DisplayName("TC-008 curriculum_steps 누락 → 400")
         void missingSteps() throws Exception {
             String body = objectMapper.createObjectNode().put("track", "ANALYSIS").toString();
 
@@ -139,7 +139,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-009 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/curriculums")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -149,14 +149,14 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-003: PUT /api/v1/admin/curriculums/{id}
+    // CUR-ADMIN-02: PUT /api/v1/admin/curriculums/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("CUR-003 PUT /api/v1/admin/curriculums/{curriculumId}")
+    @DisplayName("CUR-ADMIN-02 PUT /api/v1/admin/curriculums/{curriculumId}")
     class UpdateCurriculum {
 
         @Test
-        @DisplayName("TC-008 단계 전체 교체 성공 → 200 OK")
+        @DisplayName("TC-003 단계 전체 교체 성공 → 200 OK")
         void success() throws Exception {
             when(curriculumService.updateCurriculum(eq(1L), any()))
                     .thenReturn(makeCurriculumResponse(1L, Track.ANALYSIS));
@@ -170,7 +170,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 존재하지 않는 curriculumId → 404 CURRICULUM_NOT_FOUND")
+        @DisplayName("TC-004 존재하지 않는 curriculumId → 404 CURRICULUM_NOT_FOUND")
         void notFound() throws Exception {
             when(curriculumService.updateCurriculum(eq(999L), any()))
                     .thenThrow(new CustomException(ErrorCode.CURRICULUM_NOT_FOUND));
@@ -184,7 +184,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-005 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(put("/api/v1/admin/curriculums/1")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -194,14 +194,14 @@ class CurriculumAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // CUR-004: DELETE /api/v1/admin/curriculums/{id}
+    // CUR-ADMIN-03: DELETE /api/v1/admin/curriculums/{id}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("CUR-004 DELETE /api/v1/admin/curriculums/{curriculumId}")
+    @DisplayName("CUR-ADMIN-03 DELETE /api/v1/admin/curriculums/{curriculumId}")
     class DeleteCurriculum {
 
         @Test
-        @DisplayName("TC-010 삭제 성공 → 200 OK")
+        @DisplayName("TC-003 삭제 성공 → 200 OK")
         void success() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/curriculums/1")
                             .with(authentication(adminAuth())))
@@ -210,7 +210,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 존재하지 않는 curriculumId → 404 CURRICULUM_NOT_FOUND")
+        @DisplayName("TC-004 존재하지 않는 curriculumId → 404 CURRICULUM_NOT_FOUND")
         void notFound() throws Exception {
             doThrow(new CustomException(ErrorCode.CURRICULUM_NOT_FOUND))
                     .when(curriculumService).deleteCurriculum(999L);
@@ -222,7 +222,7 @@ class CurriculumAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-005 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/curriculums/1"))
                     .andExpect(status().isUnauthorized());

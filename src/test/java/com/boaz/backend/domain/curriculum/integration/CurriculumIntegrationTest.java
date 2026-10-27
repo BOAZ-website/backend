@@ -69,14 +69,14 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-001: 커리큘럼 조회
+    // CUR-01: 커리큘럼 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("커리큘럼 조회 end-to-end (CUR-001)")
+    @DisplayName("CUR-01 커리큘럼 조회 end-to-end")
     class GetCurriculums {
 
         @Test
-        @DisplayName("TC-001 track 미입력 → 저장된 전체 반환")
+        @DisplayName("TC-011 track 미입력 → 저장된 전체 반환")
         void allTracks() {
             saveCurriculum(Track.ANALYSIS);
             saveCurriculum(Track.VISUALIZATION);
@@ -87,7 +87,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-002 track=ANALYSIS 필터 → 해당 트랙만 반환")
+        @DisplayName("TC-012 track=ANALYSIS 필터 → 해당 트랙만 반환")
         void specificTrack() {
             saveCurriculum(Track.ANALYSIS);
             saveCurriculum(Track.ENGINEERING);
@@ -99,7 +99,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-003 track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-013 track=ALL → INVALID_TRACK_SELECTION")
         void trackAll() {
             assertThatThrownBy(() -> curriculumService.getCurriculums(Track.ALL))
                     .isInstanceOf(CustomException.class)
@@ -107,7 +107,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-004 해당 track 데이터 없을 때 → 빈 배열")
+        @DisplayName("TC-014 해당 track 데이터 없을 때 → 빈 배열")
         void noData() {
             List<CurriculumResponse> result = curriculumService.getCurriculums(Track.ENGINEERING);
 
@@ -116,14 +116,14 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-002: 커리큘럼 등록
+    // CUR-ADMIN-01: 커리큘럼 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("커리큘럼 등록 end-to-end (CUR-002)")
+    @DisplayName("CUR-ADMIN-01 커리큘럼 등록 end-to-end")
     class CreateCurriculum {
 
         @Test
-        @DisplayName("TC-005 등록 성공 → step 오름차순 정렬 후 DB 저장")
+        @DisplayName("TC-010 등록 성공 → step 오름차순 정렬 후 DB 저장")
         void successWithStepSorting() {
             List<CurriculumStepRequest> steps = List.of(
                     makeStep(3, "세번째", "설명3"),
@@ -141,7 +141,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-006 track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-011 track=ALL → INVALID_TRACK_SELECTION")
         void trackAll() {
             assertThatThrownBy(() -> curriculumService.createCurriculum(
                     makeCreateRequest(Track.ALL, List.of(makeStep(1, "제목", "설명")))))
@@ -152,7 +152,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-007 동일 track 중복 등록 → DUPLICATE_TRACK")
+        @DisplayName("TC-012 동일 track 중복 등록 → DUPLICATE_TRACK")
         void duplicateTrack() {
             saveCurriculum(Track.ANALYSIS);
 
@@ -165,7 +165,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-012 동시에 같은 track으로 등록 요청 → 단 하나만 성공, 나머지는 DUPLICATE_TRACK, DB에는 1건만 남음")
+        @DisplayName("TC-013 동시에 같은 track으로 등록 요청 → 단 하나만 성공, 나머지는 DUPLICATE_TRACK, DB에는 1건만 남음")
         void concurrentCreateSameTrack() throws Exception {
             int threadCount = 5;
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -213,14 +213,14 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-003: 커리큘럼 수정
+    // CUR-ADMIN-02: 커리큘럼 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("커리큘럼 수정 end-to-end (CUR-003)")
+    @DisplayName("CUR-ADMIN-02 커리큘럼 수정 end-to-end")
     class UpdateCurriculum {
 
         @Test
-        @DisplayName("TC-008 단계 전체 교체 성공 → 새 단계로 대체, track 유지")
+        @DisplayName("TC-006 단계 전체 교체 성공 → 새 단계로 대체, track 유지")
         void success() {
             Curriculum saved = saveCurriculum(Track.ANALYSIS);
 
@@ -236,7 +236,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-009 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> curriculumService.updateCurriculum(999L,
                     makeUpdateRequest(List.of(makeStep(1, "제목", "설명")))))
@@ -246,14 +246,14 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // CUR-004: 커리큘럼 삭제
+    // CUR-ADMIN-03: 커리큘럼 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("커리큘럼 삭제 end-to-end (CUR-004)")
+    @DisplayName("CUR-ADMIN-03 커리큘럼 삭제 end-to-end")
     class DeleteCurriculum {
 
         @Test
-        @DisplayName("TC-010 삭제 성공 → DB에서 제거됨")
+        @DisplayName("TC-006 삭제 성공 → DB에서 제거됨")
         void success() {
             Curriculum saved = saveCurriculum(Track.ANALYSIS);
 
@@ -263,7 +263,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-011 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 curriculumId → CURRICULUM_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> curriculumService.deleteCurriculum(999L))
                     .isInstanceOf(CustomException.class)
@@ -279,7 +279,7 @@ class CurriculumIntegrationTest extends TestcontainersBase {
     class Lifecycle {
 
         @Test
-        @DisplayName("등록 → 조회 → 수정 → 삭제 흐름이 DB와 일치")
+        @DisplayName("TC-001 등록 → 조회 → 수정 → 삭제 흐름이 DB와 일치")
         void fullLifecycle() {
             CurriculumResponse created = curriculumService.createCurriculum(
                     makeCreateRequest(Track.VISUALIZATION, List.of(makeStep(1, "초기", "초기설명"))));

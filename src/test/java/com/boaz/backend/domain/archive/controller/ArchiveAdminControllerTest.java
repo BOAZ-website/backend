@@ -34,8 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
- * ARC-005 ~ ARC-013 아카이빙 등록/수정/삭제 컨트롤러 테스트.
- * 명세: TF 테스트코드 작성 (ARC-005 프로젝트 등록 ~ ARC-013 기술블로그 삭제)
+ * ARC-ADMIN 아카이빙 등록/수정/삭제 컨트롤러 테스트.
+ * 명세: TF 테스트코드 작성 (ARC-ADMIN-02 프로젝트 등록 ~ ARC-ADMIN-12 기술블로그 삭제)
  */
 @ActiveProfiles("test")
 @WebMvcTest(
@@ -81,14 +81,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-005 프로젝트 등록  POST /api/v1/admin/archiving/projects
+    // ARC-ADMIN-02 프로젝트 등록  POST /api/v1/admin/archiving/projects
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-005 POST /api/v1/admin/archiving/projects")
+    @DisplayName("ARC-ADMIN-02 POST /api/v1/admin/archiving/projects")
     class CreateProject {
 
         @Test
-        @DisplayName("TC-008 유효한 요청 → 201 Created + body")
+        @DisplayName("TC-015 유효한 요청 → 201 Created + body")
         void create_201() throws Exception {
             doNothing().when(archiveAdminService).createArchive(any(), any(), any());
 
@@ -103,7 +103,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 data 파트 누락 → 400 MISSING_PARAMETER")
+        @DisplayName("TC-016 data 파트 누락 → 400 MISSING_PARAMETER")
         void create_missing_data_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
                             .file(imagePart())
@@ -113,7 +113,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 image 파트 누락 → 400 MISSING_PARAMETER")
+        @DisplayName("TC-017 image 파트 누락 → 400 MISSING_PARAMETER")
         void create_missing_image_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
                             .file(dataPart(validCreateBody()))
@@ -123,7 +123,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 Bean Validation 위반(term 누락) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-018 Bean Validation 위반(term 누락) → 400 INVALID_INPUT_VALUE")
         void create_bean_validation() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.remove("term");
@@ -138,7 +138,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 links 공백 → 400 INVALID_INPUT_VALUE (@NotBlank)")
+        @DisplayName("TC-019 links 공백 → 400 INVALID_INPUT_VALUE (@NotBlank)")
         void create_blank_links() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("links", "   ");
@@ -153,7 +153,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 content_date 미래 날짜 → 400 INVALID_INPUT_VALUE (@PastOrPresent)")
+        @DisplayName("TC-020 content_date 미래 날짜 → 400 INVALID_INPUT_VALUE (@PastOrPresent)")
         void create_future_content_date() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("content_date", "2999-12-31");
@@ -168,7 +168,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-021 data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
         void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
                             .file(rawDataPart("{ not json"))
@@ -179,7 +179,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009 data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-022 data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
         void create_invalid_enum_value() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("track", "DEEP_LEARNING");
@@ -193,7 +193,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010 토큰 없음 → 401 TOKEN_NOT_FOUND")
+        @DisplayName("TC-023 토큰 없음 → 401 TOKEN_NOT_FOUND")
         void create_unauthenticated() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
                             .file(dataPart(validCreateBody()))
@@ -205,7 +205,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010 USER 권한 → 403 ACCESS_DENIED")
+        @DisplayName("TC-024 USER 권한 → 403 ACCESS_DENIED")
         void create_forbidden_for_user() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/projects")
                             .file(dataPart(validCreateBody()))
@@ -219,14 +219,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-006 활동사진 등록  POST /api/v1/admin/archiving/activities
+    // ARC-ADMIN-06 활동사진 등록  POST /api/v1/admin/archiving/activities
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-006 POST /api/v1/admin/archiving/activities")
+    @DisplayName("ARC-ADMIN-06 POST /api/v1/admin/archiving/activities")
     class CreateActivity {
 
         @Test
-        @DisplayName("TC-012 유효한 요청 → 201 + category=ACTIVITY 전달")
+        @DisplayName("TC-008 유효한 요청 → 201 + category=ACTIVITY 전달")
         void create_201() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("half", "26-1");
@@ -242,7 +242,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-013 half 형식 오류 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-009 half 형식 오류 → 400 INVALID_INPUT_VALUE")
         void create_invalid_half_format() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("half", "2026-1");
@@ -257,7 +257,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-016 term 누락 + half 누락 동시 → 400 INVALID_INPUT_VALUE (Bean Validation 선행, MISSING_HALF 아님)")
+        @DisplayName("TC-010 term 누락 + half 누락 동시 → 400 INVALID_INPUT_VALUE (Bean Validation 선행, MISSING_HALF 아님)")
         void create_missing_term_and_half_bean_validation_first() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.remove("term"); // half 도 없음
@@ -274,7 +274,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data 파트 누락 → 400 MISSING_PARAMETER")
+        @DisplayName("TC-011 (공통) data 파트 누락 → 400 MISSING_PARAMETER")
         void create_missing_data_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(imagePart())
                             .with(authentication(adminAuth())))
@@ -283,7 +283,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) Bean Validation 위반(title 공백) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-012 (공통) Bean Validation 위반(title 공백) → 400 INVALID_INPUT_VALUE")
         void create_bean_validation() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("half", "26-1");
@@ -296,7 +296,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-013 (공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
         void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/activities").file(rawDataPart("{ not json")).file(imagePart())
                             .with(authentication(adminAuth())))
@@ -305,7 +305,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-014 (공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
         void create_invalid_enum_value() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("half", "26-1");
@@ -318,7 +318,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010(공통) 토큰 없음 → 401 / USER 권한 → 403")
+        @DisplayName("TC-015 (공통) 토큰 없음 → 401 / USER 권한 → 403")
         void create_security() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("half", "26-1");
@@ -337,14 +337,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-007 기술블로그 등록  POST /api/v1/admin/archiving/blogs
+    // ARC-ADMIN-10 기술블로그 등록  POST /api/v1/admin/archiving/blogs
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-007 POST /api/v1/admin/archiving/blogs")
+    @DisplayName("ARC-ADMIN-10 POST /api/v1/admin/archiving/blogs")
     class CreateBlog {
 
         @Test
-        @DisplayName("TC-012 유효한 요청 → 201 + category=BLOG 전달")
+        @DisplayName("TC-008 유효한 요청 → 201 + category=BLOG 전달")
         void create_201() throws Exception {
             doNothing().when(archiveAdminService).createArchive(any(), any(), any());
 
@@ -358,7 +358,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data 파트 누락 → 400 MISSING_PARAMETER")
+        @DisplayName("TC-009 (공통) data 파트 누락 → 400 MISSING_PARAMETER")
         void create_missing_data_part() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(imagePart())
                             .with(authentication(adminAuth())))
@@ -367,7 +367,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) Bean Validation 위반(content_date 누락) → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-010 (공통) Bean Validation 위반(content_date 누락) → 400 INVALID_INPUT_VALUE")
         void create_bean_validation() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.remove("content_date");
@@ -379,7 +379,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-011 (공통) data 파트 malformed JSON → 400 INVALID_INPUT_VALUE")
         void create_malformed_json() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(rawDataPart("{ not json")).file(imagePart())
                             .with(authentication(adminAuth())))
@@ -388,7 +388,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-009(공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-012 (공통) data.track에 없는 enum 값 → 400 INVALID_INPUT_VALUE")
         void create_invalid_enum_value() throws Exception {
             Map<String, Object> body = validCreateBody();
             body.put("track", "DEEP_LEARNING");
@@ -400,7 +400,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010(공통) 토큰 없음 → 401 / USER 권한 → 403")
+        @DisplayName("TC-013 (공통) 토큰 없음 → 401 / USER 권한 → 403")
         void create_security() throws Exception {
             mockMvc.perform(multipart("/api/v1/admin/archiving/blogs").file(dataPart(validCreateBody())).file(imagePart()))
                     .andExpect(status().isUnauthorized())
@@ -416,14 +416,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-008 프로젝트 수정  PATCH /api/v1/admin/archiving/projects/{id}
+    // ARC-ADMIN-03 프로젝트 수정  PATCH /api/v1/admin/archiving/projects/{id}
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-008 PATCH /api/v1/admin/archiving/projects/{id}")
+    @DisplayName("ARC-ADMIN-03 PATCH /api/v1/admin/archiving/projects/{id}")
     class UpdateProject {
 
         @Test
-        @DisplayName("TC-011 유효한 요청 → 200 OK + body")
+        @DisplayName("TC-018 유효한 요청 → 200 OK + body")
         void update_200() throws Exception {
             doNothing().when(archiveAdminService).updateArchive(any(), any(), any(), any());
             Map<String, Object> body = Map.of("title", "새 제목");
@@ -438,7 +438,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 존재하지 않는 id → 404 ARCHIVE_NOT_FOUND")
+        @DisplayName("TC-019 존재하지 않는 id → 404 ARCHIVE_NOT_FOUND")
         void update_not_found() throws Exception {
             doThrow(new CustomException(ErrorCode.ARCHIVE_NOT_FOUND))
                     .when(archiveAdminService).updateArchive(any(), any(), any(), any());
@@ -451,7 +451,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 id 타입 불일치(/projects/abc) → 400 INVALID_PARAMETER_TYPE")
+        @DisplayName("TC-020 id 타입 불일치(/projects/abc) → 400 INVALID_PARAMETER_TYPE")
         void update_id_type_mismatch() throws Exception {
             mockMvc.perform(multipart(HttpMethod.PATCH, "/api/v1/admin/archiving/projects/abc")
                             .file(dataPart(Map.of("title", "새 제목")))
@@ -461,7 +461,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 data malformed JSON / 잘못된 enum / half 형식 오류 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("TC-021 data malformed JSON / 잘못된 enum / half 형식 오류 → 400 INVALID_INPUT_VALUE")
         void update_malformed_or_invalid_enum() throws Exception {
             mockMvc.perform(multipart(HttpMethod.PATCH, "/api/v1/admin/archiving/projects/1")
                             .file(rawDataPart("{ not json"))
@@ -485,7 +485,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 토큰 없음 → 401 TOKEN_NOT_FOUND / USER 권한 → 403 ACCESS_DENIED")
+        @DisplayName("TC-022 토큰 없음 → 401 TOKEN_NOT_FOUND / USER 권한 → 403 ACCESS_DENIED")
         void update_security() throws Exception {
             mockMvc.perform(multipart(HttpMethod.PATCH, "/api/v1/admin/archiving/projects/1")
                             .file(dataPart(Map.of("title", "새 제목"))))
@@ -503,14 +503,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-009 / ARC-010 활동사진·기술블로그 수정 (category 전달 검증)
+    // ARC-ADMIN-07 / ARC-ADMIN-11 활동사진·기술블로그 수정 (category 전달 검증)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-009 / ARC-010 PATCH activities|blogs")
+    @DisplayName("ARC-ADMIN-07 / ARC-ADMIN-11 PATCH activities|blogs")
     class UpdateActivityAndBlog {
 
         @Test
-        @DisplayName("ARC-009 TC-004 PATCH /activities/{id} → category=ACTIVITY 전달")
+        @DisplayName("ARC-ADMIN-07 TC-005 PATCH /activities/{id} → category=ACTIVITY 전달")
         void update_activity() throws Exception {
             doNothing().when(archiveAdminService).updateArchive(any(), any(), any(), any());
 
@@ -523,7 +523,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("ARC-009 TC-004 PATCH /activities half 형식 오류 → 400 INVALID_INPUT_VALUE")
+        @DisplayName("ARC-ADMIN-07 TC-006 PATCH /activities half 형식 오류 → 400 INVALID_INPUT_VALUE")
         void update_activity_invalid_half() throws Exception {
             mockMvc.perform(multipart(HttpMethod.PATCH, "/api/v1/admin/archiving/activities/1")
                             .file(dataPart(Map.of("half", "26-3")))
@@ -534,7 +534,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("ARC-010 PATCH /blogs/{id} → category=BLOG 전달")
+        @DisplayName("ARC-ADMIN-11 TC-003 PATCH /blogs/{id} → category=BLOG 전달")
         void update_blog() throws Exception {
             doNothing().when(archiveAdminService).updateArchive(any(), any(), any(), any());
 
@@ -548,14 +548,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-011 프로젝트 삭제  DELETE /api/v1/admin/archiving/projects/{id}
+    // ARC-ADMIN-04 프로젝트 삭제  DELETE /api/v1/admin/archiving/projects/{id}
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-011 DELETE /api/v1/admin/archiving/projects/{id}")
+    @DisplayName("ARC-ADMIN-04 DELETE /api/v1/admin/archiving/projects/{id}")
     class DeleteProject {
 
         @Test
-        @DisplayName("TC-004 유효한 요청 → 200 OK + body")
+        @DisplayName("TC-006 유효한 요청 → 200 OK + body")
         void delete_200() throws Exception {
             doNothing().when(archiveAdminService).deleteArchive(any(), any());
 
@@ -568,7 +568,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 존재하지 않는 id → 404 ARCHIVE_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 id → 404 ARCHIVE_NOT_FOUND")
         void delete_not_found() throws Exception {
             doThrow(new CustomException(ErrorCode.ARCHIVE_NOT_FOUND))
                     .when(archiveAdminService).deleteArchive(any(), any());
@@ -580,7 +580,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 서비스가 UNSUPPORTED_ARCHIVE_CATEGORY 예외 → 400 + error_code 응답 매핑")
+        @DisplayName("TC-008 서비스가 UNSUPPORTED_ARCHIVE_CATEGORY 예외 → 400 + error_code 응답 매핑")
         void delete_unsupported_category_exception_mapped_to_400() throws Exception {
             doThrow(new CustomException(ErrorCode.UNSUPPORTED_ARCHIVE_CATEGORY))
                     .when(archiveAdminService).deleteArchive(any(), any());
@@ -592,7 +592,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 id 타입 불일치(/projects/abc) → 400 INVALID_PARAMETER_TYPE")
+        @DisplayName("TC-009 id 타입 불일치(/projects/abc) → 400 INVALID_PARAMETER_TYPE")
         void delete_id_type_mismatch() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/archiving/projects/abc")
                             .with(authentication(adminAuth())))
@@ -601,7 +601,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 토큰 없음 → 401 / USER 권한 → 403")
+        @DisplayName("TC-010 토큰 없음 → 401 / USER 권한 → 403")
         void delete_security() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/archiving/projects/1"))
                     .andExpect(status().isUnauthorized())
@@ -617,14 +617,14 @@ class ArchiveAdminControllerTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-012 / ARC-013 활동사진·기술블로그 삭제 (category 전달 검증)
+    // ARC-ADMIN-08 / ARC-ADMIN-12 활동사진·기술블로그 삭제 (category 전달 검증)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-012 / ARC-013 DELETE activities|blogs")
+    @DisplayName("ARC-ADMIN-08 / ARC-ADMIN-12 DELETE activities|blogs")
     class DeleteActivityAndBlog {
 
         @Test
-        @DisplayName("ARC-012 DELETE /activities/{id} → category=ACTIVITY 전달")
+        @DisplayName("ARC-ADMIN-08 TC-002 DELETE /activities/{id} → category=ACTIVITY 전달")
         void delete_activity() throws Exception {
             doNothing().when(archiveAdminService).deleteArchive(any(), any());
 
@@ -636,7 +636,7 @@ class ArchiveAdminControllerTest {
         }
 
         @Test
-        @DisplayName("ARC-013 DELETE /blogs/{id} → category=BLOG 전달")
+        @DisplayName("ARC-ADMIN-12 TC-002 DELETE /blogs/{id} → category=BLOG 전달")
         void delete_blog() throws Exception {
             doNothing().when(archiveAdminService).deleteArchive(any(), any());
 

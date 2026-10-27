@@ -41,7 +41,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
     class FindActiveRecruitment {
 
         @Test
-        @DisplayName("now 가 모집 기간 내면 해당 공고 반환")
+        @DisplayName("TC-001 now 가 모집 기간 내면 해당 공고 반환")
         void within() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(27, now.minusDays(1), now.plusDays(1));
@@ -53,7 +53,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("now 가 모집 종료 이후면 empty")
+        @DisplayName("TC-002 now 가 모집 종료 이후면 empty")
         void afterEnd() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(27, now.minusDays(10), now.minusDays(1));
@@ -62,7 +62,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("경계: start_date 정각도 모집 중 포함")
+        @DisplayName("TC-003 경계: start_date 정각도 모집 중 포함")
         void startBoundaryInclusive() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(27, now, now.plusDays(7));
@@ -71,7 +71,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("경계: end_date 정각도 모집 중 포함")
+        @DisplayName("TC-004 경계: end_date 정각도 모집 중 포함")
         void endBoundaryInclusive() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(27, now.minusDays(7), now);
@@ -85,7 +85,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
     class ByTerm {
 
         @Test
-        @DisplayName("기수로 공고 조회")
+        @DisplayName("TC-005 기수로 공고 조회")
         void findByTerm() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(26, now.minusDays(1), now.plusDays(1));
@@ -95,7 +95,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("existsByTerm: 존재/미존재")
+        @DisplayName("TC-006 existsByTerm: 존재/미존재")
         void existsByTerm() {
             LocalDateTime now = LocalDateTime.now();
             persistRecruitment(26, now.minusDays(1), now.plusDays(1));
@@ -105,7 +105,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("existsByTermAndIdNot: 자기 자신은 중복으로 보지 않음")
+        @DisplayName("TC-007 existsByTermAndIdNot: 자기 자신은 중복으로 보지 않음")
         void existsByTermAndIdNot() {
             LocalDateTime now = LocalDateTime.now();
             Recruitment r = persistRecruitment(26, now.minusDays(1), now.plusDays(1));
@@ -118,7 +118,7 @@ class RecruitmentRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findAllByOrderByTermDesc: term 내림차순 정렬")
+    @DisplayName("TC-008 findAllByOrderByTermDesc: term 내림차순 정렬")
     void findAllByOrderByTermDesc() {
         LocalDateTime now = LocalDateTime.now();
         persistRecruitment(25, now.minusDays(1), now.plusDays(1));

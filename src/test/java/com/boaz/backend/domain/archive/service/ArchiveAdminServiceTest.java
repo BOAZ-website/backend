@@ -35,8 +35,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * ARC-005 ~ ARC-013 아카이빙 등록/수정/삭제 서비스 단위 테스트.
- * 명세: TF 테스트코드 작성 (ARC-005 프로젝트 등록 ~ ARC-013 기술블로그 삭제)
+ * ARC-ADMIN 아카이빙 등록/수정/삭제 서비스 단위 테스트.
+ * 명세: TF 테스트코드 작성 (ARC-ADMIN-02 프로젝트 등록 ~ ARC-ADMIN-12 기술블로그 삭제)
  */
 @ExtendWith(MockitoExtension.class)
 class ArchiveAdminServiceTest {
@@ -117,10 +117,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-005 프로젝트 등록
+    // ARC-ADMIN-02 프로젝트 등록
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-005 프로젝트 등록")
+    @DisplayName("ARC-ADMIN-02 프로젝트 등록")
     class CreateProject {
 
         @Test
@@ -187,7 +187,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 links 객체 아님(배열) → INVALID_INPUT_VALUE")
+        @DisplayName("TC-005 links 객체 아님(배열) → INVALID_INPUT_VALUE")
         void create_links_not_object() {
             ArchiveCreateRequest request = validProjectRequest();
             ReflectionTestUtils.setField(request, "links", "[\"https://a.com\"]");
@@ -198,7 +198,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 links value URL 형식 아님 → INVALID_URL_FORMAT")
+        @DisplayName("TC-006 links value URL 형식 아님 → INVALID_URL_FORMAT")
         void create_links_invalid_url() {
             ArchiveCreateRequest request = validProjectRequest();
             ReflectionTestUtils.setField(request, "links", "{\"slideshare\":\"not-a-url\"}");
@@ -209,7 +209,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 image 빈 파일 → INVALID_FILE_TYPE")
+        @DisplayName("TC-007 image 빈 파일 → INVALID_FILE_TYPE")
         void create_image_empty() {
             MockMultipartFile empty = new MockMultipartFile("image", "photo.png", "image/png", new byte[0]);
 
@@ -219,7 +219,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 허용 외 확장자(gif) → INVALID_FILE_TYPE")
+        @DisplayName("TC-008 허용 외 확장자(gif) → INVALID_FILE_TYPE")
         void create_image_bad_extension() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(Category.PROJECT, validProjectRequest(), image("photo.gif")))
                     .isInstanceOf(CustomException.class)
@@ -227,7 +227,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 파일명 없음(originalFilename=null) → INVALID_FILE_TYPE")
+        @DisplayName("TC-009 파일명 없음(originalFilename=null) → INVALID_FILE_TYPE")
         void create_image_null_filename() {
             MultipartFile nullName = mock(MultipartFile.class);
             when(nullName.isEmpty()).thenReturn(false);
@@ -240,7 +240,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 이미지 5MB 초과 → FILE_SIZE_EXCEEDED")
+        @DisplayName("TC-010 이미지 5MB 초과 → FILE_SIZE_EXCEEDED")
         void create_image_too_large() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(
                     Category.PROJECT, validProjectRequest(), sizedImage(5L * 1024 * 1024 + 1)))
@@ -249,7 +249,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 이미지 정확히 5MB → 통과")
+        @DisplayName("TC-011 이미지 정확히 5MB → 통과")
         void create_image_exactly_max() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
 
@@ -259,7 +259,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
+        @DisplayName("TC-012 S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
         void create_s3_upload_failed() {
             when(s3Service.uploadImage(any(), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED));
@@ -272,7 +272,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-013 DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
         void create_db_failure_cleans_up_s3() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
             when(archiveRepository.save(any())).thenThrow(new RuntimeException("db down"));
@@ -285,7 +285,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 비고: DB 실패 + catch 내부 S3 정리마저 실패 → 로그만, INTERNAL_SERVER_ERROR 전파")
+        @DisplayName("TC-014 비고: DB 실패 + catch 내부 S3 정리마저 실패 → 로그만, INTERNAL_SERVER_ERROR 전파")
         void create_db_failure_and_cleanup_failure_still_internal_error() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
             when(archiveRepository.save(any())).thenThrow(new RuntimeException("db down"));
@@ -300,10 +300,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-006 활동사진 등록
+    // ARC-ADMIN-06 활동사진 등록
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-006 활동사진 등록")
+    @DisplayName("ARC-ADMIN-06 활동사진 등록")
     class CreateActivity {
 
         @Test
@@ -349,14 +349,14 @@ class ArchiveAdminServiceTest {
             assertThat(saved.getValue().getTrack()).isEqualTo(Track.ALL);
         }
 
-        // ── ARC-005 공통 규칙을 category=ACTIVITY 로 동일 적용 (명세 "동일하게 적용한다") ──
+        // ── ARC-ADMIN-02 공통 규칙을 category=ACTIVITY 로 동일 적용 (명세 "동일하게 적용한다") ──
 
         private ArchiveCreateRequest activityRequest(String links) {
             return createRequest(26, "제목", "팀", Track.ANALYSIS, links, LocalDate.of(2026, 7, 1), "26-1");
         }
 
         @Test
-        @DisplayName("TC-004(공통) links — 파싱 불가/객체 아님 → INVALID_INPUT_VALUE, URL 형식 → INVALID_URL_FORMAT")
+        @DisplayName("TC-004 (공통) links — 파싱 불가/객체 아님 → INVALID_INPUT_VALUE, URL 형식 → INVALID_URL_FORMAT")
         void create_links_validation() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(Category.ACTIVITY, activityRequest("{bad"), validImage()))
                     .isInstanceOf(CustomException.class).extracting("errorCode").isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
@@ -367,7 +367,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005(공통) image — 빈 파일/확장자 gif → INVALID_FILE_TYPE, 5MB 초과 → FILE_SIZE_EXCEEDED")
+        @DisplayName("TC-005 (공통) image — 빈 파일/확장자 gif → INVALID_FILE_TYPE, 5MB 초과 → FILE_SIZE_EXCEEDED")
         void create_image_validation() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(Category.ACTIVITY, activityRequest("{}"),
                     new MockMultipartFile("image", "p.png", "image/png", new byte[0])))
@@ -379,7 +379,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006(공통) S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
+        @DisplayName("TC-006 (공통) S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
         void create_s3_upload_failed() {
             when(s3Service.uploadImage(any(), any(), any())).thenThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED));
 
@@ -389,7 +389,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007(공통) DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-007 (공통) DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
         void create_db_failure_cleans_up_s3() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
             when(archiveRepository.save(any())).thenThrow(new RuntimeException("db"));
@@ -401,10 +401,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-007 기술블로그 등록
+    // ARC-ADMIN-10 기술블로그 등록
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-007 기술블로그 등록")
+    @DisplayName("ARC-ADMIN-10 기술블로그 등록")
     class CreateBlog {
 
         @Test
@@ -435,14 +435,14 @@ class ArchiveAdminServiceTest {
             verify(archiveRepository, never()).save(any());
         }
 
-        // ── ARC-005 공통 규칙을 category=BLOG 로 동일 적용 (명세 "동일하게 적용한다") ──
+        // ── ARC-ADMIN-02 공통 규칙을 category=BLOG 로 동일 적용 (명세 "동일하게 적용한다") ──
 
         private ArchiveCreateRequest blogRequest(String teamName, String links) {
             return createRequest(8, "제목", teamName, Track.ENGINEERING, links, LocalDate.of(2024, 7, 1), null);
         }
 
         @Test
-        @DisplayName("TC-002(공통) teamName null / links {} 도 등록 성공")
+        @DisplayName("TC-003 (공통) teamName null / links {} 도 등록 성공")
         void create_optional_values() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
 
@@ -454,7 +454,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004(공통) links — 파싱 불가/객체 아님 → INVALID_INPUT_VALUE, URL 형식 → INVALID_URL_FORMAT")
+        @DisplayName("TC-004 (공통) links — 파싱 불가/객체 아님 → INVALID_INPUT_VALUE, URL 형식 → INVALID_URL_FORMAT")
         void create_links_validation() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(Category.BLOG, blogRequest("개인", "{bad"), validImage()))
                     .isInstanceOf(CustomException.class).extracting("errorCode").isEqualTo(ErrorCode.INVALID_INPUT_VALUE);
@@ -465,7 +465,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005(공통) image — 빈 파일/확장자 gif → INVALID_FILE_TYPE, 5MB 초과 → FILE_SIZE_EXCEEDED")
+        @DisplayName("TC-005 (공통) image — 빈 파일/확장자 gif → INVALID_FILE_TYPE, 5MB 초과 → FILE_SIZE_EXCEEDED")
         void create_image_validation() {
             assertThatThrownBy(() -> archiveAdminService.createArchive(Category.BLOG, blogRequest("개인", "{}"),
                     new MockMultipartFile("image", "p.png", "image/png", new byte[0])))
@@ -477,7 +477,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006(공통) S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
+        @DisplayName("TC-006 (공통) S3 업로드 실패 → S3_UPLOAD_FAILED 전파, save 미호출")
         void create_s3_upload_failed() {
             when(s3Service.uploadImage(any(), any(), any())).thenThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED));
 
@@ -487,7 +487,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007(공통) DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-007 (공통) DB save 실패 → 업로드 이미지 삭제 + INTERNAL_SERVER_ERROR")
         void create_db_failure_cleans_up_s3() {
             when(s3Service.uploadImage(any(), any(), any())).thenReturn(NEW_IMAGE_URL);
             when(archiveRepository.save(any())).thenThrow(new RuntimeException("db"));
@@ -499,10 +499,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-008 프로젝트 수정
+    // ARC-ADMIN-03 프로젝트 수정
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-008 프로젝트 수정")
+    @DisplayName("ARC-ADMIN-03 프로젝트 수정")
     class UpdateProject {
 
         @Test
@@ -516,7 +516,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-001 category 불일치(id가 BLOG) → UNSUPPORTED_ARCHIVE_CATEGORY")
+        @DisplayName("TC-002 category 불일치(id가 BLOG) → UNSUPPORTED_ARCHIVE_CATEGORY")
         void update_category_mismatch() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.BLOG, "s3://old")));
 
@@ -526,7 +526,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 request=null && image 없음 → INVALID_INPUT_VALUE")
+        @DisplayName("TC-003 request=null && image 없음 → INVALID_INPUT_VALUE")
         void update_empty_request() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
 
@@ -536,7 +536,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 title만 전달 → title만 변경, 나머지 필드 유지")
+        @DisplayName("TC-004 title만 전달 → title만 변경, 나머지 필드 유지")
         void update_partial_title_only() {
             Archive a = archive(Category.PROJECT, "s3://old");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -556,7 +556,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 teamName/contentDate 명시적 null → 각각 null로 비움")
+        @DisplayName("TC-005 teamName/contentDate 명시적 null → 각각 null로 비움")
         void update_explicit_null_clears() {
             Archive a = archive(Category.PROJECT, "s3://old");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -571,7 +571,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 title=\"\" → 기존 제목이 \"\"로 덮어써짐 (현행 동작)")
+        @DisplayName("TC-006 title=\"\" → 기존 제목이 \"\"로 덮어써짐 (현행 동작)")
         void update_blank_title_overwrites() {
             Archive a = archive(Category.PROJECT, "s3://old");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -584,7 +584,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-007 track=ALL → INVALID_TRACK_SELECTION")
         void update_track_all_rejected() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
             ArchiveUpdateRequest request = updateRequest();
@@ -598,7 +598,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 contentDate 미래 → FUTURE_DATE_NOT_ALLOWED")
+        @DisplayName("TC-008 contentDate 미래 → FUTURE_DATE_NOT_ALLOWED")
         void update_future_date_rejected() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
             ArchiveUpdateRequest request = updateRequest();
@@ -610,7 +610,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 contentDate 오늘 → 통과")
+        @DisplayName("TC-009 contentDate 오늘 → 통과")
         void update_today_date_allowed() {
             Archive a = archive(Category.PROJECT, "s3://old");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -623,7 +623,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 links 빈 문자열 → INVALID_INPUT_VALUE (빈 문자열로 비울 수 없음)")
+        @DisplayName("TC-010 links 빈 문자열 → INVALID_INPUT_VALUE (빈 문자열로 비울 수 없음)")
         void update_blank_links_rejected() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
             ArchiveUpdateRequest request = updateRequest();
@@ -635,7 +635,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 links 파싱 불가 → INVALID_INPUT_VALUE / URL 형식 오류 → INVALID_URL_FORMAT")
+        @DisplayName("TC-011 links 파싱 불가 → INVALID_INPUT_VALUE / URL 형식 오류 → INVALID_URL_FORMAT")
         void update_links_validation() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
 
@@ -653,7 +653,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 새 이미지 업로드 → imageUrl 갱신 + 커밋 후 기존 이미지 삭제 예약")
+        @DisplayName("TC-012 새 이미지 업로드 → imageUrl 갱신 + 커밋 후 기존 이미지 삭제 예약")
         void update_new_image_schedules_old_delete() {
             Archive a = archive(Category.PROJECT, "https://bucket/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -669,7 +669,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 새 이미지 업로드했으나 기존 imageUrl이 null → 커밋 후 삭제 콜백 미등록")
+        @DisplayName("TC-013 새 이미지 업로드했으나 기존 imageUrl이 null → 커밋 후 삭제 콜백 미등록")
         void update_new_image_old_null_no_callback() {
             Archive a = archive(Category.PROJECT, null);
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -684,7 +684,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 이미지 업로드 후 flush 실패 → 새 이미지 삭제 + INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-014 이미지 업로드 후 flush 실패 → 새 이미지 삭제 + INTERNAL_SERVER_ERROR")
         void update_flush_failure_cleans_new_image() {
             Archive a = archive(Category.PROJECT, "https://bucket/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -700,7 +700,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 request-only 수정(이미지 없음) flush 실패 → S3 작업 없이 INTERNAL_SERVER_ERROR")
+        @DisplayName("TC-015 request-only 수정(이미지 없음) flush 실패 → S3 작업 없이 INTERNAL_SERVER_ERROR")
         void update_request_only_flush_failure_no_s3() {
             Archive a = archive(Category.PROJECT, "s3://old");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -716,7 +716,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 이미지 업로드가 S3_UPLOAD_FAILED → 정리 없이 전파, flush 미호출")
+        @DisplayName("TC-016 이미지 업로드가 S3_UPLOAD_FAILED → 정리 없이 전파, flush 미호출")
         void update_s3_upload_failed_propagates() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
             when(s3Service.uploadImage(any(), any(), any())).thenThrow(new CustomException(ErrorCode.S3_UPLOAD_FAILED));
@@ -730,7 +730,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 image만 전달(request=null) → 이미지만 교체, teamName/contentDate 유지")
+        @DisplayName("TC-017 image만 전달(request=null) → 이미지만 교체, teamName/contentDate 유지")
         void update_image_only() {
             Archive a = archive(Category.PROJECT, "https://bucket/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -745,10 +745,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-009 활동사진 수정
+    // ARC-ADMIN-07 활동사진 수정
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-009 활동사진 수정")
+    @DisplayName("ARC-ADMIN-07 활동사진 수정")
     class UpdateActivity {
 
         private Archive activityArchive(String imageUrl) {
@@ -787,7 +787,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 request.half 전달 시 → 파싱 대신 request.half로 key 생성")
+        @DisplayName("TC-003 request.half 전달 시 → 파싱 대신 request.half로 key 생성")
         void update_uses_request_half() {
             Archive a = activityArchive("https://bucket/activities/26기/26-1/분석/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -804,7 +804,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 기존 imageUrl에 half 세그먼트 없음 → key에 \"null\" 포함 (현행 동작)")
+        @DisplayName("TC-004 기존 imageUrl에 half 세그먼트 없음 → key에 \"null\" 포함 (현행 동작)")
         void update_image_only_no_half_segment() {
             Archive a = activityArchive("https://bucket/activities/26기/분석/old.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -819,10 +819,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-010 기술블로그 수정
+    // ARC-ADMIN-11 기술블로그 수정
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-010 기술블로그 수정")
+    @DisplayName("ARC-ADMIN-11 기술블로그 수정")
     class UpdateBlog {
 
         @Test
@@ -857,10 +857,10 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-011 프로젝트 삭제
+    // ARC-ADMIN-04 프로젝트 삭제
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-011 프로젝트 삭제")
+    @DisplayName("ARC-ADMIN-04 프로젝트 삭제")
     class DeleteProject {
 
         @Test
@@ -880,7 +880,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-001 imageUrl=null → S3 삭제 콜백 미등록")
+        @DisplayName("TC-002 imageUrl=null → S3 삭제 콜백 미등록")
         void delete_null_image_no_callback() {
             Archive a = archive(Category.PROJECT, null);
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -892,7 +892,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 없는 id → ARCHIVE_NOT_FOUND (delete 미호출)")
+        @DisplayName("TC-003 없는 id → ARCHIVE_NOT_FOUND (delete 미호출)")
         void delete_not_found() {
             when(archiveRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -904,7 +904,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-002 category 불일치 → UNSUPPORTED_ARCHIVE_CATEGORY (delete 미호출)")
+        @DisplayName("TC-004 category 불일치 → UNSUPPORTED_ARCHIVE_CATEGORY (delete 미호출)")
         void delete_category_mismatch() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.BLOG, "s3://old")));
 
@@ -916,7 +916,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 delete 중 예외 → 그대로 전파(도메인 코드 아님), S3 삭제 콜백 미등록")
+        @DisplayName("TC-005 delete 중 예외 → 그대로 전파(도메인 코드 아님), S3 삭제 콜백 미등록")
         void delete_repository_throws_propagates() {
             Archive a = archive(Category.PROJECT, "https://bucket/p.png");
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(a));
@@ -930,14 +930,14 @@ class ArchiveAdminServiceTest {
     }
 
     // ══════════════════════════════════════════════════════════════════════════
-    // ARC-012 / ARC-013 활동사진·기술블로그 삭제 (카테고리 고정 검증)
+    // ARC-ADMIN-08 / ARC-ADMIN-12 활동사진·기술블로그 삭제 (카테고리 고정 검증)
     // ══════════════════════════════════════════════════════════════════════════
     @Nested
-    @DisplayName("ARC-012 활동사진 삭제 / ARC-013 기술블로그 삭제")
+    @DisplayName("ARC-ADMIN-08 활동사진 삭제 / ARC-ADMIN-12 기술블로그 삭제")
     class DeleteActivityAndBlog {
 
         @Test
-        @DisplayName("ARC-012 TC-001 id의 category가 PROJECT → UNSUPPORTED_ARCHIVE_CATEGORY")
+        @DisplayName("ARC-ADMIN-08 TC-001 id의 category가 PROJECT → UNSUPPORTED_ARCHIVE_CATEGORY")
         void delete_activity_category_mismatch() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.PROJECT, "s3://old")));
 
@@ -949,7 +949,7 @@ class ArchiveAdminServiceTest {
         }
 
         @Test
-        @DisplayName("ARC-013 TC-001 id의 category가 ACTIVITY → UNSUPPORTED_ARCHIVE_CATEGORY")
+        @DisplayName("ARC-ADMIN-12 TC-001 id의 category가 ACTIVITY → UNSUPPORTED_ARCHIVE_CATEGORY")
         void delete_blog_category_mismatch() {
             when(archiveRepository.findById(1L)).thenReturn(Optional.of(archive(Category.ACTIVITY, "s3://old")));
 

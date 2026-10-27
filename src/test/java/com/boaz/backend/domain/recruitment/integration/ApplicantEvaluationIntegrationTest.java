@@ -128,7 +128,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("개인 평가 저장 → 평가 대시보드 집계에 반영")
+    @DisplayName("TC-001 개인 평가 저장 → 평가 대시보드 집계에 반영")
     void saveThenAggregate() {
         Recruitment r = saveRecruitment(27);
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -149,7 +149,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("개인 평가 저장은 upsert — 같은 평가자 재저장 시 행 추가 없이 갱신")
+    @DisplayName("TC-002 개인 평가 저장은 upsert — 같은 평가자 재저장 시 행 추가 없이 갱신")
     void resaveIsUpsert() {
         Recruitment r = saveRecruitment(27);
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -169,7 +169,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("타 부문 지원자 평가 저장 → ACCESS_DENIED")
+    @DisplayName("TC-003 타 부문 지원자 평가 저장 → ACCESS_DENIED")
     void crossTrackRejected() {
         Recruitment r = saveRecruitment(27);
         Applicant engApplicant = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -182,7 +182,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("대표진 최종 평가 수정 → 대시보드 final_decision 반영")
+    @DisplayName("TC-004 대표진 최종 평가 수정 → 대시보드 final_decision 반영")
     void finalDecisionByRepresentative() {
         Recruitment r = saveRecruitment(27);
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -217,7 +217,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[최종합불 A] 대표진(분석, 전 부문 평가 권한 없음) → 엔지 지원자 최종 합불 수정 200")
+    @DisplayName("TC-005 [최종합불 A] 대표진(분석, 전 부문 평가 권한 없음) → 엔지 지원자 최종 합불 수정 200")
     void finalDecisionRepresentativeCrossTrack() throws Exception {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -233,7 +233,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[최종합불 B] 차기대표진(분석) → 엔지 지원자 최종 합불 수정 200 (regression)")
+    @DisplayName("TC-006 [최종합불 B] 차기대표진(분석) → 엔지 지원자 최종 합불 수정 200 (regression)")
     void finalDecisionNextRepresentativeCrossTrack() throws Exception {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -244,7 +244,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[최종합불 C] FINAL_DECISION_WRITE 없음 → 같은 track 이어도, 전 부문 평가 GRANT 가 있어도 403")
+    @DisplayName("TC-007 [최종합불 C] FINAL_DECISION_WRITE 없음 → 같은 track 이어도, 전 부문 평가 GRANT 가 있어도 403")
     void finalDecisionWithoutPermissionDenied() throws Exception {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -264,7 +264,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[최종합불 D] 기본값에 없는 운영진(기획팀)에 FINAL_DECISION_WRITE GRANT → 타 track 지원자 수정 200")
+    @DisplayName("TC-008 [최종합불 D] 기본값에 없는 운영진(기획팀)에 FINAL_DECISION_WRITE GRANT → 타 track 지원자 수정 200")
     void finalDecisionCustomGrant() throws Exception {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -278,7 +278,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[최종합불 E] 대표진에서 FINAL_DECISION_WRITE REVOKE → 같은 track 지원자여도 403")
+    @DisplayName("TC-009 [최종합불 E] 대표진에서 FINAL_DECISION_WRITE REVOKE → 같은 track 지원자여도 403")
     void finalDecisionCustomRevoke() throws Exception {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -294,7 +294,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("평가자 풀 = 해당 부문 + 차기 대표진 — 엔지 지원자 풀에 타 부문 차기대표진 포함")
+    @DisplayName("TC-010 평가자 풀 = 해당 부문 + 차기 대표진 — 엔지 지원자 풀에 타 부문 차기대표진 포함")
     void evaluatorPoolIncludesNextRepresentative() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -317,7 +317,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("면접 질문 저장(개인 평가) → 지원서별 면접 질문 조회 & 개인 평가 조회에 반영")
+    @DisplayName("TC-011 면접 질문 저장(개인 평가) → 지원서별 면접 질문 조회 & 개인 평가 조회에 반영")
     void interviewQuestionSaveAndQuery() {
         Recruitment r = saveRecruitment(27);
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -348,7 +348,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("지원서 답변 조회 — 문항 순서대로 답변 + 문항 정보 반환 (TEXT/TABLE)")
+    @DisplayName("TC-012 지원서 답변 조회 — 문항 순서대로 답변 + 문항 정보 반환 (TEXT/TABLE)")
     void getApplicantAnswers() {
         Recruitment r = saveRecruitment(27);
         Applicant a = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -380,7 +380,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("타 부문 지원서 답변 조회 — 본인 부문 권한만 있으면(운영진·현재 대표진) 차단, 전 부문 권한(차기 대표진)만 가능")
+    @DisplayName("TC-013 타 부문 지원서 답변 조회 — 본인 부문 권한만 있으면(운영진·현재 대표진) 차단, 전 부문 권한(차기 대표진)만 가능")
     void getApplicantAnswersTrackAccess() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -405,7 +405,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("존재하지 않는 지원자 답변 조회 → APPLICATION_NOT_FOUND")
+    @DisplayName("TC-014 존재하지 않는 지원자 답변 조회 → APPLICATION_NOT_FOUND")
     void getApplicantAnswersNotFound() {
         Admin viewer = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
         assertThatThrownBy(() -> recruitmentService.getApplicantAnswers(999999L, viewer, STAFF))
@@ -434,7 +434,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[A] 일반 운영진(분석)에 전 부문 평가 GRANT → 엔지 지원자 평가 저장, 평가 상세에 본인·평가 내용 표시")
+    @DisplayName("TC-015 [A] 일반 운영진(분석)에 전 부문 평가 GRANT → 엔지 지원자 평가 저장, 평가 상세에 본인·평가 내용 표시")
     void customAllTrackGrantShownInEvaluators() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -456,7 +456,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[B] 전 부문 평가 GRANT 운영진 — 면접 질문 조회에서도 누락되지 않음 (작성 전·후)")
+    @DisplayName("TC-016 [B] 전 부문 평가 GRANT 운영진 — 면접 질문 조회에서도 누락되지 않음 (작성 전·후)")
     void customAllTrackGrantShownInInterviewQuestions() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -478,7 +478,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[C] 평가 작성 후 전 부문 GRANT 제거 → 재평가 ACCESS_DENIED, 그래도 기존 작성자로 상세·면접 질문에 계속 표시")
+    @DisplayName("TC-017 [C] 평가 작성 후 전 부문 GRANT 제거 → 재평가 ACCESS_DENIED, 그래도 기존 작성자로 상세·면접 질문에 계속 표시")
     void grantRemovedAuthorStillShown() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -510,7 +510,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[D] 차기대표진(기본 권한) 타 부문 평가 → 저장 성공, 상세·면접 질문 풀에 유지 (regression)")
+    @DisplayName("TC-018 [D] 차기대표진(기본 권한) 타 부문 평가 → 저장 성공, 상세·면접 질문 풀에 유지 (regression)")
     void nextRepresentativeCrossTrackRegression() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -528,7 +528,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[E] 같은 track 이어도 평가 권한 없는 MASTER·HOST 미작성자는 풀에서 제외")
+    @DisplayName("TC-019 [E] 같은 track 이어도 평가 권한 없는 MASTER·HOST 미작성자는 풀에서 제외")
     void masterAndHostWithoutPermissionExcluded() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -549,7 +549,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[ALL-only] 차기대표진에서 OWN REVOKE → ALL 만 남아도 같은 track 평가 저장·목록(전 track)·평가자 풀 포함")
+    @DisplayName("TC-020 [ALL-only] 차기대표진에서 OWN REVOKE → ALL 만 남아도 같은 track 평가 저장·목록(전 track)·평가자 풀 포함")
     void allTrackOnlyViaOwnRevoke() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
@@ -575,7 +575,7 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("[soft delete] 평가 작성 후 삭제된 평가자 — 집계·상세·면접 질문 모두 과거 기록 보존, 삭제된 미작성자는 제외")
+    @DisplayName("TC-021 [soft delete] 평가 작성 후 삭제된 평가자 — 집계·상세·면접 질문 모두 과거 기록 보존, 삭제된 미작성자는 제외")
     void softDeletedAuthorKeptInAggregationAndDetail() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);

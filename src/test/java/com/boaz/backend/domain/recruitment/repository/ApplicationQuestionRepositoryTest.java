@@ -41,7 +41,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findByRecruitmentIdAndCategories: COMMON + 지정 트랙만, order_num 오름차순")
+    @DisplayName("TC-001 findByRecruitmentIdAndCategories: COMMON + 지정 트랙만, order_num 오름차순")
     void findByCategories() {
         Recruitment r = persistRecruitment(27);
         persistQuestion(r, "공통2", Category.COMMON, 2);
@@ -60,7 +60,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("findByRecruitmentIdOrderByOrderNumAsc: order_num 오름차순 전체")
+    @DisplayName("TC-002 findByRecruitmentIdOrderByOrderNumAsc: order_num 오름차순 전체")
     void findOrdered() {
         Recruitment r = persistRecruitment(27);
         persistQuestion(r, "q3", Category.COMMON, 3);
@@ -75,7 +75,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("중복 검증 쿼리: label / (category, order_num) / 자기 자신 제외")
+    @DisplayName("TC-003 중복 검증 쿼리: label / (category, order_num) / 자기 자신 제외")
     void existsQueries() {
         Recruitment r = persistRecruitment(27);
         persistQuestion(r, "공통1", Category.COMMON, 1);
@@ -86,7 +86,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "공통1")).isTrue();
         assertThat(questionRepository.existsByRecruitmentIdAndLabel(r.getId(), "없는라벨")).isFalse();
 
-        // label 자기 자신 제외 (REC-ADMIN-008 질문 수정 중복 검증)
+        // label 자기 자신 제외 (REC-ADMIN-08 질문 수정 중복 검증)
         assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(
                 r.getId(), "공통1", savedId)).isFalse();
         assertThat(questionRepository.existsByRecruitmentIdAndLabelAndIdNot(
@@ -102,7 +102,7 @@ class ApplicationQuestionRepositoryTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("existsByRecruitmentId: 공고 연관 질문 존재 여부 (REC-ADMIN-005 삭제 가드)")
+    @DisplayName("TC-004 existsByRecruitmentId: 공고 연관 질문 존재 여부 (REC-ADMIN-05 삭제 가드)")
     void existsByRecruitmentId() {
         Recruitment r = persistRecruitment(27);
         Recruitment empty = persistRecruitment(26);

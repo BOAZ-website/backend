@@ -94,11 +94,11 @@ class AdminIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("계정 생성 end-to-end (ADMIN-002)")
+    @DisplayName("ADMIN-02 계정 생성 end-to-end")
     class CreateAccount {
 
         @Test
-        @DisplayName("생성 → DB 영속, password BCrypt 해시, createdBy = 생성자 id")
+        @DisplayName("TC-010 생성 → DB 영속, password BCrypt 해시, createdBy = 생성자 id")
         void persistsWithHashedPassword() {
             Admin master = saveMaster("Master1234!");
             em.flush();
@@ -115,7 +115,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("동일 username 재생성 → DUPLICATE_USERNAME")
+        @DisplayName("TC-011 동일 username 재생성 → DUPLICATE_USERNAME")
         void duplicateUsername() {
             Admin master = saveMaster("Master1234!");
             adminService.createAccount(createReq("dup_team"), master);
@@ -129,11 +129,11 @@ class AdminIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("계정 수정 end-to-end (ADMIN-004)")
+    @DisplayName("ADMIN-04 계정 수정 end-to-end")
     class UpdateAccount {
 
         @Test
-        @DisplayName("role 변경 → 영속 반영 + 대상 RefreshToken 삭제")
+        @DisplayName("TC-022 role 변경 → 영속 반영 + 대상 RefreshToken 삭제")
         void roleChangeDeletesToken() {
             Admin master = saveMaster("Master1234!");
             Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -159,7 +159,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("role 변경 → 그 계정의 오버라이드 행 전삭제 (base 가 바뀌면 차이도 무의미해진다)")
+        @DisplayName("TC-023 role 변경 → 그 계정의 오버라이드 행 전삭제 (base 가 바뀌면 차이도 무의미해진다)")
         void keyChangeClearsOverrides() {
             Admin master = saveMaster("Master1234!");
             Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -182,7 +182,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("프로필 필드만 수정 → 대상 RefreshToken 유지")
+        @DisplayName("TC-024 프로필 필드만 수정 → 대상 RefreshToken 유지")
         void profileOnlyKeepsToken() {
             Admin master = saveMaster("Master1234!");
             Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -204,11 +204,11 @@ class AdminIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("계정 삭제 end-to-end (ADMIN-005)")
+    @DisplayName("ADMIN-05 계정 삭제 end-to-end")
     class DeleteAccount {
 
         @Test
-        @DisplayName("soft delete → deletedAt 세팅, 목록 제외, RefreshToken 삭제")
+        @DisplayName("TC-009 soft delete → deletedAt 세팅, 목록 제외, RefreshToken 삭제")
         void softDeleteExcludesAndDeletesToken() {
             Admin master = saveMaster("Master1234!");
             Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -233,7 +233,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("마지막 계정 관리자 삭제 → LAST_ACCOUNT_MANAGER (삭제 안 됨)")
+        @DisplayName("TC-010 마지막 계정 관리자 삭제 → LAST_ACCOUNT_MANAGER (삭제 안 됨)")
         void lastAccountManagerBlocked() {
             Admin master = saveMaster("Master1234!");
             saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -249,7 +249,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("오버라이드로 권한을 받은 계정이 있으면 마지막 관리자도 삭제된다 — role 로 세지 않는다")
+        @DisplayName("TC-011 오버라이드로 권한을 받은 계정이 있으면 마지막 관리자도 삭제된다 — role 로 세지 않는다")
         void grantedByOverrideCountsAsManager() {
             Admin master = saveMaster("Master1234!");
             Admin granted = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -271,11 +271,11 @@ class AdminIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("비밀번호 변경 end-to-end (ADMIN-006)")
+    @DisplayName("ADMIN-06 비밀번호 변경 end-to-end")
     class ResetPassword {
 
         @Test
-        @DisplayName("계정 관리자의 타인 초기화 → 해시 변경(matches new) + RefreshToken 삭제")
+        @DisplayName("TC-011 계정 관리자의 타인 초기화 → 해시 변경(matches new) + RefreshToken 삭제")
         void superResetsOther() {
             Admin master = saveMaster("Master1234!");
             Admin target = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
@@ -296,7 +296,7 @@ class AdminIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("본인 변경 (currentPassword 일치) → 해시 변경")
+        @DisplayName("TC-012 본인 변경 (currentPassword 일치) → 해시 변경")
         void selfChange() {
             Admin self = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");
             saveRefreshToken(self.getId());
@@ -317,11 +317,11 @@ class AdminIntegrationTest extends TestcontainersBase {
     }
 
     @Nested
-    @DisplayName("모든 계정 조회 end-to-end (ADMIN-001)")
+    @DisplayName("ADMIN-01 모든 계정 조회 end-to-end")
     class GetAccounts {
 
         @Test
-        @DisplayName("soft delete 제외하고 활성 계정만 반환")
+        @DisplayName("TC-007 soft delete 제외하고 활성 계정만 반환")
         void excludesDeleted() {
             Admin master = saveMaster("Master1234!");
             Admin active = saveAdmin(Admin.Role.TEAM, Admin.TeamName.기획팀, "Team1234!");

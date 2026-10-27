@@ -48,10 +48,10 @@ class UserAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-006 POST /api/v1/auth/user/logout
+    // AUTH-06 POST /api/v1/auth/user/logout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-006 POST /api/v1/auth/user/logout")
+    @DisplayName("AUTH-06 POST /api/v1/auth/user/logout")
     class Logout {
 
         @Test
@@ -81,14 +81,14 @@ class UserAuthControllerTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-005 POST /api/v1/auth/user/refresh
+    // AUTH-05 POST /api/v1/auth/user/refresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-005 POST /api/v1/auth/user/refresh")
+    @DisplayName("AUTH-05 POST /api/v1/auth/user/refresh")
     class Refresh {
 
         @Test
-        @DisplayName("유효한 쿠키 → 200 OK + 새 Access Token 반환")
+        @DisplayName("TC-008 유효한 쿠키 → 200 OK + 새 Access Token 반환")
         void refresh_success() throws Exception {
             when(authService.userRefresh("valid-refresh-token"))
                     .thenReturn(new TokenRefreshResponse("new-access-token"));

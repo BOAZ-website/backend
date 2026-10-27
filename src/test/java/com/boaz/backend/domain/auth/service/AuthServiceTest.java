@@ -82,10 +82,10 @@ class AuthServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-001 관리자 로그인 - adminLogin
+    // AUTH-01 관리자 로그인 - adminLogin
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-001 adminLogin")
+    @DisplayName("AUTH-01 adminLogin")
     class AdminLogin {
 
         @Test
@@ -169,10 +169,10 @@ class AuthServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-002 관리자 토큰 갱신 - adminRefresh
+    // AUTH-02 관리자 토큰 갱신 - adminRefresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-002 adminRefresh")
+    @DisplayName("AUTH-02 adminRefresh")
     class AdminRefresh {
 
         @Test
@@ -267,10 +267,10 @@ class AuthServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-003 관리자 로그아웃 - adminLogout
+    // AUTH-03 관리자 로그아웃 - adminLogout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-003 adminLogout")
+    @DisplayName("AUTH-03 adminLogout")
     class AdminLogout {
 
         @Test
@@ -294,10 +294,10 @@ class AuthServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-005 사용자 토큰 갱신 - userRefresh
+    // AUTH-05 사용자 토큰 갱신 - userRefresh
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-005 userRefresh")
+    @DisplayName("AUTH-05 userRefresh")
     class UserRefresh {
 
         @Test
@@ -402,10 +402,10 @@ class AuthServiceTest {
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-006 사용자 로그아웃 - userLogout
+    // AUTH-06 사용자 로그아웃 - userLogout
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-006 userLogout")
+    @DisplayName("AUTH-06 userLogout")
     class UserLogout {
 
         @Test

@@ -115,10 +115,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-001: getAccounts (모든 계정 조회)
+    // ADMIN-01: getAccounts (모든 계정 조회)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-001 getAccounts")
+    @DisplayName("ADMIN-01 getAccounts")
     class GetAccounts {
 
         @Test
@@ -144,10 +144,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-002: createAccount (계정 생성)
+    // ADMIN-02: createAccount (계정 생성)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-002 createAccount")
+    @DisplayName("ADMIN-02 createAccount")
     class CreateAccount {
 
         @Test
@@ -173,7 +173,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 매트릭스에 없는 (role, 소속) 조합 → INVALID_ROLE_TEAM_COMBINATION, save 안 함")
+        @DisplayName("TC-002 매트릭스에 없는 (role, 소속) 조합 → INVALID_ROLE_TEAM_COMBINATION, save 안 함")
         void invalidRoleTeamCombination() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             AdminCreateRequest req = createRequest("boaz_bad", Track.ANALYSIS);
@@ -187,7 +187,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 유효하지 않은 조합은 username 중복 검사보다 먼저 걸린다")
+        @DisplayName("TC-003 유효하지 않은 조합은 username 중복 검사보다 먼저 걸린다")
         void combinationCheckedBeforeDuplicateUsername() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             AdminCreateRequest req = createRequest("boaz_bad", Track.ANALYSIS);
@@ -200,7 +200,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 track=ALL → INVALID_TRACK_SELECTION, save 안 함")
+        @DisplayName("TC-004 track=ALL → INVALID_TRACK_SELECTION, save 안 함")
         void trackAll() {
             AdminCreateRequest req = createRequest("boaz_team2", Track.ALL);
 
@@ -211,7 +211,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 username 중복 → DUPLICATE_USERNAME, save 안 함")
+        @DisplayName("TC-005 username 중복 → DUPLICATE_USERNAME, save 안 함")
         void duplicateUsername() {
             AdminCreateRequest req = createRequest("boaz_team2", Track.ANALYSIS);
             when(adminRepository.existsByUsernameAndDeletedAtIsNull("boaz_team2")).thenReturn(true);
@@ -224,10 +224,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-007: getMe (내 계정 정보 조회)
+    // ADMIN-07: getMe (내 계정 정보 조회)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-007 getMe")
+    @DisplayName("ADMIN-07 getMe")
     class GetMe {
 
         @Test
@@ -257,10 +257,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-003: getAccount (id별 계정 조회)
+    // ADMIN-03: getAccount (id별 계정 조회)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-003 getAccount")
+    @DisplayName("ADMIN-03 getAccount")
     class GetAccount {
 
         @Test
@@ -310,10 +310,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-004: updateAccount (id별 계정 수정)
+    // ADMIN-04: updateAccount (id별 계정 수정)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-004 updateAccount")
+    @DisplayName("ADMIN-04 updateAccount")
     class UpdateAccount {
 
         @Test
@@ -354,7 +354,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 role 만 올려 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
+        @DisplayName("TC-003 role 만 올려 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
         void roleOnlyChangeBreakingCombination() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
@@ -369,7 +369,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 teamName 만 바꿔 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
+        @DisplayName("TC-004 teamName 만 바꿔 매트릭스에 없는 조합이 되면 → INVALID_ROLE_TEAM_COMBINATION")
         void teamOnlyChangeBreakingCombination() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
@@ -384,7 +384,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 권한 키를 안 건드리면 조합을 보지 않는다 — 기존 잘못된 행도 이름은 고칠 수 있다")
+        @DisplayName("TC-005 권한 키를 안 건드리면 조합을 보지 않는다 — 기존 잘못된 행도 이름은 고칠 수 있다")
         void nonKeyChangeSkipsCombinationCheck() {
             Admin currentAdmin = admin(1L, Admin.Role.SUPER);
             // 이 검증이 생기기 전에 저장됐을 법한 조합
@@ -399,7 +399,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-003 teamName 변경도 권한 키 변경이다 → 토큰·오버라이드 정리")
+        @DisplayName("TC-006 teamName 변경도 권한 키 변경이다 → 토큰·오버라이드 정리")
         void teamNameChange() {
             Admin target = admin(2L, Admin.Role.TEAM);
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
@@ -415,7 +415,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 ScopeGuard 거부 → ACCESS_DENIED (DB 조회 안 함)")
+        @DisplayName("TC-007 ScopeGuard 거부 → ACCESS_DENIED (DB 조회 안 함)")
         void scopeDenied() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -429,7 +429,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-005 본인 role 변경 → CANNOT_MODIFY_OWN_ROLE (DB 조회 안 함)")
+        @DisplayName("TC-008 본인 role 변경 → CANNOT_MODIFY_OWN_ROLE (DB 조회 안 함)")
         void selfRole() {
             Admin currentAdmin = master(1L);
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -442,7 +442,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 본인 teamName 변경도 금지 → CANNOT_MODIFY_OWN_ROLE (권한 키의 절반이다)")
+        @DisplayName("TC-009 본인 teamName 변경도 금지 → CANNOT_MODIFY_OWN_ROLE (권한 키의 절반이다)")
         void selfTeamName() {
             Admin currentAdmin = master(1L);
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -455,7 +455,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 본인 프로필(이름)만 수정 → 허용. 막는 것은 권한 키뿐이다")
+        @DisplayName("TC-010 본인 프로필(이름)만 수정 → 허용. 막는 것은 권한 키뿐이다")
         void selfProfileAllowed() {
             Admin currentAdmin = admin(5L, Admin.Role.TEAM);
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(currentAdmin));
@@ -468,7 +468,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 존재하지 않는 계정 → ADMIN_NOT_FOUND")
+        @DisplayName("TC-011 존재하지 않는 계정 → ADMIN_NOT_FOUND")
         void notFound() {
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of());
             AdminUpdateRequest req = new AdminUpdateRequest();
@@ -479,7 +479,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-009 track=ALL → INVALID_TRACK_SELECTION")
+        @DisplayName("TC-012 track=ALL → INVALID_TRACK_SELECTION")
         void trackAll() {
             when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(admin(2L, Admin.Role.TEAM)));
@@ -492,7 +492,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 term < 0 → INVALID_INPUT_VALUE")
+        @DisplayName("TC-013 term < 0 → INVALID_INPUT_VALUE")
         void negativeTerm() {
             when(adminRepository.findAllLiveForUpdate())
                     .thenReturn(List.of(admin(2L, Admin.Role.TEAM)));
@@ -505,7 +505,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 마지막 ADMIN_ACCOUNT_CREATE_DELETE 보유자 강등 → LAST_ACCOUNT_MANAGER (변경 안 됨)")
+        @DisplayName("TC-014 마지막 ADMIN_ACCOUNT_CREATE_DELETE 보유자 강등 → LAST_ACCOUNT_MANAGER (변경 안 됨)")
         void lastManagerDemotionBlocked() {
             Admin target = master(2L);
             Admin other = admin(3L, Admin.Role.TEAM);
@@ -525,7 +525,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 다른 보유자가 남아 있으면 강등 허용 — 기준은 role 이 아니라 유효 권한 카운트다")
+        @DisplayName("TC-015 다른 보유자가 남아 있으면 강등 허용 — 기준은 role 이 아니라 유효 권한 카운트다")
         void demotionAllowedWhenAnotherManagerRemains() {
             Admin target = master(2L);
             Admin other = master(3L);
@@ -545,7 +545,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-013 권한을 잃지 않는 키 변경은 카운트를 안 센다")
+        @DisplayName("TC-016 권한을 잃지 않는 키 변경은 카운트를 안 센다")
         void noCountWhenPermissionKept() {
             Admin target = admin(2L, Admin.Role.TEAM);
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
@@ -561,7 +561,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-014 본인에게 현재와 같은 role·teamName 을 보내면 키 변경이 아니다 → 허용")
+        @DisplayName("TC-017 본인에게 현재와 같은 role·teamName 을 보내면 키 변경이 아니다 → 허용")
         void selfSameKeyIsNotKeyChange() {
             Admin currentAdmin = master(1L);   // (MASTER, 서비스운영팀)
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(currentAdmin));
@@ -580,7 +580,7 @@ class AdminServiceTest {
         }
 
         @Test
-        @DisplayName("TC-015 타 계정도 키가 그대로면 정리하지 않는다 — 불필요한 재로그인·오버라이드 삭제 금지")
+        @DisplayName("TC-018 타 계정도 키가 그대로면 정리하지 않는다 — 불필요한 재로그인·오버라이드 삭제 금지")
         void sameKeySkipsCleanup() {
             Admin target = admin(2L, Admin.Role.TEAM);   // (TEAM, 기획팀)
             when(adminRepository.findAllLiveForUpdate()).thenReturn(List.of(target));
@@ -598,10 +598,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-005: deleteAccount (id별 계정 삭제, soft delete)
+    // ADMIN-05: deleteAccount (id별 계정 삭제, soft delete)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-005 deleteAccount")
+    @DisplayName("ADMIN-05 deleteAccount")
     class DeleteAccount {
 
         @Test
@@ -681,10 +681,10 @@ class AdminServiceTest {
     }
 
     // ──────────────────────────────────────────────
-    // ADMIN-006: resetPassword (비밀번호 초기화/변경)
+    // ADMIN-06: resetPassword (비밀번호 초기화/변경)
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("ADMIN-006 resetPassword")
+    @DisplayName("ADMIN-06 resetPassword")
     class ResetPassword {
 
         @Test

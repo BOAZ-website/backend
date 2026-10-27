@@ -33,6 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
 )
 @Import(TestSecurityConfig.class)
+@DisplayName("USER-ADMIN-01 합격자 승격 컨트롤러 테스트")
 class UserAdminControllerTest {
 
     @Autowired MockMvc mockMvc;
@@ -52,7 +53,7 @@ class UserAdminControllerTest {
     }
 
     @Test
-    @DisplayName("정상 승격 요청 → 200")
+    @DisplayName("TC-012 정상 승격 요청 → 200")
     void success() throws Exception {
         when(userAdminService.bulkPromote(any())).thenReturn(PromoteUsersResponse.of(Collections.emptyList()));
 
@@ -65,7 +66,7 @@ class UserAdminControllerTest {
     }
 
     @Test
-    @DisplayName("빈 userIds(@NotEmpty) → 400 INVALID_INPUT_VALUE")
+    @DisplayName("TC-013 빈 userIds(@NotEmpty) → 400 INVALID_INPUT_VALUE")
     void emptyUserIds() throws Exception {
         mockMvc.perform(patch("/api/v1/admin/users/promote")
                         .with(authentication(adminAuth()))
@@ -76,7 +77,7 @@ class UserAdminControllerTest {
     }
 
     @Test
-    @DisplayName("TC-008 미인증 요청 → 401 TOKEN_NOT_FOUND")
+    @DisplayName("TC-014 미인증 요청 → 401 TOKEN_NOT_FOUND")
     void unauthorized() throws Exception {
         mockMvc.perform(patch("/api/v1/admin/users/promote")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +87,7 @@ class UserAdminControllerTest {
     }
 
     @Test
-    @DisplayName("TC-009 User 권한으로 접근 → 403 ACCESS_DENIED")
+    @DisplayName("TC-015 User 권한으로 접근 → 403 ACCESS_DENIED")
     void forbidden() throws Exception {
         mockMvc.perform(patch("/api/v1/admin/users/promote")
                         .with(authentication(userAuth()))

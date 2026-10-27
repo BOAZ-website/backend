@@ -61,10 +61,10 @@ class FaqServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-001: FAQ 목록 조회
+    // FAQ-01: FAQ 목록 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ-001 FAQ 목록 조회")
+    @DisplayName("FAQ-01 FAQ 목록 조회")
     class GetFaqs {
 
         @Test
@@ -96,14 +96,14 @@ class FaqServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-002: FAQ 등록
+    // FAQ-ADMIN-01: FAQ 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ-002 FAQ 등록")
+    @DisplayName("FAQ-ADMIN-01 FAQ 등록")
     class CreateFaq {
 
         @Test
-        @DisplayName("TC-003 FAQ 등록 성공 → 저장 후 응답 반환")
+        @DisplayName("TC-001 FAQ 등록 성공 → 저장 후 응답 반환")
         void success() {
             when(faqRepository.existsByCategoryAndOrderNum(Faq.Category.RECRUITMENT, 1)).thenReturn(false);
             when(faqRepository.save(any())).thenAnswer(inv -> {
@@ -120,7 +120,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-004 동일 카테고리 내 orderNum 중복 → DUPLICATE_ORDER_NUM, 저장 안 함")
+        @DisplayName("TC-002 동일 카테고리 내 orderNum 중복 → DUPLICATE_ORDER_NUM, 저장 안 함")
         void duplicateOrderNum() {
             when(faqRepository.existsByCategoryAndOrderNum(Faq.Category.RECRUITMENT, 1)).thenReturn(true);
 
@@ -133,7 +133,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("다른 카테고리에 동일 orderNum 있어도 → RECRUITMENT 등록 성공")
+        @DisplayName("TC-003 다른 카테고리에 동일 orderNum 있어도 → RECRUITMENT 등록 성공")
         void differentCategorySameOrderNum() {
             when(faqRepository.existsByCategoryAndOrderNum(Faq.Category.RECRUITMENT, 1)).thenReturn(false);
             when(faqRepository.save(any())).thenAnswer(inv -> {
@@ -148,7 +148,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-011 동시 요청으로 existsByCategoryAndOrderNum 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
+        @DisplayName("TC-004 동시 요청으로 existsByCategoryAndOrderNum 통과 후 저장 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
         void raceConditionCaughtByDbConstraint() {
             when(faqRepository.existsByCategoryAndOrderNum(Faq.Category.RECRUITMENT, 1)).thenReturn(false);
             when(faqRepository.save(any()))
@@ -162,14 +162,14 @@ class FaqServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-003: FAQ 수정
+    // FAQ-ADMIN-02: FAQ 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ-003 FAQ 수정")
+    @DisplayName("FAQ-ADMIN-02 FAQ 수정")
     class UpdateFaq {
 
         @Test
-        @DisplayName("TC-005 question만 부분 수정 → answer·category·orderNum 기존 값 유지")
+        @DisplayName("TC-001 question만 부분 수정 → answer·category·orderNum 기존 값 유지")
         void partialUpdateQuestion() {
             Faq faq = makeFaq(1L, Faq.Category.RECRUITMENT, 1);
             when(faqRepository.findById(1L)).thenReturn(Optional.of(faq));
@@ -184,7 +184,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-006 자기 자신의 orderNum으로 수정 → 중복 에러 미발생")
+        @DisplayName("TC-002 자기 자신의 orderNum으로 수정 → 중복 에러 미발생")
         void selfOrderNum() {
             Faq faq = makeFaq(1L, Faq.Category.RECRUITMENT, 1);
             when(faqRepository.findById(1L)).thenReturn(Optional.of(faq));
@@ -197,7 +197,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-007 존재하지 않는 faqId → FAQ_NOT_FOUND")
+        @DisplayName("TC-003 존재하지 않는 faqId → FAQ_NOT_FOUND")
         void notFound() {
             when(faqRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -208,7 +208,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-008 수정 후 동일 카테고리 내 orderNum 충돌 → DUPLICATE_ORDER_NUM")
+        @DisplayName("TC-004 수정 후 동일 카테고리 내 orderNum 충돌 → DUPLICATE_ORDER_NUM")
         void duplicateOnUpdate() {
             Faq faq = makeFaq(2L, Faq.Category.RECRUITMENT, 2);
             when(faqRepository.findById(2L)).thenReturn(Optional.of(faq));
@@ -222,7 +222,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-012 동시 요청으로 existsByCategoryAndOrderNumAndIdNot 통과 후 flush 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
+        @DisplayName("TC-005 동시 요청으로 existsByCategoryAndOrderNumAndIdNot 통과 후 flush 시점에 DB 유니크 제약 위반 → DUPLICATE_ORDER_NUM")
         void raceConditionCaughtByDbConstraint() {
             Faq faq = makeFaq(2L, Faq.Category.RECRUITMENT, 2);
             when(faqRepository.findById(2L)).thenReturn(Optional.of(faq));
@@ -239,14 +239,14 @@ class FaqServiceTest {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-004: FAQ 삭제
+    // FAQ-ADMIN-03: FAQ 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ-004 FAQ 삭제")
+    @DisplayName("FAQ-ADMIN-03 FAQ 삭제")
     class DeleteFaq {
 
         @Test
-        @DisplayName("TC-009 FAQ 삭제 성공 → repository.delete 호출")
+        @DisplayName("TC-001 FAQ 삭제 성공 → repository.delete 호출")
         void success() {
             Faq faq = makeFaq(1L, Faq.Category.RECRUITMENT, 1);
             when(faqRepository.findById(1L)).thenReturn(Optional.of(faq));
@@ -257,7 +257,7 @@ class FaqServiceTest {
         }
 
         @Test
-        @DisplayName("TC-010 존재하지 않는 faqId → FAQ_NOT_FOUND, 삭제 미호출")
+        @DisplayName("TC-002 존재하지 않는 faqId → FAQ_NOT_FOUND, 삭제 미호출")
         void notFound() {
             when(faqRepository.findById(999L)).thenReturn(Optional.empty());
 

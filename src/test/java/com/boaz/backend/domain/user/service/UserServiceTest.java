@@ -25,6 +25,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("사용자 서비스 단위 테스트")
 class UserServiceTest {
 
     @InjectMocks
@@ -41,32 +42,40 @@ class UserServiceTest {
         return u;
     }
 
-    @Test
-    @DisplayName("TC-001 유효한 userId 로 조회 → nickname 반환")
-    void getMyInfo() {
-        when(userRepository.findById(1L)).thenReturn(Optional.of(createUser(1L, "홍길동")));
-
-        UserInfoResponse res = userService.getMyInfo(1L);
-
-        assertThat(res.getNickname()).isEqualTo("홍길동");
-    }
-
-    @Test
-    @DisplayName("TC-002 존재하지 않는 userId → USER_NOT_FOUND")
-    void getMyInfoNotFound() {
-        when(userRepository.findById(999L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> userService.getMyInfo(999L))
-                .isInstanceOf(CustomException.class)
-                .extracting(e -> ((CustomException) e).getErrorCode())
-                .isEqualTo(ErrorCode.USER_NOT_FOUND);
-    }
-
     // ──────────────────────────────────────────────────────────────────────────
-    // AUTH-004 findOrCreate
+    // USER-01 getMyInfo
     // ──────────────────────────────────────────────────────────────────────────
     @Nested
-    @DisplayName("AUTH-004 findOrCreate")
+    @DisplayName("USER-01 getMyInfo")
+    class GetMyInfo {
+
+        @Test
+        @DisplayName("TC-001 유효한 userId 로 조회 → nickname 반환")
+        void getMyInfo() {
+            when(userRepository.findById(1L)).thenReturn(Optional.of(createUser(1L, "홍길동")));
+
+            UserInfoResponse res = userService.getMyInfo(1L);
+
+            assertThat(res.getNickname()).isEqualTo("홍길동");
+        }
+
+        @Test
+        @DisplayName("TC-002 존재하지 않는 userId → USER_NOT_FOUND")
+        void getMyInfoNotFound() {
+            when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> userService.getMyInfo(999L))
+                    .isInstanceOf(CustomException.class)
+                    .extracting(e -> ((CustomException) e).getErrorCode())
+                    .isEqualTo(ErrorCode.USER_NOT_FOUND);
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // AUTH-04 findOrCreate
+    // ──────────────────────────────────────────────────────────────────────────
+    @Nested
+    @DisplayName("AUTH-04 findOrCreate")
     class FindOrCreate {
 
         private OAuth2UserInfo mockUserInfo(String provider, String providerId, String nickname) {

@@ -44,7 +44,7 @@ class ScopeGuardTest {
     class CheckTrack {
 
         @Test
-        @DisplayName("전 부문 권한자는 남의 부문도 통과한다")
+        @DisplayName("TC-001 전 부문 권한자는 남의 부문도 통과한다")
         void allTrackPassesOtherTrack() {
             Admin admin = self(Track.ANALYSIS);
 
@@ -54,7 +54,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("전 부문 권한자는 본인 부문도 당연히 통과한다")
+        @DisplayName("TC-002 전 부문 권한자는 본인 부문도 당연히 통과한다")
         void allTrackPassesOwnTrack() {
             Admin admin = self(Track.ANALYSIS);
 
@@ -64,7 +64,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("본인 부문 권한자는 본인 부문만 통과한다")
+        @DisplayName("TC-003 본인 부문 권한자는 본인 부문만 통과한다")
         void ownTrackPassesOwnTrack() {
             Admin admin = self(Track.ANALYSIS);
 
@@ -74,7 +74,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("본인 부문 권한자가 남의 부문을 평가하면 거부된다")
+        @DisplayName("TC-004 본인 부문 권한자가 남의 부문을 평가하면 거부된다")
         void ownTrackDeniesOtherTrack() {
             Admin admin = self(Track.ANALYSIS);
 
@@ -85,7 +85,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("권한 0이어도 본인 부문이면 3층은 통과한다 — 보유 여부는 2층 몫이다")
+        @DisplayName("TC-005 권한 0이어도 본인 부문이면 3층은 통과한다 — 보유 여부는 2층 몫이다")
         void emptyPermissionsStillPassesOwnTrack() {
             Admin admin = self(Track.ANALYSIS);
 
@@ -99,7 +99,7 @@ class ScopeGuardTest {
     class CheckAccountWrite {
 
         @Test
-        @DisplayName("ADMIN_ACCOUNT_WRITE 보유자는 남의 계정도 통과한다")
+        @DisplayName("TC-006 ADMIN_ACCOUNT_WRITE 보유자는 남의 계정도 통과한다")
         void writePassesOther() {
             assertThatCode(() -> scopeGuard.checkAccountWrite(
                     self(), Set.of(ADMIN_ACCOUNT_WRITE), OTHER))
@@ -107,7 +107,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("SELF_WRITE 만 있으면 본인 계정은 통과한다")
+        @DisplayName("TC-007 SELF_WRITE 만 있으면 본인 계정은 통과한다")
         void selfWritePassesSelf() {
             assertThatCode(() -> scopeGuard.checkAccountWrite(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_WRITE), SELF))
@@ -115,7 +115,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("SELF_WRITE 만 있으면 남의 계정은 거부된다")
+        @DisplayName("TC-008 SELF_WRITE 만 있으면 남의 계정은 거부된다")
         void selfWriteDeniesOther() {
             assertThatThrownBy(() -> scopeGuard.checkAccountWrite(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_WRITE), OTHER))
@@ -124,7 +124,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("둘 다 있으면 넓은 쪽이 먼저다 — 남의 계정에서 거부되지 않는다")
+        @DisplayName("TC-009 둘 다 있으면 넓은 쪽이 먼저다 — 남의 계정에서 거부되지 않는다")
         void widerPermissionWinsOverSelfOnly() {
             assertThatCode(() -> scopeGuard.checkAccountWrite(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE), OTHER))
@@ -132,7 +132,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("SELF_READ 로는 쓰기 범위가 열리지 않는다 — 읽기 권한과 섞이지 않는다")
+        @DisplayName("TC-010 SELF_READ 로는 쓰기 범위가 열리지 않는다 — 읽기 권한과 섞이지 않는다")
         void readPermissionDoesNotOpenWrite() {
             assertThatThrownBy(() -> scopeGuard.checkAccountWrite(
                     self(), Set.of(ADMIN_ACCOUNT_READ), OTHER))
@@ -146,7 +146,7 @@ class ScopeGuardTest {
     class CheckAccountRead {
 
         @Test
-        @DisplayName("ADMIN_ACCOUNT_READ 보유자는 남의 계정도 통과한다")
+        @DisplayName("TC-011 ADMIN_ACCOUNT_READ 보유자는 남의 계정도 통과한다")
         void readPassesOther() {
             assertThatCode(() -> scopeGuard.checkAccountRead(
                     self(), Set.of(ADMIN_ACCOUNT_READ), OTHER))
@@ -154,7 +154,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("SELF_READ 만 있으면 본인 계정은 통과한다")
+        @DisplayName("TC-012 SELF_READ 만 있으면 본인 계정은 통과한다")
         void selfReadPassesSelf() {
             assertThatCode(() -> scopeGuard.checkAccountRead(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_READ), SELF))
@@ -162,7 +162,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("SELF_READ 만 있으면 남의 계정은 거부된다")
+        @DisplayName("TC-013 SELF_READ 만 있으면 남의 계정은 거부된다")
         void selfReadDeniesOther() {
             assertThatThrownBy(() -> scopeGuard.checkAccountRead(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_READ), OTHER))
@@ -171,7 +171,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("둘 다 있으면 넓은 쪽이 먼저다 — 남의 계정에서 거부되지 않는다")
+        @DisplayName("TC-014 둘 다 있으면 넓은 쪽이 먼저다 — 남의 계정에서 거부되지 않는다")
         void widerPermissionWinsOverSelfOnly() {
             assertThatCode(() -> scopeGuard.checkAccountRead(
                     self(), Set.of(ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_READ), OTHER))
@@ -179,7 +179,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("ADMIN_ACCOUNT_WRITE 로는 조회 범위가 열리지 않는다")
+        @DisplayName("TC-015 ADMIN_ACCOUNT_WRITE 로는 조회 범위가 열리지 않는다")
         void writePermissionDoesNotOpenRead() {
             assertThatThrownBy(() -> scopeGuard.checkAccountRead(
                     self(), Set.of(ADMIN_ACCOUNT_WRITE), OTHER))
@@ -193,7 +193,7 @@ class ScopeGuardTest {
     class WithDefaultSets {
 
         @Test
-        @DisplayName("(MASTER, 서비스운영팀)은 ADMIN_ACCOUNT_WRITE 보유자라 남의 계정을 통과한다")
+        @DisplayName("TC-016 (MASTER, 서비스운영팀)은 ADMIN_ACCOUNT_WRITE 보유자라 남의 계정을 통과한다")
         void masterPassesOtherAccount() {
             Admin master = AuthFixtures.admin(SELF, Admin.Role.MASTER, Admin.TeamName.서비스운영팀);
             Set<Permission> permissions =
@@ -204,7 +204,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("(TEAM, 운영지원팀)은 ADMIN_ACCOUNT_READ 가 없어 남의 계정 조회가 거부된다")
+        @DisplayName("TC-017 (TEAM, 운영지원팀)은 ADMIN_ACCOUNT_READ 가 없어 남의 계정 조회가 거부된다")
         void supportTeamDeniedOnOtherAccount() {
             Admin support = AuthFixtures.admin(SELF, Admin.Role.TEAM, Admin.TeamName.운영지원팀);
             Set<Permission> permissions =
@@ -216,7 +216,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("(TEAM, 운영지원팀)도 본인 계정 조회는 통과한다 — SELF_READ 를 갖는다")
+        @DisplayName("TC-018 (TEAM, 운영지원팀)도 본인 계정 조회는 통과한다 — SELF_READ 를 갖는다")
         void supportTeamPassesOnSelf() {
             Admin support = AuthFixtures.admin(SELF, Admin.Role.TEAM, Admin.TeamName.운영지원팀);
             Set<Permission> permissions =
@@ -227,7 +227,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("(SUPER, 차기대표진)은 전 부문 평가 권한이라 남의 부문도 통과한다")
+        @DisplayName("TC-019 (SUPER, 차기대표진)은 전 부문 평가 권한이라 남의 부문도 통과한다")
         void nextRepPassesOtherTrack() {
             Admin nextRep = AuthFixtures.admin(
                     SELF, Admin.Role.SUPER, Admin.TeamName.차기대표진, Track.ANALYSIS);
@@ -239,7 +239,7 @@ class ScopeGuardTest {
         }
 
         @Test
-        @DisplayName("(SUPER, 대표진)은 본인 부문 평가뿐이라 남의 부문이 거부된다")
+        @DisplayName("TC-020 (SUPER, 대표진)은 본인 부문 평가뿐이라 남의 부문이 거부된다")
         void currentRepDeniedOnOtherTrack() {
             Admin rep = AuthFixtures.admin(
                     SELF, Admin.Role.SUPER, Admin.TeamName.대표진, Track.ANALYSIS);

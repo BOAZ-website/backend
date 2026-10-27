@@ -67,14 +67,14 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-002: POST /api/v1/admin/reviews
+    // REV-ADMIN-01: POST /api/v1/admin/reviews
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REV-002 POST /api/v1/admin/reviews")
+    @DisplayName("REV-ADMIN-01 POST /api/v1/admin/reviews")
     class CreateReview {
 
         @Test
-        @DisplayName("TC-007 후기 등록 성공 → 201 Created")
+        @DisplayName("TC-003 후기 등록 성공 → 201 Created")
         void success() throws Exception {
             when(reviewService.createReview(any()))
                     .thenReturn(makeReviewResponse(1L, Track.ANALYSIS, 26));
@@ -90,7 +90,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-008 track=ALL → 400 INVALID_TRACK_SELECTION")
+        @DisplayName("TC-004 track=ALL → 400 INVALID_TRACK_SELECTION")
         void trackAll() throws Exception {
             when(reviewService.createReview(any()))
                     .thenThrow(new CustomException(ErrorCode.INVALID_TRACK_SELECTION));
@@ -104,7 +104,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("필수 필드 누락 (name 없음) → 400")
+        @DisplayName("TC-005 필수 필드 누락 (name 없음) → 400")
         void missingRequiredField() throws Exception {
             String body = objectMapper.createObjectNode()
                     .put("track", "ANALYSIS")
@@ -120,7 +120,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-006 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/admin/reviews")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -130,14 +130,14 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-003: PATCH /api/v1/admin/reviews/{reviewId}
+    // REV-ADMIN-02: PATCH /api/v1/admin/reviews/{reviewId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REV-003 PATCH /api/v1/admin/reviews/{reviewId}")
+    @DisplayName("REV-ADMIN-02 PATCH /api/v1/admin/reviews/{reviewId}")
     class UpdateReview {
 
         @Test
-        @DisplayName("TC-009 부분 수정 성공 → 200 OK")
+        @DisplayName("TC-005 부분 수정 성공 → 200 OK")
         void success() throws Exception {
             when(reviewService.updateReview(eq(1L), any()))
                     .thenReturn(makeReviewResponse(1L, Track.ANALYSIS, 26));
@@ -155,7 +155,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-010 존재하지 않는 reviewId → 404 REVIEW_NOT_FOUND")
+        @DisplayName("TC-006 존재하지 않는 reviewId → 404 REVIEW_NOT_FOUND")
         void notFound() throws Exception {
             when(reviewService.updateReview(eq(999L), any()))
                     .thenThrow(new CustomException(ErrorCode.REVIEW_NOT_FOUND));
@@ -169,7 +169,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-011 track=ALL로 수정 시도 → 400 INVALID_TRACK_SELECTION")
+        @DisplayName("TC-007 track=ALL로 수정 시도 → 400 INVALID_TRACK_SELECTION")
         void trackAll() throws Exception {
             when(reviewService.updateReview(eq(1L), any()))
                     .thenThrow(new CustomException(ErrorCode.INVALID_TRACK_SELECTION));
@@ -185,7 +185,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-008 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(patch("/api/v1/admin/reviews/1")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -195,14 +195,14 @@ class ReviewAdminControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REV-004: DELETE /api/v1/admin/reviews/{reviewId}
+    // REV-ADMIN-03: DELETE /api/v1/admin/reviews/{reviewId}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REV-004 DELETE /api/v1/admin/reviews/{reviewId}")
+    @DisplayName("REV-ADMIN-03 DELETE /api/v1/admin/reviews/{reviewId}")
     class DeleteReview {
 
         @Test
-        @DisplayName("TC-012 삭제 성공 → 200 OK")
+        @DisplayName("TC-003 삭제 성공 → 200 OK")
         void success() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/reviews/1")
                             .with(authentication(adminAuth())))
@@ -211,7 +211,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("TC-013 존재하지 않는 reviewId → 404 REVIEW_NOT_FOUND")
+        @DisplayName("TC-004 존재하지 않는 reviewId → 404 REVIEW_NOT_FOUND")
         void notFound() throws Exception {
             doThrow(new CustomException(ErrorCode.REVIEW_NOT_FOUND))
                     .when(reviewService).deleteReview(999L);
@@ -223,7 +223,7 @@ class ReviewAdminControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-005 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(delete("/api/v1/admin/reviews/1"))
                     .andExpect(status().isUnauthorized());

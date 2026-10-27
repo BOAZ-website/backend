@@ -65,14 +65,14 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-001: FAQ 목록 조회
+    // FAQ-01: FAQ 목록 조회
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ 목록 조회 end-to-end (FAQ-001)")
+    @DisplayName("FAQ-01 FAQ 목록 조회 end-to-end")
     class GetFaqs {
 
         @Test
-        @DisplayName("TC-001 RECRUITMENT 카테고리 → orderNum 오름차순 반환, 타 카테고리 미포함")
+        @DisplayName("TC-008 RECRUITMENT 카테고리 → orderNum 오름차순 반환, 타 카테고리 미포함")
         void orderedByOrderNum() {
             saveFaq(Faq.Category.RECRUITMENT, 2);
             saveFaq(Faq.Category.RECRUITMENT, 1);
@@ -87,7 +87,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-002 해당 카테고리 데이터 없을 때 → 빈 배열 반환")
+        @DisplayName("TC-009 해당 카테고리 데이터 없을 때 → 빈 배열 반환")
         void emptyCategory() {
             List<FaqResponse> result = faqService.getFaqs(Faq.Category.ETC);
 
@@ -96,14 +96,14 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-002: FAQ 등록
+    // FAQ-ADMIN-01: FAQ 등록
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ 등록 end-to-end (FAQ-002)")
+    @DisplayName("FAQ-ADMIN-01 FAQ 등록 end-to-end")
     class CreateFaq {
 
         @Test
-        @DisplayName("TC-003 FAQ 등록 성공 → DB에 저장됨")
+        @DisplayName("TC-009 FAQ 등록 성공 → DB에 저장됨")
         void success() {
             FaqResponse res = faqService.createFaq(
                     makeCreateRequest("지원 방법?", "홈페이지를 통해 지원", Faq.Category.RECRUITMENT, 1));
@@ -113,7 +113,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-004 동일 카테고리 내 orderNum 중복 → DUPLICATE_ORDER_NUM, DB 미저장")
+        @DisplayName("TC-010 동일 카테고리 내 orderNum 중복 → DUPLICATE_ORDER_NUM, DB 미저장")
         void duplicateOrderNum() {
             saveFaq(Faq.Category.RECRUITMENT, 1);
 
@@ -126,7 +126,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("다른 카테고리에 동일 orderNum 있어도 → 등록 성공")
+        @DisplayName("TC-011 다른 카테고리에 동일 orderNum 있어도 → 등록 성공")
         void differentCategorySameOrderNum() {
             saveFaq(Faq.Category.ACTIVITY, 1);
 
@@ -138,7 +138,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-011 동시에 같은 category+orderNum으로 등록 요청 → 단 하나만 성공, 나머지는 DUPLICATE_ORDER_NUM, DB에는 1건만 남음")
+        @DisplayName("TC-012 동시에 같은 category+orderNum으로 등록 요청 → 단 하나만 성공, 나머지는 DUPLICATE_ORDER_NUM, DB에는 1건만 남음")
         void concurrentCreateSameCategoryOrderNum() throws Exception {
             int threadCount = 5;
             ExecutorService executor = Executors.newFixedThreadPool(threadCount);
@@ -186,14 +186,14 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-003: FAQ 수정
+    // FAQ-ADMIN-02: FAQ 수정
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ 수정 end-to-end (FAQ-003)")
+    @DisplayName("FAQ-ADMIN-02 FAQ 수정 end-to-end")
     class UpdateFaq {
 
         @Test
-        @DisplayName("TC-005 question만 부분 수정 → answer·orderNum 기존 값 유지")
+        @DisplayName("TC-010 question만 부분 수정 → answer·orderNum 기존 값 유지")
         void partialUpdate() {
             Faq saved = saveFaq(Faq.Category.RECRUITMENT, 1);
 
@@ -206,7 +206,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-006 자기 자신의 orderNum으로 수정 → 중복 에러 미발생")
+        @DisplayName("TC-011 자기 자신의 orderNum으로 수정 → 중복 에러 미발생")
         void selfOrderNum() {
             Faq saved = saveFaq(Faq.Category.RECRUITMENT, 1);
 
@@ -217,7 +217,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-007 존재하지 않는 faqId → FAQ_NOT_FOUND")
+        @DisplayName("TC-012 존재하지 않는 faqId → FAQ_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> faqService.updateFaq(999L,
                     makeUpdateRequest("수정", null, null, null)))
@@ -226,7 +226,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-008 수정 후 동일 카테고리 내 orderNum 충돌 → DUPLICATE_ORDER_NUM")
+        @DisplayName("TC-013 수정 후 동일 카테고리 내 orderNum 충돌 → DUPLICATE_ORDER_NUM")
         void duplicateOnUpdate() {
             saveFaq(Faq.Category.RECRUITMENT, 1);
             Faq target = saveFaq(Faq.Category.RECRUITMENT, 2);
@@ -239,14 +239,14 @@ class FaqIntegrationTest extends TestcontainersBase {
     }
 
     // ══════════════════════════════════════════════
-    // FAQ-004: FAQ 삭제
+    // FAQ-ADMIN-03: FAQ 삭제
     // ══════════════════════════════════════════════
     @Nested
-    @DisplayName("FAQ 삭제 end-to-end (FAQ-004)")
+    @DisplayName("FAQ-ADMIN-03 FAQ 삭제 end-to-end")
     class DeleteFaq {
 
         @Test
-        @DisplayName("TC-009 FAQ 삭제 성공 → DB에서 제거됨")
+        @DisplayName("TC-006 FAQ 삭제 성공 → DB에서 제거됨")
         void success() {
             Faq saved = saveFaq(Faq.Category.RECRUITMENT, 1);
 
@@ -256,7 +256,7 @@ class FaqIntegrationTest extends TestcontainersBase {
         }
 
         @Test
-        @DisplayName("TC-010 존재하지 않는 faqId → FAQ_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 faqId → FAQ_NOT_FOUND")
         void notFound() {
             assertThatThrownBy(() -> faqService.deleteFaq(999L))
                     .isInstanceOf(CustomException.class)
@@ -272,7 +272,7 @@ class FaqIntegrationTest extends TestcontainersBase {
     class Lifecycle {
 
         @Test
-        @DisplayName("등록 → 조회 → 수정 → 삭제 흐름이 DB와 일치")
+        @DisplayName("TC-001 등록 → 조회 → 수정 → 삭제 흐름이 DB와 일치")
         void fullLifecycle() {
             // 등록
             FaqResponse created = faqService.createFaq(

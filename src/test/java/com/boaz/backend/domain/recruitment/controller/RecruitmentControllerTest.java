@@ -62,14 +62,14 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-001: GET /api/v1/recruitment/status
+    // REC-01: GET /api/v1/recruitment/status
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-001 GET /api/v1/recruitment/status")
+    @DisplayName("REC-01 GET /api/v1/recruitment/status")
     class GetStatus {
 
         @Test
-        @DisplayName("TC-006 정상 조회 → 200 + is_active:true")
+        @DisplayName("TC-007 정상 조회 → 200 + is_active:true")
         void success() throws Exception {
             RecruitmentStatusResponse res = RecruitmentStatusResponse.of(true, 27);
             when(recruitmentService.getRecruitmentStatus()).thenReturn(res);
@@ -82,7 +82,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("TC-006 비모집 기간 → is_active:false (term 키 생략)")
+        @DisplayName("TC-008 비모집 기간 → is_active:false (term 키 생략)")
         void inactive() throws Exception {
             RecruitmentStatusResponse res = RecruitmentStatusResponse.of(false, null);
             when(recruitmentService.getRecruitmentStatus()).thenReturn(res);
@@ -94,7 +94,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("[Security] 인증 없이 접근 가능 (공개 API)")
+        @DisplayName("TC-009 [Security] 인증 없이 접근 가능 (공개 API)")
         void publicApi() throws Exception {
             RecruitmentStatusResponse res = RecruitmentStatusResponse.of(false, null);
             when(recruitmentService.getRecruitmentStatus()).thenReturn(res);
@@ -105,10 +105,10 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-002: GET /api/v1/recruitment/{term}
+    // REC-02: GET /api/v1/recruitment/{term}
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-002 GET /api/v1/recruitment/{term}")
+    @DisplayName("REC-02 GET /api/v1/recruitment/{term}")
     class GetRecruitment {
 
         @Test
@@ -123,7 +123,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("TC-004 term 파라미터 타입 오류 → 400 INVALID_PARAMETER_TYPE")
+        @DisplayName("TC-006 term 파라미터 타입 오류 → 400 INVALID_PARAMETER_TYPE")
         void invalidTermType() throws Exception {
             mockMvc.perform(get("/api/v1/recruitment/abc"))
                     .andExpect(status().isBadRequest())
@@ -131,7 +131,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 존재하지 않는 term → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-007 존재하지 않는 term → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.getRecruitment(999))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -143,10 +143,10 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-003: GET /api/v1/recruitment/questions
+    // REC-03: GET /api/v1/recruitment/questions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-003 GET /api/v1/recruitment/questions")
+    @DisplayName("REC-03 GET /api/v1/recruitment/questions")
     class GetQuestions {
 
         @Test
@@ -162,7 +162,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-005 recruitmentId 누락 → 400 MISSING_PARAMETER")
+        @DisplayName("TC-007 recruitmentId 누락 → 400 MISSING_PARAMETER")
         void missingParam() throws Exception {
             mockMvc.perform(get("/api/v1/recruitment/questions")
                             .param("track", "ENGINEERING"))
@@ -170,7 +170,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-004 track=ALL → 400 INVALID_TRACK_SELECTION")
+        @DisplayName("TC-008 track=ALL → 400 INVALID_TRACK_SELECTION")
         void trackAll() throws Exception {
             when(recruitmentService.getQuestions(any(), eq(Track.ALL)))
                     .thenThrow(new CustomException(ErrorCode.INVALID_TRACK_SELECTION));
@@ -183,7 +183,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 모집 기간 아님 → 400 RECRUITMENT_NOT_AVAILABLE")
+        @DisplayName("TC-009 모집 기간 아님 → 400 RECRUITMENT_NOT_AVAILABLE")
         void notAvailable() throws Exception {
             when(recruitmentService.getQuestions(any(), any()))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_AVAILABLE));
@@ -197,14 +197,14 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-004: POST /api/v1/recruitment/{id}/applications
+    // REC-04: POST /api/v1/recruitment/{id}/applications
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-004 POST /api/v1/recruitment/{id}/applications")
+    @DisplayName("REC-04 POST /api/v1/recruitment/{id}/applications")
     class SubmitApplication {
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-028 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(post("/api/v1/recruitment/1/applications")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -214,7 +214,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("정상 제출 → 201 Created")
+        @DisplayName("TC-029 정상 제출 → 201 Created")
         void success() throws Exception {
             ApplicationResponse res = ApplicationResponse.of(42L, LocalDateTime.now());
             when(recruitmentService.submitApplication(eq(1L), eq(1L), any())).thenReturn(res);
@@ -228,7 +228,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 이미 SUBMITTED → 409 ALREADY_SUBMITTED")
+        @DisplayName("TC-030 이미 SUBMITTED → 409 ALREADY_SUBMITTED")
         void alreadySubmitted() throws Exception {
             when(recruitmentService.submitApplication(any(), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.ALREADY_SUBMITTED));
@@ -242,7 +242,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 모집 기간 아님 → 409 RECRUITMENT_CLOSED")
+        @DisplayName("TC-031 모집 기간 아님 → 409 RECRUITMENT_CLOSED")
         void closed() throws Exception {
             when(recruitmentService.submitApplication(any(), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_CLOSED));
@@ -257,10 +257,10 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-005: POST /api/v1/recruitment/subscriptions
+    // REC-05: POST /api/v1/recruitment/subscriptions
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-005 POST /api/v1/recruitment/subscriptions")
+    @DisplayName("REC-05 POST /api/v1/recruitment/subscriptions")
     class Subscribe {
 
         @Test
@@ -286,7 +286,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 중복 이메일 → 409 DUPLICATE_EMAIL")
+        @DisplayName("TC-007 중복 이메일 → 409 DUPLICATE_EMAIL")
         void duplicate() throws Exception {
             when(recruitmentService.subscribe(any()))
                     .thenThrow(new CustomException(ErrorCode.DUPLICATE_EMAIL));
@@ -300,10 +300,10 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-006: GET /api/v1/recruitment/deadline
+    // REC-06: GET /api/v1/recruitment/deadline
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-006 GET /api/v1/recruitment/deadline")
+    @DisplayName("REC-06 GET /api/v1/recruitment/deadline")
     class GetDeadline {
 
         @Test
@@ -319,7 +319,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 활성 공고 없음 → 404 RECRUITMENT_NOT_FOUND")
+        @DisplayName("TC-004 활성 공고 없음 → 404 RECRUITMENT_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.getDeadline())
                     .thenThrow(new CustomException(ErrorCode.RECRUITMENT_NOT_FOUND));
@@ -331,14 +331,14 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-007: PUT /api/v1/recruitment/{id}/applications/draft
+    // REC-07: PUT /api/v1/recruitment/{id}/applications/draft
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-007 PUT /api/v1/recruitment/{id}/applications/draft")
+    @DisplayName("REC-07 PUT /api/v1/recruitment/{id}/applications/draft")
     class SaveDraft {
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-013 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(put("/api/v1/recruitment/1/applications/draft")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -348,7 +348,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("정상 임시저장 → 200 + applicant_id")
+        @DisplayName("TC-014 정상 임시저장 → 200 + applicant_id")
         void success() throws Exception {
             DraftApplicationResponse res = DraftApplicationResponse.of(42L);
             when(recruitmentService.saveDraft(eq(1L), eq(1L), any())).thenReturn(res);
@@ -362,7 +362,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 SUBMITTED 지원서 존재 → 403 APPLICATION_ALREADY_SUBMITTED")
+        @DisplayName("TC-015 SUBMITTED 지원서 존재 → 403 APPLICATION_ALREADY_SUBMITTED")
         void alreadySubmitted() throws Exception {
             when(recruitmentService.saveDraft(any(), any(), any()))
                     .thenThrow(new CustomException(ErrorCode.APPLICATION_ALREADY_SUBMITTED));
@@ -377,14 +377,14 @@ class RecruitmentControllerTest {
     }
 
     // ──────────────────────────────────────────────
-    // REC-008: GET /api/v1/recruitment/{id}/applications/me
+    // REC-08: GET /api/v1/recruitment/{id}/applications/me
     // ──────────────────────────────────────────────
     @Nested
-    @DisplayName("REC-008 GET /api/v1/recruitment/{id}/applications/me")
+    @DisplayName("REC-08 GET /api/v1/recruitment/{id}/applications/me")
     class GetMyApplication {
 
         @Test
-        @DisplayName("[Security] 미인증 요청 → 401")
+        @DisplayName("TC-006 [Security] 미인증 요청 → 401")
         void unauthorized() throws Exception {
             mockMvc.perform(get("/api/v1/recruitment/1/applications/me"))
                     .andExpect(status().isUnauthorized())
@@ -392,7 +392,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-002 SUBMITTED 상태 접근 → 403 APPLICATION_ALREADY_SUBMITTED")
+        @DisplayName("TC-007 SUBMITTED 상태 접근 → 403 APPLICATION_ALREADY_SUBMITTED")
         void submittedForbidden() throws Exception {
             when(recruitmentService.getMyApplication(any(), any()))
                     .thenThrow(new CustomException(ErrorCode.APPLICATION_ALREADY_SUBMITTED));
@@ -404,7 +404,7 @@ class RecruitmentControllerTest {
         }
 
         @Test
-        @DisplayName("EX-001 지원서 없음 → 404 APPLICATION_NOT_FOUND")
+        @DisplayName("TC-008 지원서 없음 → 404 APPLICATION_NOT_FOUND")
         void notFound() throws Exception {
             when(recruitmentService.getMyApplication(any(), any()))
                     .thenThrow(new CustomException(ErrorCode.APPLICATION_NOT_FOUND));
