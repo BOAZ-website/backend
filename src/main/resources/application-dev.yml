@@ -16,10 +16,16 @@ spring:
       mode: never
       encoding: UTF-8
 
+  # prod와 같은 방식: 앱이 뜰 때 Flyway 실행 후 validate. prod 복제 DB에 먼저 배포해 마이그레이션을 확인한다.
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+
   jpa:
     defer-datasource-initialization: false
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect

@@ -16,6 +16,11 @@ spring:
       mode: always
       encoding: UTF-8
 
+  # local은 Flyway를 쓰지 않는다. Hibernate가 테이블을 만들고 data.sql로 시드를 넣는다.
+  # 마이그레이션 파일 검증은 ./gradlew test(Testcontainers + Flyway + validate)가 맡는다.
+  flyway:
+    enabled: false
+
   jpa:
     defer-datasource-initialization: true
     hibernate:
