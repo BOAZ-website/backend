@@ -138,7 +138,9 @@ Developer ──(Push/Merge)──> GitHub Actions ──(Upload Bundle)──> 
 ```
 1. GitHub Actions가 테스트 및 빌드를 수행합니다.
 2. 빌드 결과물과 배포 스크립트를 ZIP으로 묶어 S3에 업로드합니다.
-3. CodeDeploy가 EC2에 배포하고 systemd를 통해 서비스를 실행합니다.
+3. CodeDeploy가 EC2에 배포하고 systemd를 통해 서비스를 실행합니다. 앱이 뜰 때 Flyway가 DB 마이그레이션을 실행합니다.
+
+> **DB 마이그레이션:** 엔티티를 바꾸면 `src/main/resources/db/migration/`에 Flyway 마이그레이션 파일을 함께 추가합니다. 작성 규칙, 배포 순서, 실패 시 복구 절차는 [`src/main/resources/db/README.md`](src/main/resources/db/README.md)를 참고하세요.
 
 > **환경 변수 주입:** 운영 환경의 환경 변수는 AWS SSM Parameter Store에 저장되며, 배포 시 `scripts/load-ssm-env.sh`가 이를 불러와 주입합니다. <br>단, AWS 자격 증명은 환경 변수가 아니라 **EC2 인스턴스의 IAM 역할**로 제공됩니다. <br>또한 운영 환경에서는 Swagger UI에 Basic 인증(`SWAGGER_USER` / `SWAGGER_PASSWORD`)이 적용됩니다.
 
