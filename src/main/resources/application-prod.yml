@@ -16,6 +16,14 @@ spring:
       mode: never
       encoding: UTF-8
 
+  # 앱이 뜰 때 Flyway가 아직 실행하지 않은 마이그레이션(db/migration)을 실행한 뒤 Hibernate validate가 돈다.
+  flyway:
+    enabled: true
+    # 첫 prod 배포 전용: 테이블은 있고 flyway_schema_history가 없는 DB에서 V1을 실행하지 않고 "V1까지 적용됨"으로 기록한다.
+    # 첫 prod 배포가 성공하면 다음 PR에서 아래 두 줄을 지운다.
+    baseline-on-migrate: true
+    baseline-version: 1
+
   jpa:
     defer-datasource-initialization: false
     hibernate:

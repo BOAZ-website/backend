@@ -7,10 +7,14 @@ spring:
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  # 컨테이너는 빈 스키마로 시작한다. Flyway가 db/migration을 V1부터 실행해 테이블을 만들고,
+  # Hibernate validate가 엔티티와 대조한다. prod와 같은 경로로 스키마를 검증하기 위해서다.
+  flyway:
+    enabled: true
+
   jpa:
     hibernate:
-      # 컨테이너는 빈 스키마로 시작하므로 엔티티 기준으로 테이블을 생성한다.
-      ddl-auto: ${DDL_AUTO:create-drop}
+      ddl-auto: validate
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
