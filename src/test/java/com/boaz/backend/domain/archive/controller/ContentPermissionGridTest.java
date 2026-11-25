@@ -41,7 +41,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 2층 격자 테스트: 매트릭스의 {@code 콘텐츠(아카이빙, FAQ, 수료자 후기, 커리큘럼) CUD} 행 × 기본 세트 주체.
- * <p>한 행이 도메인 4개의 admin 컨트롤러에 걸쳐 있어 격자도 하나로 묶는다. 조회는 공개 GET({@code permitAll})뿐이다.
+ * <p>조회는 공개 GET({@code permitAll})뿐이다.
  *
  * <p><b>서비스는 목이다.</b> 여기서 검증하는 것은 2층뿐이다.
  * <p><b>기대값은 구현에서 복사하지 않고 매트릭스에서 직접 옮겨 썼다.</b>
@@ -80,7 +80,7 @@ class ContentPermissionGridTest {
     private static final String REVIEW_UPDATE_BODY = "{\"content\":\"수정된 후기\"}";
 
     /**
-     * 기본 세트 키 7개 + 권한 0 조합 1개.
+     * 기본 세트 키별 주체 + 권한 0 조합.
      * {@code (SUPER, 그룹리더)}는 명시 키에도 없고 {@code SUPER} 폴백도 없어 빈 집합이 된다.
      */
     private record Subject(String label, Admin.Role role, Admin.TeamName team) {
@@ -159,12 +159,14 @@ class ContentPermissionGridTest {
 
     /**
      * 매트릭스 전사. O = 2층 통과, X = 403.
-     * 콘텐츠 CUD 는 서운팀장과 서비스운영팀만 O 다. 행 하나라 18칸이 주체마다 전부 같다 —
-     * 한 칸이라도 다르면 부착이 빠졌거나 다른 permission 이 붙은 것이다.
+     * 콘텐츠 CUD 는 서운팀장과 서비스운영팀만 O 다. 행이 하나라 주체마다 모든 칸이 같다.
+     * 한 칸이라도 다르면 {@code @PreAuthorize}가 빠졌거나 다른 permission 이 붙은 것이다.
      *
      * <pre>
-     * 열 순서: archiving POST×3(projects·activities·blogs) · PATCH×3 · DELETE×3
-     *          · curriculums POST·PUT·DELETE · faqs POST·PATCH·DELETE · reviews POST·PATCH·DELETE
+     * 열 순서: archiving POST, PATCH, DELETE (각각 projects, activities, blogs)
+     *          curriculums POST, PUT, DELETE
+     *          faqs POST, PATCH, DELETE
+     *          reviews POST, PATCH, DELETE
      * </pre>
      */
     private static final String[] GRID = {
@@ -199,8 +201,8 @@ class ContentPermissionGridTest {
                 });
     }
 
-    @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("TC-001 콘텐츠 API 2층 격자: 기본 세트 주체 8종 × 엔드포인트 18개")
+    @ParameterizedTest(name = "{0}, {1}: {2}")
+    @DisplayName("TC-001 콘텐츠 API 2층 격자: 기본 세트 주체 × 엔드포인트")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));

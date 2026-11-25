@@ -15,16 +15,16 @@ import static com.boaz.backend.global.security.authz.Permission.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 기본 세트가 확정 권한 매트릭스(43행 × 8열, 2026-09-10 개정판)와 맞는지 본다.
+ * 기본 세트가 권한 매트릭스와 맞는지 본다.
  */
 class DefaultPermissionsTest {
 
     @Nested
-    @DisplayName("명시 키 6개")
+    @DisplayName("명시 키")
     class ExactKeys {
 
         @Test
-        @DisplayName("TC-001 (MASTER, 서비스운영팀) 서운팀장 — 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 35개 전부")
+        @DisplayName("TC-001 (MASTER, 서비스운영팀) 서운팀장은 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 전부 O")
         void master() {
             Set<Permission> actual = DefaultPermissions.of(Role.MASTER, TeamName.서비스운영팀);
 
@@ -49,7 +49,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-002 MASTER 는 최고 권한이 아니다 — 다른 부문 서류 평가와 최종 합불 수정은 갖지 않는다")
+        @DisplayName("TC-002 MASTER 는 최고 권한이 아니다. 다른 부문 서류 평가와 최종 합불 수정은 갖지 않는다")
         void masterHasNoAllTrackEvaluationOrFinalDecisionWrite() {
             assertThat(DefaultPermissions.of(Role.MASTER, TeamName.서비스운영팀))
                     .contains(EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
@@ -74,7 +74,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-004 (SUPER, 차기대표진) — 대표진과 `다른 부문 서류 평가` 1행만 다르다")
+        @DisplayName("TC-004 (SUPER, 차기대표진)은 대표진과 다른 부문 서류 평가 1행만 다르다")
         void nextRepresentative() {
             Set<Permission> rep = DefaultPermissions.of(Role.SUPER, TeamName.대표진);
             Set<Permission> next = DefaultPermissions.of(Role.SUPER, TeamName.차기대표진);
@@ -86,7 +86,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-005 (TEAM, 서비스운영팀) — 계정 조회·감사로그·콘텐츠·리크루팅. 출결은 전부 X")
+        @DisplayName("TC-005 (TEAM, 서비스운영팀)은 계정 조회, 감사 로그, 콘텐츠, 리크루팅. 출결은 전부 X")
         void serviceOperationTeam() {
             Set<Permission> actual = DefaultPermissions.of(Role.TEAM, TeamName.서비스운영팀);
 
@@ -103,7 +103,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-006 (TEAM, 운영지원팀) — 출결 전반·점수 규칙·HOST 계정 발급. 계정 목록 조회는 X")
+        @DisplayName("TC-006 (TEAM, 운영지원팀)은 출결 전반, 점수 규칙, HOST 계정 발급. 계정 목록 조회는 X")
         void operationSupportTeam() {
             Set<Permission> actual = DefaultPermissions.of(Role.TEAM, TeamName.운영지원팀);
 
@@ -124,7 +124,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-007 (HOST, 그룹리더) — 스터디장·ADV팀장 두 열이 합쳐진 키. 본인 계정 수정 하나뿐이고 빈 집합이 아니다")
+        @DisplayName("TC-007 (HOST, 그룹리더)는 스터디장과 ADV 팀장을 합친 키. 본인 계정 수정 하나뿐이고 빈 집합이 아니다")
         void groupLeader() {
             Set<Permission> actual = DefaultPermissions.of(Role.HOST, TeamName.그룹리더);
 
@@ -135,10 +135,10 @@ class DefaultPermissionsTest {
     }
 
     @Nested
-    @DisplayName("TEAM 폴백 — 기타 운영진")
+    @DisplayName("TEAM 폴백: 기타 운영진")
     class Fallback {
 
-        @ParameterizedTest(name = "(TEAM, {0}) → 기타 운영진 4개")
+        @ParameterizedTest(name = "(TEAM, {0}): 기타 운영진 기본 세트")
         @EnumSource(value = TeamName.class, names = {"디자인팀", "자료연구팀", "기획팀", "대외협력팀"})
         void otherTeams(TeamName teamName) {
             assertThat(DefaultPermissions.of(Role.TEAM, teamName)).containsExactlyInAnyOrder(
@@ -147,13 +147,13 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-008 명시 키가 폴백보다 먼저다 — (TEAM, 운영지원팀)이 폴백으로 떨어지지 않는다")
+        @DisplayName("TC-008 명시 키가 폴백보다 먼저다. (TEAM, 운영지원팀)은 폴백을 받지 않는다")
         void exactBeatsFallback() {
             assertThat(DefaultPermissions.of(Role.TEAM, TeamName.운영지원팀))
                     .isNotEqualTo(DefaultPermissions.of(Role.TEAM, TeamName.기획팀));
         }
 
-        @ParameterizedTest(name = "(TEAM, {0}) → 권한 0")
+        @ParameterizedTest(name = "(TEAM, {0}): 권한 0")
         @DisplayName("TC-009 매트릭스에 없는 TEAM 조합은 권한 0")
         @EnumSource(value = TeamName.class, names = {"대표진", "차기대표진", "그룹리더"})
         void teamWithNonTeamName(TeamName teamName) {
@@ -162,11 +162,11 @@ class DefaultPermissionsTest {
     }
 
     @Nested
-    @DisplayName("isValidCombination — 저장 경로가 입력을 거르는 기준")
+    @DisplayName("isValidCombination: 계정 저장 때 조합을 거르는 기준")
     class ValidCombination {
 
         @ParameterizedTest(name = "{0} + {1}")
-        @DisplayName("TC-010 매트릭스 7키는 유효하다")
+        @DisplayName("TC-010 매트릭스에 있는 명시 키는 유효하다")
         @CsvSource({
                 "MASTER, 서비스운영팀",
                 "SUPER, 대표진",
@@ -202,7 +202,7 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-013 유효하지 않은 조합은 언제나 권한 0이다 — 두 규칙이 어긋나지 않는다")
+        @DisplayName("TC-013 유효하지 않은 조합은 언제나 권한 0이다")
         void invalidImpliesNoPermission() {
             for (Role role : Role.values()) {
                 for (TeamName teamName : TeamName.values()) {
@@ -217,7 +217,7 @@ class DefaultPermissionsTest {
     }
 
     @Nested
-    @DisplayName("없는 조합은 빈 집합 — 닫히는 쪽으로 실패한다")
+    @DisplayName("표에 없는 조합은 빈 집합")
     class NoKey {
 
         @Test
@@ -227,13 +227,13 @@ class DefaultPermissionsTest {
         }
 
         @Test
-        @DisplayName("TC-015 HOST 에는 폴백이 없다 — (HOST, 기획팀)은 권한 0")
+        @DisplayName("TC-015 HOST 에는 폴백이 없다. (HOST, 기획팀)은 권한 0")
         void hostWithoutGroupLeaderTeam() {
             assertThat(DefaultPermissions.of(Role.HOST, TeamName.기획팀)).isEmpty();
         }
 
         @Test
-        @DisplayName("TC-016 MASTER 에도 폴백이 없다 — (MASTER, 기획팀)은 권한 0")
+        @DisplayName("TC-016 MASTER 에도 폴백이 없다. (MASTER, 기획팀)은 권한 0")
         void masterWithOtherTeam() {
             assertThat(DefaultPermissions.of(Role.MASTER, TeamName.기획팀)).isEmpty();
         }
