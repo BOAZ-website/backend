@@ -3,9 +3,18 @@ package com.boaz.backend.global.security;
 import com.boaz.backend.domain.admin.entity.Admin;
 import com.boaz.backend.domain.admin.repository.AdminRepository;
 import com.boaz.backend.global.common.enums.Track;
+import com.boaz.backend.global.logging.RequestLoggingFilter;
 import com.boaz.backend.support.TestcontainersBase;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.jayway.jsonpath.JsonPath;
 import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.slf4j.LoggerFactory;
+import org.slf4j.event.KeyValuePair;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -21,7 +30,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import static org.assertj.core.api.Assertions.assertThat;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -200,6 +213,108 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
             mockMvc.perform(get("/api/v1/recruitment/9999"))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.error_code").value("RECRUITMENT_NOT_FOUND"));
+        }
+    }
+
+    /**
+     * 요청 로그 필터는 Security보다 앞에 있으므로, 보안 필터가 끝낸 401·403도 남아야 한다.
+     * 없는 경로는 500이 아니라 404로 응답·기록돼야 한다.
+     */
+    @Nested
+    @DisplayName("요청 로그 - 실제 필터 순서")
+    class RequestLogging {
+
+        private final Logger logger = (Logger) LoggerFactory.getLogger(RequestLoggingFilter.class);
+        private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
+
+        @BeforeEach
+        void attach() {
+            logger.setLevel(Level.INFO);
+            appender.start();
+            logger.addAppender(appender);
+        }
+
+        @AfterEach
+        void detach() {
+            logger.detachAppender(appender);
+            logger.setLevel(null);
+        }
+
+        private Map<String, Object> lastRequestLog() {
+            assertThat(appender.list).isNotEmpty();
+            Map<String, Object> map = new HashMap<>();
+            ILoggingEvent event = appender.list.get(appender.list.size() - 1);
+            if (event.getKeyValuePairs() != null) {
+                for (KeyValuePair p : event.getKeyValuePairs()) {
+                    map.put(p.key, p.value);
+                }
+            }
+            return map;
+        }
+
+        @Test
+        @DisplayName("토큰 없이 보호 경로 → 401이 경로 템플릿 없이 남는다")
+        void logs_401_from_entry_point() throws Exception {
+            mockMvc.perform(get("/api/v1/admin/accounts/me")).andExpect(status().isUnauthorized());
+
+            Map<String, Object> log = lastRequestLog();
+            assertThat(log).containsEntry("status", 401).containsEntry("method", "GET");
+            assertThat(log.get("path")).isNull();
+        }
+
+        @Test
+        @DisplayName("USER 토큰으로 관리자 경로 → 403과 사용자 식별자가 남는다")
+        void logs_403_with_user() throws Exception {
+            String userAccessToken = jwtProvider.generateUserAccessToken(999L);
+
+            mockMvc.perform(get("/api/v1/admin/accounts/me")
+                            .header("Authorization", "Bearer " + userAccessToken))
+                    .andExpect(status().isForbidden());
+
+            assertThat(lastRequestLog()).containsEntry("status", 403).containsEntry("user", "USER:999");
+        }
+
+        @Test
+        @DisplayName("관리자 토큰으로 성공 → 경로 템플릿과 ADMIN 식별자가 남는다")
+        void logs_200_with_template_and_admin() throws Exception {
+            saveAdmin("requestlog_admin", "Boaz1234!", Admin.Role.TEAM);
+            String accessToken = loginAndGetAccessToken("requestlog_admin", "Boaz1234!");
+
+            mockMvc.perform(get("/api/v1/admin/accounts/me")
+                            .header("Authorization", "Bearer " + accessToken))
+                    .andExpect(status().isOk());
+
+            Map<String, Object> log = lastRequestLog();
+            assertThat(log).containsEntry("status", 200).containsEntry("path", "/api/v1/admin/accounts/me");
+            assertThat((String) log.get("user")).startsWith("ADMIN:");
+        }
+
+        @Test
+        @DisplayName("없는 경로(탐색 봇) → URL 게이트(denyAll)에서 401, 경로 템플릿 없이 남는다")
+        void unknown_path_without_token_is_401() throws Exception {
+            mockMvc.perform(get("/.env.local"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error_code").value("TOKEN_NOT_FOUND"));
+
+            Map<String, Object> log = lastRequestLog();
+            assertThat(log).containsEntry("status", 401);
+            assertThat(log.get("path")).isNull();
+        }
+
+        @Test
+        @DisplayName("게이트를 통과한 없는 경로 → 500이 아니라 404")
+        void unknown_path_past_gate_is_404() throws Exception {
+            saveAdmin("requestlog_404_admin", "Boaz1234!", Admin.Role.TEAM);
+            String accessToken = loginAndGetAccessToken("requestlog_404_admin", "Boaz1234!");
+
+            mockMvc.perform(get("/api/v1/admin/not-a-registered-path")
+                            .header("Authorization", "Bearer " + accessToken))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error_code").value("NOT_FOUND"));
+
+            Map<String, Object> log = lastRequestLog();
+            assertThat(log).containsEntry("status", 404);
+            assertThat(log.get("path")).isNull();
         }
     }
 }

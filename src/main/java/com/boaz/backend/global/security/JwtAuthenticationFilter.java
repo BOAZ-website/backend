@@ -2,6 +2,7 @@ package com.boaz.backend.global.security;
 
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.logging.RequestLoggingFilter;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -53,12 +54,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     principal, null,
                                     List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_USER")));
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    request.setAttribute(RequestLoggingFilter.USER_ATTRIBUTE, "USER:" + userId);
                 } else if ("ADMIN".equals(type)) {
                     String username = claims.get("username", String.class);
                     UserDetails userDetails = adminUserDetailsService.loadUserByUsername(username);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    // 토큰 subject는 admin id다. username(로그인 아이디)은 남기지 않는다.
+                    request.setAttribute(RequestLoggingFilter.USER_ATTRIBUTE, "ADMIN:" + claims.getSubject());
                 } else {
                     throw new CustomException(ErrorCode.INVALID_TOKEN);
                 }
