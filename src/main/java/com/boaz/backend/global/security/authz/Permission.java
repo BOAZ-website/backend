@@ -21,7 +21,6 @@ public enum Permission {
     AUDIT_LOG_READ,
 
     // ── 콘텐츠 (archive · curriculum · faq · review 네 도메인에 걸친다) ──
-    CONTENT_READ,
     CONTENT_WRITE,
 
     // ── 리크루팅 ──────────────────────────────────────────────────

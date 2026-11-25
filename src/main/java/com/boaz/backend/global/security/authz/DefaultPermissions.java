@@ -46,7 +46,7 @@ public final class DefaultPermissions {
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
                     ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
                     ADMIN_ACCOUNT_CREATE_DELETE, ADMIN_PERMISSION_WRITE, AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,
@@ -63,7 +63,6 @@ public final class DefaultPermissions {
             // 대표진 — 차기대표진과 `다른 부문 서류 평가` 1행만 다르다.
             key(Role.SUPER, TeamName.대표진), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
-                    CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
                     ATTENDANCE_EVENT_READ, ATTENDANCE_SCORE_READ,
@@ -76,7 +75,6 @@ public final class DefaultPermissions {
             // 차기대표진 — 대표진 + 다른 부문 서류 평가.
             key(Role.SUPER, TeamName.차기대표진), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
-                    CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
                     ATTENDANCE_EVENT_READ, ATTENDANCE_SCORE_READ,
@@ -90,7 +88,7 @@ public final class DefaultPermissions {
             key(Role.TEAM, TeamName.서비스운영팀), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,

@@ -56,7 +56,7 @@ class EffectivePermissionsTest {
         assertThat(DefaultPermissions.of(Admin.Role.TEAM, Admin.TeamName.서비스운영팀))
                 .contains(CONTENT_WRITE);  // 애초에 갖고 있던 권한이어야 REVOKE 검증이 성립한다
         assertThat(actual).doesNotContain(CONTENT_WRITE);
-        assertThat(actual).contains(CONTENT_READ);
+        assertThat(actual).contains(AUDIT_LOG_READ);
     }
 
     @Test

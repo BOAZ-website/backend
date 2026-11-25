@@ -32,7 +32,7 @@ class DefaultPermissionsTest {
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
                     ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
                     ADMIN_ACCOUNT_CREATE_DELETE, ADMIN_PERMISSION_WRITE, AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,
@@ -62,7 +62,6 @@ class DefaultPermissionsTest {
 
             assertThat(actual).containsExactlyInAnyOrder(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
-                    CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
                     ATTENDANCE_EVENT_READ, ATTENDANCE_SCORE_READ,
@@ -93,7 +92,7 @@ class DefaultPermissionsTest {
             assertThat(actual).containsExactlyInAnyOrder(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,
