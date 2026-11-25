@@ -4,6 +4,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- 모든 테이블 초기화
 TRUNCATE refresh_token;
 TRUNCATE users;
+TRUNCATE member;
 TRUNCATE admin;
 TRUNCATE recruitment;
 TRUNCATE application_question;
@@ -23,47 +24,63 @@ SET FOREIGN_KEY_CHECKS = 1;
 
 -- 임시 데이터
 
+-- member 임시 데이터: id 1~9는 같은 id의 admin 계정 소유자. 이름·기수·부문은 admin과 같다.
+-- id 10~12는 계정이 없는 회원. 10·11은 같은 기수·부문·이름이라 name_suffix로 구분한다(동명이인). 12는 수료 회원이다.
+INSERT INTO member (id, term, track, name, name_suffix, phone, email, birth_date, university, major, source_user_id, status, version, created_at, updated_at)
+VALUES (1, 27, 'ENGINEERING', '김보아즈', NULL, '010-0000-0001', 'member1@example.com', '2001-03-01', '보아즈대학교', '컴퓨터공학', NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (2, 27, 'ANALYSIS', '이보아즈', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (3, 27, 'ENGINEERING', '최차기', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (4, 27, 'ENGINEERING', '박엔지', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (5, 27, 'ANALYSIS', '정분석', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (6, 27, 'VISUALIZATION', '한시각', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (7, 27, 'ENGINEERING', '장서운', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (8, 27, 'ANALYSIS', '윤영지', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (9, 26, 'VISUALIZATION', '김대표', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (10, 28, 'ANALYSIS', '김민수', '01', NULL, NULL, '2001-05-10', NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (11, 28, 'ANALYSIS', '김민수', '03', NULL, NULL, '2003-08-20', NULL, NULL, NULL, 'ACTIVE', 0, NOW(), NOW()),
+       (12, 25, 'VISUALIZATION', '오수료', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'COMPLETED', 0, NOW(), NOW());
+
 -- admin 임시 데이터 (비밀번호: Boaz1234!)
 -- id=1: 현재 대표진(ENGINEERING) — 본인 부문만 조회/평가/최종결정
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (1, 'boaz_super', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '김보아즈', 'ENGINEERING', 27, '대표진', NULL, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (1, 'boaz_super', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '김보아즈', 'ENGINEERING', 27, '대표진', NULL, 1, FALSE, NOW(), NOW());
 
 -- id=2: 서비스운영팀 TEAM(ANALYSIS) — 본인 부문 평가자
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (2, 'boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (2, 'boaz_team', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '이보아즈', 'ANALYSIS', 27, '서비스운영팀', 1, 2, FALSE, NOW(), NOW());
 
 -- id=3: 차기 대표진(SUPER + 차기대표진) — 전 부문 조회/평가/최종결정 권한
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (3, 'boaz_next_rep', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '최차기', 'ENGINEERING', 27, '차기대표진', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (3, 'boaz_next_rep', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'SUPER', '최차기', 'ENGINEERING', 27, '차기대표진', 1, 3, FALSE, NOW(), NOW());
 
 -- id=4: ENGINEERING 부문 평가자(TEAM)
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (4, 'boaz_eng_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '박엔지', 'ENGINEERING', 27, '서비스운영팀', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (4, 'boaz_eng_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '박엔지', 'ENGINEERING', 27, '서비스운영팀', 1, 4, FALSE, NOW(), NOW());
 
 -- id=5: ANALYSIS 부문 평가자(TEAM)
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (5, 'boaz_ana_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '정분석', 'ANALYSIS', 27, '서비스운영팀', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (5, 'boaz_ana_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '정분석', 'ANALYSIS', 27, '서비스운영팀', 1, 5, FALSE, NOW(), NOW());
 
 -- id=6: VISUALIZATION 부문 평가자(TEAM)
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (6, 'boaz_vis_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '한시각', 'VISUALIZATION', 27, '서비스운영팀', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (6, 'boaz_vis_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '한시각', 'VISUALIZATION', 27, '서비스운영팀', 1, 6, FALSE, NOW(), NOW());
 
 -- 권한 재설계로 늘어난 기본 세트 키를 로컬에서 밟을 수 있게 하는 시드 3건.
 -- (MASTER,서비스운영팀)·(TEAM,운영지원팀)·(HOST,그룹리더)
 
--- id=7: 서운팀장(MASTER) — 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 전권
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (7, 'boaz_master', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'MASTER', '장서운', 'ENGINEERING', 27, '서비스운영팀', 1, NOW(), NOW());
+-- id=7: 서운팀장(MASTER, is_leader=true) — 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 전권
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (7, 'boaz_master', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'MASTER', '장서운', 'ENGINEERING', 27, '서비스운영팀', 1, 7, TRUE, NOW(), NOW());
 
 -- id=8: 운영지원팀(TEAM) — 출결 전반·점수 규칙·HOST 계정 발급
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (8, 'boaz_ops_support', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '윤영지', 'ANALYSIS', 27, '운영지원팀', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (8, 'boaz_ops_support', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'TEAM', '윤영지', 'ANALYSIS', 27, '운영지원팀', 1, 8, FALSE, NOW(), NOW());
 
 -- id=9: 그룹리더(HOST) — 기본 세트는 본인 계정 수정 하나뿐.
 --       입력탭 _OWN_GROUP_ 권한은 admin_group_leader 에서 파생되는데 그 계산이 아직 범위 밖이라
 --       지금 이 계정은 본인 계정 수정만 할 수 있다.
-INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
-VALUES (9, 'boaz_group_leader', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'HOST', '김대표', 'VISUALIZATION', 26, '그룹리더', 1, NOW(), NOW());
+INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, member_id, is_leader, created_at, updated_at)
+VALUES (9, 'boaz_group_leader', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'HOST', '김대표', 'VISUALIZATION', 26, '그룹리더', 1, 9, FALSE, NOW(), NOW());
 
 -- users 임시 데이터
 INSERT INTO users (id, provider, provider_id, nickname, member_type, created_at, updated_at)
