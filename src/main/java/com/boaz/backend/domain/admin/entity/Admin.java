@@ -69,9 +69,22 @@ public class Admin extends BaseEntity {
 
     private LocalDateTime deletedAt;
 
+    /**
+     * 계정 소유 동아리원({@code member.id}). DB에는 FK가 있다.
+     *
+     * <p>기존 계정을 백필하기 전까지 NULL인 계정이 있다. 값이 있다고 가정하지 않는다.
+     * 회원당 삭제되지 않은 계정은 하나다(DB 생성 컬럼 {@code live_member_id}의 UNIQUE, 엔티티에는 매핑하지 않음).
+     */
+    private Long memberId;
+
+    /** 운영진 팀장 여부. 표시와 점수 계산에만 쓰고 권한 계산에는 쓰지 않는다. HOST는 false. */
+    @Column(nullable = false)
+    private boolean isLeader;
+
     @Builder
     public Admin(String username, String password, Role role, String name,
-                 Track track, Integer term, TeamName teamName, Long createdBy) {
+                 Track track, Integer term, TeamName teamName, Long createdBy,
+                 Long memberId, boolean isLeader) {
         this.username = username;
         this.password = password;
         this.role = role;
@@ -80,6 +93,8 @@ public class Admin extends BaseEntity {
         this.term = term;
         this.teamName = teamName;
         this.createdBy = createdBy;
+        this.memberId = memberId;
+        this.isLeader = isLeader;
     }
 
     public void update(Role role, String name, Track track, Integer term, TeamName teamName) {
