@@ -528,24 +528,23 @@ class ApplicantEvaluationIntegrationTest extends TestcontainersBase {
     }
 
     @Test
-    @DisplayName("TC-019 [E] 같은 track 이어도 평가 권한 없는 MASTER·HOST 미작성자는 풀에서 제외")
-    void masterAndHostWithoutPermissionExcluded() {
+    @DisplayName("TC-019 [E] 같은 track 의 MASTER 미작성자는 풀에 포함, 평가 권한 없는 HOST 미작성자는 제외")
+    void masterIncludedAndHostWithoutPermissionExcluded() {
         Recruitment r = saveRecruitment(27);
         Applicant eng = saveApplicant(r, Track.ENGINEERING, Applicant.ApplicantStatus.SUBMITTED);
         Admin engStaff = saveAdmin(Admin.Role.TEAM, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
         Admin master = saveAdmin(Admin.Role.MASTER, Admin.TeamName.서비스운영팀, Track.ENGINEERING);
         Admin host = saveAdmin(Admin.Role.HOST, Admin.TeamName.그룹리더, Track.ENGINEERING);
-        assertThat(effectivePermissions.of(master)).doesNotContain(
-                Permission.EVALUATION_OWN_TRACK_WRITE, Permission.EVALUATION_ALL_TRACK_WRITE);
+        assertThat(effectivePermissions.of(master)).contains(Permission.EVALUATION_OWN_TRACK_WRITE);
         assertThat(effectivePermissions.of(host)).doesNotContain(
                 Permission.EVALUATION_OWN_TRACK_WRITE, Permission.EVALUATION_ALL_TRACK_WRITE);
 
         assertThat(evaluatorIds(eng.getId(), engStaff))
-                .contains(engStaff.getId())
-                .doesNotContain(master.getId(), host.getId());
+                .contains(engStaff.getId(), master.getId())
+                .doesNotContain(host.getId());
         assertThat(interviewerIds(eng.getId(), engStaff))
-                .contains(engStaff.getId())
-                .doesNotContain(master.getId(), host.getId());
+                .contains(engStaff.getId(), master.getId())
+                .doesNotContain(host.getId());
     }
 
     @Test

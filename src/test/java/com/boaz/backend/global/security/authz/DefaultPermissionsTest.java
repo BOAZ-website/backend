@@ -24,7 +24,7 @@ class DefaultPermissionsTest {
     class ExactKeys {
 
         @Test
-        @DisplayName("TC-001 (MASTER, 서비스운영팀) 서운팀장 — 평가 4행만 X, 나머지 34개 전부")
+        @DisplayName("TC-001 (MASTER, 서비스운영팀) 서운팀장 — 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 35개 전부")
         void master() {
             Set<Permission> actual = DefaultPermissions.of(Role.MASTER, TeamName.서비스운영팀);
 
@@ -44,15 +44,16 @@ class DefaultPermissionsTest {
                     ATTENDANCE_ADV_ENTRY_READ, ATTENDANCE_ADV_ENTRY_WRITE,
                     ATTENDANCE_STUDY_ENTRY_READ, ATTENDANCE_STUDY_ENTRY_WRITE,
                     HOST_ACCOUNT_READ, HOST_ACCOUNT_WRITE,
-                    SCORE_RULE_READ, SCORE_RULE_WRITE);
+                    SCORE_RULE_READ, SCORE_RULE_WRITE,
+                    EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ);
         }
 
         @Test
-        @DisplayName("TC-002 MASTER 는 최고 권한이 아니다 — 평가·최종합불 4개는 갖지 않는다")
-        void masterHasNoEvaluation() {
+        @DisplayName("TC-002 MASTER 는 최고 권한이 아니다 — 다른 부문 서류 평가와 최종 합불 수정은 갖지 않는다")
+        void masterHasNoAllTrackEvaluationOrFinalDecisionWrite() {
             assertThat(DefaultPermissions.of(Role.MASTER, TeamName.서비스운영팀))
-                    .doesNotContain(EVALUATION_OWN_TRACK_WRITE, EVALUATION_ALL_TRACK_WRITE,
-                            FINAL_DECISION_READ, FINAL_DECISION_WRITE);
+                    .contains(EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
+                    .doesNotContain(EVALUATION_ALL_TRACK_WRITE, FINAL_DECISION_WRITE);
         }
 
         @Test

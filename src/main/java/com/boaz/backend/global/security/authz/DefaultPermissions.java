@@ -41,7 +41,7 @@ public final class DefaultPermissions {
     /** 명시 키 6개. 각 집합은 매트릭스 열을 그대로 옮긴 것이다. */
     private static final Map<Key, Set<Permission>> EXACT = Map.of(
 
-            // 서운팀장 — 서류 평가 4행만 X. 평가 결정에 대한 권한은 없다.
+            // 서운팀장 — 다른 부문 서류 평가와 최종 합불 수정만 X. 본인 부문 서류 평가와 최종 합불 조회는 한다.
             key(Role.MASTER, TeamName.서비스운영팀), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
                     ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
@@ -58,7 +58,8 @@ public final class DefaultPermissions {
                     ATTENDANCE_ADV_ENTRY_READ, ATTENDANCE_ADV_ENTRY_WRITE,
                     ATTENDANCE_STUDY_ENTRY_READ, ATTENDANCE_STUDY_ENTRY_WRITE,
                     HOST_ACCOUNT_READ, HOST_ACCOUNT_WRITE,
-                    SCORE_RULE_READ, SCORE_RULE_WRITE),
+                    SCORE_RULE_READ, SCORE_RULE_WRITE,
+                    EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ),
 
             // 대표진 — 차기대표진과 `다른 부문 서류 평가` 1행만 다르다.
             key(Role.SUPER, TeamName.대표진), set(

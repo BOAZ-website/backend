@@ -135,7 +135,7 @@ class ApplicantEvaluationPermissionGridTest {
      */
     private static final String[] GRID = {
             //                         APPL DASH FINAL EVS  IQ   ANS  MY   SAVE
-            "서운팀장(MASTER)            X    X    X     X    X    X    X    X",
+            "서운팀장(MASTER)            O    O    X     O    O    O    O    O",
             "대표진(SUPER)               O    O    O     O    O    O    O    O",
             "차기대표진(SUPER)            O    O    O     O    O    O    O    O",
             "서비스운영팀(TEAM)           O    O    X     O    O    O    O    O",

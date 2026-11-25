@@ -51,7 +51,7 @@ VALUES (6, 'boaz_vis_eval', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQ
 -- 권한 재설계로 늘어난 기본 세트 키를 로컬에서 밟을 수 있게 하는 시드 3건.
 -- (MASTER,서비스운영팀)·(TEAM,운영지원팀)·(HOST,그룹리더)
 
--- id=7: 서운팀장(MASTER) — 평가 4행만 X, 나머지 전권
+-- id=7: 서운팀장(MASTER) — 다른 부문 서류 평가와 최종 합불 수정만 X, 나머지 전권
 INSERT INTO admin (id, username, password, role, name, track, term, team_name, created_by, created_at, updated_at)
 VALUES (7, 'boaz_master', '$2a$10$7GogA3bv05pd830JHPishOFHtneEqmpZgE2s9fZuoARQxDZGg6N.y', 'MASTER', '장서운', 'ENGINEERING', 27, '서비스운영팀', 1, NOW(), NOW());
 
