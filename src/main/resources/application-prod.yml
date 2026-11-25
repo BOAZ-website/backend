@@ -132,6 +132,12 @@ logging:
     com.boaz: INFO
   file:
     name: /var/log/boaz/application.log
+  # 파일 로그를 한 줄에 한 건인 JSON(ECS 형식)으로 쓴다. 스택 트레이스도 같은 줄(error.stack_trace)에 들어가고,
+  # MDC의 requestId와 요청 로그 필드(method, path, status, durationMs, user, clientIp)가 JSON 필드로 남는다.
+  # 콘솔 출력은 텍스트 그대로다.
+  structured:
+    format:
+      file: ecs
   logback:
     rollingpolicy:
       max-file-size: 50MB
