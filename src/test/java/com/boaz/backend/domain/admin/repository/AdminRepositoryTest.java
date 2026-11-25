@@ -1,10 +1,12 @@
 package com.boaz.backend.domain.admin.repository;
 
 import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.member.entity.Member;
 import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.config.JpaConfig;
 import com.boaz.backend.support.TestcontainersBase;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -151,6 +154,110 @@ class AdminRepositoryTest extends TestcontainersBase {
             List<Admin> result = adminRepository.findByTrackAndDeletedAtIsNullOrderByNameAsc(Track.ENGINEERING);
 
             assertThat(result).extracting(Admin::getName).containsExactly("가", "나");
+        }
+    }
+
+    /**
+     * V2.2.2~V2.2.4에서 추가한 member_id·live_member_id·is_leader의 DB 제약.
+     * 위반 케이스는 TestEntityManager로 저장해 JPA 예외(PersistenceException)를 그대로 본다.
+     */
+    @Nested
+    @DisplayName("member 연결 컬럼 제약")
+    class MemberLinkColumns {
+
+        private Long persistMember() {
+            Member m = Member.builder()
+                    .term(25).track(Track.ANALYSIS).name("회원").status(Member.Status.ACTIVE)
+                    .build();
+            return em.persistAndFlush(m).getId();
+        }
+
+        private Admin newAdmin(String username, Long memberId) {
+            return Admin.builder()
+                    .username(username).password("ENC").role(Admin.Role.TEAM).name("회원")
+                    .track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀)
+                    .memberId(memberId)
+                    .build();
+        }
+
+        private Object liveMemberId(Long adminId) {
+            return em.getEntityManager()
+                    .createNativeQuery("SELECT live_member_id FROM admin WHERE id = ?1")
+                    .setParameter(1, adminId)
+                    .getSingleResult();
+        }
+
+        @Test
+        @DisplayName("TC-007 member_id 없이 저장 가능(백필 전 기존 계정), is_leader 기본 false")
+        void memberIdNullable() {
+            Admin a = em.persistFlushFind(newAdmin("no_member1", null));
+            em.persistAndFlush(newAdmin("no_member2", null));
+
+            assertThat(a.getMemberId()).isNull();
+            assertThat(a.isLeader()).isFalse();
+            assertThat(liveMemberId(a.getId())).isNull();
+        }
+
+        @Test
+        @DisplayName("TC-008 [예외] 같은 회원에 삭제되지 않은 계정 두 개 → uk_admin_live_member 위반")
+        void oneLiveAccountPerMember() {
+            Long memberId = persistMember();
+            em.persistAndFlush(newAdmin("first", memberId));
+
+            assertThatThrownBy(() -> em.persistAndFlush(newAdmin("second", memberId)))
+                    .isInstanceOf(PersistenceException.class)
+                    .rootCause().hasMessageContaining("uk_admin_live_member");
+        }
+
+        @Test
+        @DisplayName("TC-009 계정을 soft delete하면 member_id는 남고 live_member_id는 NULL → 같은 회원에 새 계정 가능")
+        void deletedAccountLeavesUnique() {
+            Long memberId = persistMember();
+            Admin old = em.persistAndFlush(newAdmin("old", memberId));
+            old.softDelete();
+            em.flush();
+
+            Admin renewed = em.persistAndFlush(newAdmin("renewed", memberId));
+            em.clear();
+
+            assertThat(em.find(Admin.class, old.getId()).getMemberId()).isEqualTo(memberId);
+            assertThat(liveMemberId(old.getId())).isNull();
+            assertThat(((Number) liveMemberId(renewed.getId())).longValue()).isEqualTo(memberId);
+        }
+
+        @Test
+        @DisplayName("TC-010 [예외] 없는 member id 참조 → fk_admin_member 위반")
+        void memberFk() {
+            assertThatThrownBy(() -> em.persistAndFlush(newAdmin("ghost", 999_999L)))
+                    .isInstanceOf(PersistenceException.class)
+                    .rootCause().hasMessageContaining("fk_admin_member");
+        }
+
+        @Test
+        @DisplayName("TC-011 is_leader를 생략한 SQL INSERT(직전 버전 앱) → DB 기본값 false")
+        void isLeaderDbDefault() {
+            em.getEntityManager().createNativeQuery(
+                    "INSERT INTO admin (username, password, role, name, track, term, team_name) "
+                            + "VALUES ('legacy', 'ENC', 'TEAM', '구버전', 'ANALYSIS', 25, '기획팀')")
+                    .executeUpdate();
+            em.clear();
+
+            Admin legacy = adminRepository.findByUsernameAndDeletedAtIsNull("legacy").orElseThrow();
+            assertThat(legacy.isLeader()).isFalse();
+            assertThat(legacy.getMemberId()).isNull();
+        }
+
+        @Test
+        @DisplayName("TC-012 is_leader=true 저장 → 그대로 조회")
+        void isLeaderTrue() {
+            Admin leader = Admin.builder()
+                    .username("leader").password("ENC").role(Admin.Role.TEAM).name("팀장")
+                    .track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀)
+                    .isLeader(true)
+                    .build();
+            Admin found = em.persistFlushFind(leader);
+
+            assertThat(found.isLeader()).isTrue();
         }
     }
 }
