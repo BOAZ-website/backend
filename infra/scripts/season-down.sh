@@ -58,7 +58,12 @@ echo "  ✅ 설정 로드 완료"
 echo ""
 echo "[1/5] CloudFront origin을 EC2-A로 복귀 중..."
 
-CF_SCRIPT=$(cygpath -w "$SCRIPT_DIR/cf_set_origin.py")
+# Windows(Git Bash)에서는 Windows용 Python이 읽을 수 있게 경로를 바꾸고, macOS·Linux에서는 그대로 씀
+if command -v cygpath >/dev/null 2>&1; then
+  CF_SCRIPT=$(cygpath -w "$SCRIPT_DIR/cf_set_origin.py")
+else
+  CF_SCRIPT="$SCRIPT_DIR/cf_set_origin.py"
+fi
 ETAG=$(aws cloudfront get-distribution-config --id "$CLOUDFRONT_DIST_ID" \
   --profile "$AWS_PROFILE" --query 'ETag' --output text)
 DIST_CONFIG=$(aws cloudfront get-distribution-config --id "$CLOUDFRONT_DIST_ID" \
