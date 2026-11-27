@@ -56,13 +56,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                     request.setAttribute(RequestLoggingFilter.USER_ATTRIBUTE, "USER:" + userId);
                 } else if ("ADMIN".equals(type)) {
-                    String username = claims.get("username", String.class);
-                    UserDetails userDetails = adminUserDetailsService.loadUserByUsername(username);
+                    Long adminId = Long.parseLong(claims.getSubject());
+                    UserDetails userDetails = adminUserDetailsService.loadUserByAdminId(adminId);
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                    // 토큰 subject는 admin id다. username(로그인 아이디)은 남기지 않는다.
-                    request.setAttribute(RequestLoggingFilter.USER_ATTRIBUTE, "ADMIN:" + claims.getSubject());
+                    // username(로그인 아이디)은 로그에 남기지 않는다.
+                    request.setAttribute(RequestLoggingFilter.USER_ATTRIBUTE, "ADMIN:" + adminId);
                 } else {
                     throw new CustomException(ErrorCode.INVALID_TOKEN);
                 }

@@ -116,6 +116,28 @@ class SecurityFilterChainIntegrationTest extends TestcontainersBase {
                     .andExpect(status().isUnauthorized())
                     .andExpect(jsonPath("$.error_code").value("INVALID_TOKEN"));
         }
+
+        /**
+         * 같은 아이디로 새 계정을 만드는 경우(B 생성)는 아직 {@code admin.username} UNIQUE 때문에 DB에서 막혀서
+         * 여기서 재현하지 못한다. 그 경우는 {@code JwtAuthenticationFilterTest} TC-011이 저장소를 mock해서 본다.
+         */
+        @Test
+        @DisplayName("TC-012 [예외] 로그인으로 발급받은 토큰 → 계정 soft delete → 같은 토큰으로 호출하면 401 INVALID_TOKEN")
+        void deleted_admin_token_rejected() throws Exception {
+            Admin admin = adminRepository.save(Admin.builder()
+                    .username("deleted_admin").password(passwordEncoder.encode("Boaz1234!")).role(Admin.Role.TEAM)
+                    .name("김보아즈").track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀).createdBy(null)
+                    .build());
+            String accessToken = loginAndGetAccessToken("deleted_admin", "Boaz1234!");
+
+            admin.softDelete();
+            adminRepository.flush();
+
+            mockMvc.perform(get("/api/v1/admin/accounts/me")
+                            .header("Authorization", "Bearer " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.error_code").value("INVALID_TOKEN"));
+        }
     }
 
     /**

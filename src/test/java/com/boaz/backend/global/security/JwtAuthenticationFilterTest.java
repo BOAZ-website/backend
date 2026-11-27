@@ -1,7 +1,11 @@
 package com.boaz.backend.global.security;
 
+import com.boaz.backend.domain.admin.entity.Admin;
+import com.boaz.backend.domain.admin.repository.AdminRepository;
+import com.boaz.backend.global.common.enums.Track;
 import com.boaz.backend.global.exception.CustomException;
 import com.boaz.backend.global.exception.ErrorCode;
+import com.boaz.backend.global.security.authz.EffectivePermissions;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import org.junit.jupiter.api.AfterEach;
@@ -20,6 +24,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -54,7 +59,6 @@ class JwtAuthenticationFilterTest {
         lenient().when(claims.getSubject()).thenReturn(subject);
         lenient().when(claims.get("type", String.class)).thenReturn(type);
         lenient().when(claims.get("tokenType", String.class)).thenReturn(tokenType);
-        lenient().when(claims.get("username", String.class)).thenReturn(null);
         return claims;
     }
 
@@ -122,21 +126,20 @@ class JwtAuthenticationFilterTest {
     @DisplayName("TC-004 유효한 ADMIN Access Token → AdminUserDetails 세팅 후 통과")
     void valid_admin_access_token() throws Exception {
         Claims claims = mockClaims("10", "ADMIN", "ACCESS");
-        when(claims.get("username", String.class)).thenReturn("admin01");
 
         doNothing().when(jwtProvider).validateToken("valid-admin-token");
         when(jwtProvider.parseClaims("valid-admin-token")).thenReturn(claims);
 
         UserDetails adminDetails = mock(UserDetails.class);
         doReturn(List.of(new SimpleGrantedAuthority("ROLE_SUPER"))).when(adminDetails).getAuthorities();
-        when(adminUserDetailsService.loadUserByUsername("admin01")).thenReturn(adminDetails);
+        when(adminUserDetailsService.loadUserByAdminId(10L)).thenReturn(adminDetails);
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         MockFilterChain chain = new MockFilterChain();
 
         filter.doFilter(requestWithBearer("valid-admin-token"), response, chain);
 
-        verify(adminUserDetailsService).loadUserByUsername("admin01");
+        verify(adminUserDetailsService).loadUserByAdminId(10L);
         var auth = SecurityContextHolder.getContext().getAuthentication();
         assertThat(auth).isNotNull();
         assertThat(auth.getPrincipal()).isInstanceOf(UserDetails.class);
@@ -229,6 +232,72 @@ class JwtAuthenticationFilterTest {
             assertThat(response.getContentAsString()).contains("INTERNAL_SERVER_ERROR");
             assertThat(chain.getRequest()).isNull();
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // 삭제된 계정의 토큰 — 실제 AdminUserDetailsService(저장소만 mock)를 태운다
+    // ──────────────────────────────────────────────────────────────────────────
+    @Nested
+    @DisplayName("삭제된 관리자 계정의 토큰")
+    class DeletedAdminToken {
+
+        @Mock AdminRepository adminRepository;
+        @Mock EffectivePermissions effectivePermissions;
+
+        JwtAuthenticationFilter realLookupFilter;
+
+        @BeforeEach
+        void setUp() {
+            realLookupFilter = new JwtAuthenticationFilter(
+                    jwtProvider, new AdminUserDetailsService(adminRepository, effectivePermissions));
+        }
+
+        private Claims adminClaims(String token, Long adminId, String username) {
+            Claims claims = mockClaims(String.valueOf(adminId), "ADMIN", "ACCESS");
+            lenient().when(claims.get("username", String.class)).thenReturn(username);
+            doNothing().when(jwtProvider).validateToken(token);
+            when(jwtProvider.parseClaims(token)).thenReturn(claims);
+            return claims;
+        }
+
+        @Test
+        @DisplayName("TC-010 [예외] 삭제된 계정의 Access Token → 401 INVALID_TOKEN, chain 중단")
+        void deleted_admin_token_rejected() throws Exception {
+            adminClaims("deleted-admin-token", 10L, "admin01");
+            when(adminRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.empty());
+
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain chain = new MockFilterChain();
+            realLookupFilter.doFilter(requestWithBearer("deleted-admin-token"), response, chain);
+
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(response.getContentAsString()).contains("INVALID_TOKEN");
+            assertThat(chain.getRequest()).isNull();
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+        }
+
+        @Test
+        @DisplayName("TC-011 [예외] 삭제된 계정과 같은 아이디로 새 계정 발급 후 이전 토큰 → 새 계정으로 인증되지 않고 401 INVALID_TOKEN")
+        void old_token_not_authenticated_as_reissued_account() throws Exception {
+            // A(id=10)는 삭제됐고, 같은 아이디 admin01로 B(id=11)가 새로 발급됐다. 토큰은 A의 것이다.
+            Admin reissued = Admin.builder()
+                    .username("admin01").password("encoded").role(Admin.Role.TEAM)
+                    .name("김보아즈").track(Track.ANALYSIS).term(25).teamName(Admin.TeamName.기획팀).createdBy(null)
+                    .build();
+            lenient().when(adminRepository.findByUsernameAndDeletedAtIsNull("admin01")).thenReturn(Optional.of(reissued));
+            adminClaims("old-admin-token", 10L, "admin01");
+            when(adminRepository.findByIdAndDeletedAtIsNull(10L)).thenReturn(Optional.empty());
+
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain chain = new MockFilterChain();
+            realLookupFilter.doFilter(requestWithBearer("old-admin-token"), response, chain);
+
+            assertThat(response.getStatus()).isEqualTo(401);
+            assertThat(response.getContentAsString()).contains("INVALID_TOKEN");
+            assertThat(chain.getRequest()).isNull();
+            assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();
+            verify(adminRepository, never()).findByUsernameAndDeletedAtIsNull(anyString());
         }
     }
 }
