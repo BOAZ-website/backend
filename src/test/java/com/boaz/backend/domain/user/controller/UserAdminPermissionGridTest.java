@@ -30,10 +30,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 2층 격자 테스트 — 합격자 정회원 승격 API × 최종 권한 매트릭스 주체 8종(+ 권한 0).
- * <p>기대값은 최종 권한 매트릭스({@code FINAL_PERMISSION_MATRIX.md})의 "합격자 정회원 승격 (U)" 행에서 전사했다.
+ * 2층 격자 테스트: 합격자 정회원 승격 API와 권한 매트릭스 주체, 권한 0 조합.
+ * <p>기대값은 권한 매트릭스의 "합격자 정회원 승격 (U)" 행에서 전사했다.
  * {@code DefaultPermissions.of(...)}로 계산하지 않는다.
- * <p>요청 본문은 X 칸에서도 유효해야 한다 — {@code @Valid}가 {@code @PreAuthorize}보다 먼저 돈다.
+ * <p>요청 본문은 X 칸에서도 유효해야 한다. {@code @Valid}가 {@code @PreAuthorize}보다 먼저 돈다.
  */
 @ActiveProfiles("test")
 @WebMvcTest(
@@ -49,7 +49,7 @@ class UserAdminPermissionGridTest {
 
     private static final String PROMOTE_BODY = "{\"user_ids\":[1,2]}";
 
-    // 매트릭스 행: 합격자 정회원 승격 (U) — MEMBER_PROMOTION_WRITE
+    // 매트릭스 행: 합격자 정회원 승격 (U), MEMBER_PROMOTION_WRITE
     static Stream<Arguments> grid() {
         return Stream.of(
                 Arguments.of("서운팀장(MASTER)", Admin.Role.MASTER, Admin.TeamName.서비스운영팀, true),
@@ -58,15 +58,15 @@ class UserAdminPermissionGridTest {
                 Arguments.of("서비스운영팀(TEAM)", Admin.Role.TEAM, Admin.TeamName.서비스운영팀, true),
                 Arguments.of("운영지원팀(TEAM)", Admin.Role.TEAM, Admin.TeamName.운영지원팀, false),
                 Arguments.of("기타운영진(TEAM,기획팀)", Admin.Role.TEAM, Admin.TeamName.기획팀, false),
-                // 스터디장·ADV팀장 두 열은 코드에서 (HOST, 그룹리더) 한 키다
+                // 스터디장과 ADV 팀장은 코드에서 (HOST, 그룹리더) 한 키다
                 Arguments.of("스터디장(HOST)", Admin.Role.HOST, Admin.TeamName.그룹리더, false),
                 Arguments.of("ADV팀장(HOST)", Admin.Role.HOST, Admin.TeamName.그룹리더, false),
                 Arguments.of("권한0(SUPER,그룹리더)", Admin.Role.SUPER, Admin.TeamName.그룹리더, false)
         );
     }
 
-    @ParameterizedTest(name = "{0} → {3}")
-    @DisplayName("TC-001 합격자 승격 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0)")
+    @ParameterizedTest(name = "{0}: {3}")
+    @DisplayName("TC-001 합격자 승격 API 2층 격자: 권한 매트릭스 주체와 권한 0 조합")
     @MethodSource("grid")
     void grid(String label, Admin.Role role, Admin.TeamName team, boolean allowed) throws Exception {
         var result = mockMvc.perform(patch("/api/v1/admin/users/promote")

@@ -44,12 +44,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 2층 격자 테스트 — 지원서 평가 API 8개 × 최종 권한 매트릭스 주체 8종(+ 권한 0).
- * <p>{@code @PreAuthorize} 문자열 오타는 컴파일 타임에 안 잡힌다 — 이 테스트가 사실상 컴파일러다.
+ * 2층 격자 테스트: 지원서 평가 API와 권한 매트릭스 주체, 권한 0 조합.
+ * <p>{@code @PreAuthorize} 문자열 오타는 컴파일할 때 잡히지 않아서 이 테스트가 잡는다.
  *
  * <p><b>서비스는 목이다.</b> 여기서 검증하는 것은 2층뿐이다. 대상 지원자의 부문 범위(3층, {@code ScopeGuard})는
- * {@code RecruitmentEvaluationServiceTest}·{@code ApplicantEvaluationIntegrationTest}가 본다.
- * <p><b>기대값은 구현에서 복사하지 않고 최종 권한 매트릭스({@code FINAL_PERMISSION_MATRIX.md})에서 전사했다.</b>
+ * {@code RecruitmentEvaluationServiceTest}와 {@code ApplicantEvaluationIntegrationTest}가 본다.
+ * <p><b>기대값은 구현에서 복사하지 않고 권한 매트릭스에서 전사했다.</b>
  *
  * <p><b>요청 본문은 X 칸에서도 유효해야 한다.</b> {@code @Valid}가 {@code @PreAuthorize}보다 먼저 돈다.
  */
@@ -71,8 +71,8 @@ class ApplicantEvaluationPermissionGridTest {
     private static final String EVALUATION_BODY = "{\"decision\":\"PASS\",\"score\":5}";
 
     /**
-     * 최종 매트릭스의 주체 열 8개 + 권한 0 조합 1개.
-     * 스터디장·ADV팀장 두 열은 코드에서 {@code (HOST, 그룹리더)} 한 키라 같은 픽스처를 쓴다.
+     * 권한 매트릭스의 주체 열과 권한 0 조합.
+     * 스터디장과 ADV 팀장은 코드에서 {@code (HOST, 그룹리더)} 한 키라 같은 픽스처를 쓴다.
      */
     private record Subject(String label, Admin.Role role, Admin.TeamName team) {
 
@@ -121,21 +121,21 @@ class ApplicantEvaluationPermissionGridTest {
     );
 
     /**
-     * 최종 매트릭스 전사. O = 2층 통과, X = 403.
+     * 권한 매트릭스 전사. O = 2층 통과, X = 403.
      *
      * <pre>
-     * 열 → 매트릭스 행 / permission
-     *   APPL, EVS, IQ, ANS, MY, SAVE   본인 부문 서류 평가 CRUD ∪ 다른 부문 서류 평가 CRUD
+     * 열, 매트릭스 행, permission
+     *   APPL, EVS, IQ, ANS, MY, SAVE   본인 부문 서류 평가 CRUD 또는 다른 부문 서류 평가 CRUD
      *                                  EVALUATION_OWN_TRACK_WRITE 또는 EVALUATION_ALL_TRACK_WRITE
-     *   DASH                           위 평가 권한 ∩ 최종 합불 조회 (R) — FINAL_DECISION_READ
+     *   DASH                           위 평가 권한과 최종 합불 조회 (R) 둘 다, FINAL_DECISION_READ
      *                                  (응답에 final_decision 이 실린다)
-     *   FINAL                          최종 합불 CUD — FINAL_DECISION_WRITE
+     *   FINAL                          최종 합불 CUD, FINAL_DECISION_WRITE
      * </pre>
      * 부문(본인/전체)은 여기서 가르지 않는다. 2층은 "평가 권한이 둘 중 하나라도 있나"까지만 본다.
      */
     private static final String[] GRID = {
             //                         APPL DASH FINAL EVS  IQ   ANS  MY   SAVE
-            "서운팀장(MASTER)            X    X    X     X    X    X    X    X",
+            "서운팀장(MASTER)            O    O    X     O    O    O    O    O",
             "대표진(SUPER)               O    O    O     O    O    O    O    O",
             "차기대표진(SUPER)            O    O    O     O    O    O    O    O",
             "서비스운영팀(TEAM)           O    O    X     O    O    O    O    O",
@@ -166,8 +166,8 @@ class ApplicantEvaluationPermissionGridTest {
                 });
     }
 
-    @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("TC-001 지원서 평가 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 8개")
+    @ParameterizedTest(name = "{0}, {1}: {2}")
+    @DisplayName("TC-001 지원서 평가 API 2층 격자: 권한 매트릭스 주체와 권한 0 조합, 엔드포인트")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));
@@ -186,7 +186,7 @@ class ApplicantEvaluationPermissionGridTest {
     @Test
     @DisplayName("TC-002 [정상] 컨트롤러는 AdminUserDetails 의 유효 권한을 그대로 서비스에 넘긴다 (3층 판정 재료)")
     void passesPermissionsToService() throws Exception {
-        // 오버라이드가 섞인 주체 — 기본 세트가 아니라 넘긴 집합이 그대로 서비스까지 가야 한다
+        // 오버라이드가 섞인 주체. 기본 세트가 아니라 넘긴 집합이 그대로 서비스까지 가야 한다
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         Set<Permission> granted = Set.of(
                 Permission.EVALUATION_OWN_TRACK_WRITE, Permission.EVALUATION_ALL_TRACK_WRITE);
@@ -200,10 +200,10 @@ class ApplicantEvaluationPermissionGridTest {
                 eq(101L), any(), argThat(a -> a.getId().equals(1L)), eq(granted));
     }
 
-    // ── 최종 합불 CUD — FINAL_DECISION_WRITE 하나로만 갈린다 (평가 부문 권한과 무관) ──
+    // ── 최종 합불 CUD는 FINAL_DECISION_WRITE 하나로만 갈린다. 평가 부문 권한과는 상관없다 ──
 
     @Test
-    @DisplayName("TC-003 [인가실패] 평가 권한(본인·전 부문)을 다 가져도 FINAL_DECISION_WRITE 가 없으면 최종 합불 수정 → 403")
+    @DisplayName("TC-003 [인가실패] 본인 부문과 다른 부문 평가 권한이 모두 있어도 FINAL_DECISION_WRITE 가 없으면 최종 합불 수정은 403")
     void finalDecisionRequiresFinalDecisionWriteOnly() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.서비스운영팀);
         Set<Permission> evaluationOnly = Set.of(
@@ -232,7 +232,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("TC-005 [인가실패] 대표진 기본 세트에서 FINAL_DECISION_WRITE 만 REVOKE → 최종 합불 수정 403")
+    @DisplayName("TC-005 [인가실패] 대표진 기본 세트에서 FINAL_DECISION_WRITE 만 REVOKE 하면 최종 합불 수정은 403")
     void finalDecisionCustomRevoke() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.SUPER, Admin.TeamName.대표진);
         Set<Permission> revoked = Set.of(
@@ -247,7 +247,7 @@ class ApplicantEvaluationPermissionGridTest {
     }
 
     @Test
-    @DisplayName("TC-006 [인가실패] 평가 권한은 있어도 최종 합불 조회 권한이 없으면 평가 대시보드 → 403")
+    @DisplayName("TC-006 [인가실패] 평가 권한은 있어도 최종 합불 조회 권한이 없으면 평가 대시보드는 403")
     void dashboardRequiresFinalDecisionRead() throws Exception {
         Admin admin = AuthFixtures.admin(1L, Admin.Role.TEAM, Admin.TeamName.기획팀);
         Set<Permission> revoked = Set.of(Permission.EVALUATION_OWN_TRACK_WRITE);   // FINAL_DECISION_READ 회수

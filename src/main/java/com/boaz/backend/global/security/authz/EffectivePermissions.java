@@ -14,20 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 유효 권한 계산기.
- *
- * <pre>
- * 유효 권한 = DefaultPermissions(role, teamName)   ← 코드.  운영진으로서의 자리
- *           − REVOKE + GRANT                       ← DB.   계정별 오버라이드
- *           + LeadershipPermissions(admin)         ← DB.   그룹 리더십 (아직 구현 전)
- * </pre>
- *
- * <p><b>세 번째 항은 아직 없다.</b> 리더십 파생은 {@code admin_group_leader ⋈ activity_group}의 그룹 타입을
- * 봐야 하는데 {@code activity_group} 테이블이 아직 없다. 그래서 지금은 {@code _OWN_GROUP_} permission을
- * 아무도 갖지 못한다 — 그 permission을 참조하는 {@code @PreAuthorize}도 0개라 소비처가 없는 상태다.
- *
- * <p><b>권한은 JWT claim에 싣지 않는다.</b> 매 요청 DB로 읽는다. 토큰에 담으면 권한 회수가 토큰 만료 전까지
- * 안 먹힌다.
+ * 유효 권한은 기본 권한에서 REVOKE를 빼고 GRANT를 더한 것이다.
+ * <p>권한은 JWT에 담지 않고 요청마다 DB에서 읽는다. 토큰에 담으면 권한을 회수해도 토큰이 만료될 때까지 적용되지 않는다.
  */
 @Component
 @RequiredArgsConstructor
@@ -36,10 +24,9 @@ public class EffectivePermissions {
     private final AdminPermissionOverrideRepository overrideRepository;
 
     /**
-     * 여러 계정의 유효 권한을 한 번에 계산한다. 오버라이드 조회가 계정 수와 무관하게 <b>1회</b>다 —
-     * {@link #of(Admin)} 를 반복하면 계정마다 한 번씩 나간다.
+     * 여러 계정의 유효 권한을 한 번에 계산한다. 오버라이드는 계정 수와 상관없이 한 번만 조회한다.
      *
-     * @return admin id → 유효 권한. 오버라이드가 없는 계정도 기본 세트로 항상 들어간다
+     * @return 계정 id별 유효 권한. 오버라이드가 없는 계정도 기본 권한으로 들어간다
      */
     public Map<Long, Set<Permission>> of(Collection<Admin> admins) {
         Map<Long, Set<Permission>> result = new HashMap<>();
@@ -72,8 +59,7 @@ public class EffectivePermissions {
     }
 
     public Set<Permission> of(Admin admin) {
-        // EnumSet.copyOf 는 빈 컬렉션에서 던진다 — 권한 0인 조합(폴백에 없는 role)이 실제로 존재하므로
-        // noneOf + addAll 로 만든다.
+        // 기본 권한이 빈 집합일 수 있어서 EnumSet.copyOf 대신 noneOf로 만든다. copyOf는 빈 컬렉션이면 예외를 던진다.
         Set<Permission> result = EnumSet.noneOf(Permission.class);
         result.addAll(DefaultPermissions.of(admin.getRole(), admin.getTeamName()));
 

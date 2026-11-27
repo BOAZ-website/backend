@@ -38,14 +38,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 2층 격자 테스트 — 리크루팅 관리 API 12개 × 최종 권한 매트릭스 주체 8종(+ 권한 0).
- * <p>{@code @PreAuthorize} 문자열 오타는 컴파일 타임에 안 잡힌다 — 이 테스트가 사실상 컴파일러다.
+ * 2층 격자 테스트: 리크루팅 관리 API와 권한 매트릭스 주체, 권한 0 조합.
+ * <p>{@code @PreAuthorize} 문자열 오타는 컴파일할 때 잡히지 않아서 이 테스트가 잡는다.
  *
  * <p><b>서비스는 목이다.</b> 여기서 검증하는 것은 2층뿐이다.
- * <p><b>기대값은 구현에서 복사하지 않고 최종 권한 매트릭스({@code FINAL_PERMISSION_MATRIX.md})에서 전사했다.</b>
+ * <p><b>기대값은 구현에서 복사하지 않고 권한 매트릭스에서 전사했다.</b>
  * {@code DefaultPermissions.of(...)}로 계산하면 전사 실수를 그대로 통과시킨다.
  *
- * <p><b>요청 본문과 파라미터는 X 칸에서도 유효해야 한다.</b> {@code @Valid}·파라미터 바인딩이
+ * <p><b>요청 본문과 파라미터는 X 칸에서도 유효해야 한다.</b> {@code @Valid}와 파라미터 바인딩이
  * {@code @PreAuthorize}보다 먼저 돌기 때문에, 잘못된 요청이면 403 이 아니라 400 이 나와 판정을 가린다.
  */
 @ActiveProfiles("test")
@@ -72,9 +72,9 @@ class RecruitmentAdminPermissionGridTest {
     private static final String QUESTION_UPDATE_BODY = "{\"content\":\"수정된 내용\"}";
 
     /**
-     * 최종 매트릭스의 주체 열 8개 + 권한 0 조합 1개.
-     * 스터디장·ADV팀장 두 열은 코드에서 {@code (HOST, 그룹리더)} 한 키라 같은 픽스처를 쓴다 —
-     * 매트릭스 열이므로 라벨은 나눠 둔다. 마지막 행은 매트릭스에 없는 조합이 권한 0으로 닫히는지 본다.
+     * 권한 매트릭스의 주체 열과 권한 0 조합.
+     * 스터디장과 ADV 팀장은 코드에서 {@code (HOST, 그룹리더)} 한 키라 같은 픽스처를 쓰고, 라벨만 나눠 둔다.
+     * 마지막 행은 매트릭스에 없는 조합이 권한 0인지 본다.
      */
     private record Subject(String label, Admin.Role role, Admin.TeamName team) {
 
@@ -129,12 +129,12 @@ class RecruitmentAdminPermissionGridTest {
     );
 
     /**
-     * 최종 매트릭스 전사. O = 2층 통과, X = 403.
+     * 권한 매트릭스 전사. O = 2층 통과, X = 403.
      *
      * <pre>
-     * 열 → 매트릭스 행 / permission
+     * 열, 매트릭스 행, permission
      *   GET /, GET /{rid}/questions           리크루팅 공고 / 문항 관리 조회 (R)   RECRUITMENT_NOTICE_READ
-     *   POST·PATCH·DELETE 공고, 문항 CUD        리크루팅 공고 / 문항 관리 CUD        RECRUITMENT_NOTICE_WRITE
+     *   POST, PATCH, DELETE 공고와 문항        리크루팅 공고 / 문항 관리 CUD        RECRUITMENT_NOTICE_WRITE
      *   POST /applications/download           지원자 CSV 추출 (R)                 APPLICANT_CSV_READ
      *   DELETE /{rid}/applicants              지원서 전체 삭제                     APPLICATION_DELETE_ALL
      *   GET /subscriptions                    사전알림명단 조회 (R)                PRE_NOTIFICATION_READ
@@ -174,8 +174,8 @@ class RecruitmentAdminPermissionGridTest {
                 });
     }
 
-    @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("TC-001 리크루팅 관리 API 2층 격자 — 최종 매트릭스 주체 8종(+권한0) × 엔드포인트 12개")
+    @ParameterizedTest(name = "{0}, {1}: {2}")
+    @DisplayName("TC-001 리크루팅 관리 API 2층 격자: 권한 매트릭스 주체와 권한 0 조합, 엔드포인트")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));

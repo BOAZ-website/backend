@@ -42,8 +42,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * 2층 격자 테스트 — 계정 관련 매트릭스 행 × 기본 세트 주체.
- * <p>{@code @PreAuthorize} 문자열 오타는 컴파일 타임에 안 잡힌다 — 이 테스트가 사실상 컴파일러다.
+ * 2층 격자 테스트: 계정 관련 매트릭스 행과 기본 세트 주체.
+ * <p>{@code @PreAuthorize} 문자열 오타는 컴파일할 때 잡히지 않아서 이 테스트가 잡는다.
  *
  * <p><b>서비스는 목이다.</b> 여기서 검증하는 것은 2층뿐이다.
  * <p><b>기대값은 구현에서 복사하지 않고 매트릭스에서 전사했다.</b> {@code DefaultPermissions.of(...)}로
@@ -74,8 +74,7 @@ class AdminPermissionGridTest {
             "{\"current_password\":\"Boaz1234!\",\"new_password\":\"NewBoaz1234!\"}";
 
     /**
-     * 기본 세트 키 7개 + 권한 0 조합 1개. 마지막 것이 "닫히는 쪽으로 실패"를 실제로 밟는 행이다 —
-     * {@code (SUPER, 그룹리더)}는 명시 키에도 없고 {@code SUPER} 폴백도 없어 빈 집합이 된다.
+     * 기본 세트 키별 주체와 권한 0 조합. 마지막 {@code (SUPER, 그룹리더)}는 표에 없는 조합이라 빈 집합이 된다.
      */
     private record Subject(String label, Admin.Role role, Admin.TeamName team) {
 
@@ -129,12 +128,12 @@ class AdminPermissionGridTest {
      *                        /acc  /acc  /me   /{id} /{id}  /{id} /pw
      * 계정 생성/삭제(CD)       ●                             ●
      * 계정 목록 조회(R)              ●
-     * 본인 계정 조회(R)                          ●                        ← SELF_READ 또는 READ
-     * 본인/타 계정 수정(U)                               ●            ●   ← SELF_WRITE 또는 WRITE
+     * 본인 계정 조회(R)                          ●                        (SELF_READ 또는 READ)
+     * 본인/타 계정 수정(U)                               ●            ●   (SELF_WRITE 또는 WRITE)
      * </pre>
      *
-     * {@code /accounts/me}는 주체 자신을 돌려주는 엔드포인트라 대상 판정이 없어 2층을 붙이지 않았다 —
-     * 권한 0인 주체까지 O인 유일한 열이고, 그것이 의도다.
+     * {@code /accounts/me}는 주체 자신을 돌려주는 엔드포인트라 2층을 붙이지 않았다.
+     * 그래서 권한 0인 주체도 O다.
      */
     private static final String[] GRID = {
             //                      POST  GET  /me  {id} PTCH  DEL   pw
@@ -178,8 +177,8 @@ class AdminPermissionGridTest {
         when(adminService.updateAccount(any(), any(), any(), any())).thenReturn(new AdminIdResponse(2L));
     }
 
-    @ParameterizedTest(name = "{0} × {1} → {2}")
-    @DisplayName("TC-001 계정 API 2층 격자 — 기본 세트 주체 8종 × 엔드포인트 7개")
+    @ParameterizedTest(name = "{0}, {1}: {2}")
+    @DisplayName("TC-001 계정 API 2층 격자: 기본 세트 주체와 엔드포인트")
     @MethodSource("grid")
     void grid(Subject subject, Endpoint endpoint, boolean allowed) throws Exception {
         var result = mockMvc.perform(endpoint.request().get().with(authentication(subject.auth())));

@@ -13,12 +13,12 @@ import org.springframework.security.web.SecurityFilterChain;
 import jakarta.servlet.DispatcherType;
 
 /**
- * 2층({@code @PreAuthorize})을 실제로 켠 채 컨트롤러를 태우는 테스트 설정. 운영
- * {@code SecurityConfig}와 같은 모양 — {@code @EnableMethodSecurity} + URL 게이트는 인증 경계만,
- * 나머지는 {@code denyAll} — 이라 44행 × 8주체 격자 테스트가 여기에 물린다.
+ * 2층({@code @PreAuthorize})을 실제로 켠 채 컨트롤러를 태우는 테스트 설정. 권한 격자 테스트가 쓴다.
+ * 운영 {@code SecurityConfig}처럼 {@code @EnableMethodSecurity}를 켜고, URL 게이트는 인증 경계만 두고 나머지는
+ * {@code denyAll}로 막는다.
  *
- * <p><b>{@link TestSecurityConfig}는 건드리지 않는다.</b> 기존 컨트롤러 테스트 16개가 그 설정에 물려 있고,
- * 거기는 메서드 시큐리티가 꺼져 있어 {@code @PreAuthorize}가 무시된다 — 그 상태를 유지하는 것이 전제다.
+ * <p><b>{@link TestSecurityConfig}는 건드리지 않는다.</b> 기존 컨트롤러 테스트가 그 설정에 물려 있고,
+ * 거기는 메서드 시큐리티가 꺼져 있어 {@code @PreAuthorize}가 무시되고, 그 상태를 유지해야 한다.
  *
  * <p>붙일 때 확인할 것: {@code @EnableMethodSecurity}가 꺼져 있으면 인가가 조용히 통과하므로,
  * <b>403을 기대하는 테스트가 실제로 빨간불이 되는지</b>를 한 번 눈으로 봐야 한다.

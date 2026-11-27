@@ -11,16 +11,8 @@ import java.util.Set;
 import static com.boaz.backend.global.security.authz.Permission.*;
 
 /**
- * {@code (role, teamName)} → 기본 권한 세트. 확정 권한 매트릭스(2026.09.11 기준 43행 × 8열)를 코드로 옮긴 것이다.
- * <p>매트릭스 열은 8개지만 키는 <b>명시 6 + {@code TEAM} 폴백 1 = 7개</b>다. {@code 스터디장}·{@code ADV팀장}
- * 두 열은 {@code (HOST, 그룹리더)} 한 키로 합쳐진다.
- *
- * <p>조회 순서는 <b>명시 키 → TEAM 폴백 → 빈 집합</b>이다. 폴백은 {@code TEAM}이면서 팀이
- * {@link #TEAM_FALLBACK_TEAMS} 넷 중 하나일 때만 닿는다 — {@code (SUPER, 그룹리더)}나
- * {@code (TEAM, 대표진)}처럼 매트릭스에 없는 조합은 권한 0으로 <b>닫히는 쪽</b>으로 실패해야 한다.
- *
- * <p>여기는 <b>읽기 쪽 방어</b>다. 그런 조합이 애초에 저장되지 않게 막는 것은
- * {@link #isValidCombination}을 부르는 계정 생성·수정 경로다.
+ * 역할과 팀 조합별 기본 권한. 권한 매트릭스 표를 옮긴 것이다.
+ * <p>표에 있는 조합은 {@code EXACT}에서, 기타 운영진 팀은 {@code FALLBACK}에서 찾는다. 표에 없는 조합은 권한이 없다.
  */
 public final class DefaultPermissions {
 
@@ -38,15 +30,14 @@ public final class DefaultPermissions {
         return Collections.unmodifiableSet(EnumSet.copyOf(Set.of(permissions)));
     }
 
-    /** 명시 키 6개. 각 집합은 매트릭스 열을 그대로 옮긴 것이다. */
     private static final Map<Key, Set<Permission>> EXACT = Map.of(
 
-            // 서운팀장 — 서류 평가 4행만 X. 평가 결정에 대한 권한은 없다.
+            // 서운팀장 (MASTER)
             key(Role.MASTER, TeamName.서비스운영팀), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ,
                     ADMIN_ACCOUNT_SELF_WRITE, ADMIN_ACCOUNT_WRITE,
                     ADMIN_ACCOUNT_CREATE_DELETE, ADMIN_PERMISSION_WRITE, AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,
@@ -58,12 +49,12 @@ public final class DefaultPermissions {
                     ATTENDANCE_ADV_ENTRY_READ, ATTENDANCE_ADV_ENTRY_WRITE,
                     ATTENDANCE_STUDY_ENTRY_READ, ATTENDANCE_STUDY_ENTRY_WRITE,
                     HOST_ACCOUNT_READ, HOST_ACCOUNT_WRITE,
-                    SCORE_RULE_READ, SCORE_RULE_WRITE),
+                    SCORE_RULE_READ, SCORE_RULE_WRITE,
+                    EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ),
 
-            // 대표진 — 차기대표진과 `다른 부문 서류 평가` 1행만 다르다.
+            // 대표진 (SUPER)
             key(Role.SUPER, TeamName.대표진), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
-                    CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
                     ATTENDANCE_EVENT_READ, ATTENDANCE_SCORE_READ,
@@ -73,10 +64,9 @@ public final class DefaultPermissions {
                     EVALUATION_OWN_TRACK_WRITE,
                     FINAL_DECISION_READ, FINAL_DECISION_WRITE),
 
-            // 차기대표진 — 대표진 + 다른 부문 서류 평가.
+            // 차기대표진 (SUPER)
             key(Role.SUPER, TeamName.차기대표진), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
-                    CONTENT_READ,
                     RECRUITMENT_NOTICE_READ, PRE_NOTIFICATION_READ,
                     ATTENDANCE_BASE_READ, ATTENDANCE_ADV_READ, ATTENDANCE_STUDY_READ,
                     ATTENDANCE_EVENT_READ, ATTENDANCE_SCORE_READ,
@@ -86,17 +76,17 @@ public final class DefaultPermissions {
                     EVALUATION_OWN_TRACK_WRITE, EVALUATION_ALL_TRACK_WRITE,
                     FINAL_DECISION_READ, FINAL_DECISION_WRITE),
 
-            // 서비스운영팀 — 계정 조회·감사로그·콘텐츠·리크루팅. 출결은 전부 X.
+            // 서비스운영팀 (TEAM)
             key(Role.TEAM, TeamName.서비스운영팀), set(
                     ADMIN_ACCOUNT_READ, ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     AUDIT_LOG_READ,
-                    CONTENT_READ, CONTENT_WRITE,
+                    CONTENT_WRITE,
                     RECRUITMENT_NOTICE_READ, RECRUITMENT_NOTICE_WRITE, APPLICANT_CSV_READ,
                     APPLICATION_DELETE_ALL, PRE_NOTIFICATION_READ, PRE_NOTIFICATION_DELETE,
                     MEMBER_PROMOTION_WRITE,
                     EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ),
 
-            // 운영지원팀 — 출결 전반·점수 규칙·HOST 계정 발급. 계정 목록 조회는 X.
+            // 운영지원팀 (TEAM)
             key(Role.TEAM, TeamName.운영지원팀), set(
                     ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                     ATTENDANCE_BASE_READ, ATTENDANCE_BASE_WRITE,
@@ -110,26 +100,18 @@ public final class DefaultPermissions {
                     SCORE_RULE_READ, SCORE_RULE_WRITE,
                     EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ),
 
-            // 스터디장 + ADV팀장 두 열이 여기 하나로 합쳐진다. 입력탭 _OWN_GROUP_ permission은
-            // 여기 없다 — admin_group_leader ⋈ activity_group 에서 계산된다.
-            // 본인 계정 정보 조회(R)는 매트릭스상 X — SELF_READ 없음. 자기 정보는 /accounts/me 로 본다.
+            // 스터디장, ADV 팀장 (HOST)
             key(Role.HOST, TeamName.그룹리더), set(
                     ADMIN_ACCOUNT_SELF_WRITE)
     );
 
-    /**
-     * role 단위 폴백 — 매트릭스의 "기타 운영진" 열. 디자인팀·자료연구팀·기획팀·대외협력팀 넷이 같은 값이라
-     * 키로 다 적는 대신 폴백 하나로 둔다.
-     */
+    /** 기타 운영진 기본 권한. */
     private static final Map<Role, Set<Permission>> FALLBACK = Map.of(
             Role.TEAM, set(ADMIN_ACCOUNT_SELF_READ, ADMIN_ACCOUNT_SELF_WRITE,
                            EVALUATION_OWN_TRACK_WRITE, FINAL_DECISION_READ)
     );
 
-    /**
-     * 폴백이 닿는 팀 — 매트릭스 "기타 운영진" 열에 실제로 있는 넷. role 하나로 폴백하면
-     * {@code (TEAM, 대표진)}처럼 매트릭스에 없는 조합까지 권한을 받는다.
-     */
+    /** 기타 운영진에 속하는 팀. 이 밖의 TEAM 계정은 폴백을 받지 않는다. */
     private static final Set<TeamName> TEAM_FALLBACK_TEAMS = Set.of(
             TeamName.디자인팀,
             TeamName.자료연구팀,
@@ -137,13 +119,13 @@ public final class DefaultPermissions {
             TeamName.대외협력팀
     );
 
-    /** 매트릭스에 있는 (role, teamName) 조합인지. 저장 경로가 이걸로 입력을 거른다. */
+    /** 표에 있는 조합인지 확인한다. 계정을 저장할 때 쓴다. */
     public static boolean isValidCombination(Role role, TeamName team) {
         return EXACT.containsKey(key(role, team))
                 || (role == Role.TEAM && TEAM_FALLBACK_TEAMS.contains(team));
     }
 
-    /** 명시 키 → TEAM 폴백 → 빈 집합(권한 0). 반환값은 불변이다. */
+    /** 기본 권한을 돌려준다. 표에 없는 조합이면 빈 집합이다. */
     public static Set<Permission> of(Role role, TeamName team) {
         Set<Permission> exact = EXACT.get(key(role, team));
         if (exact != null) {
